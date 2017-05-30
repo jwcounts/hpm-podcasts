@@ -333,9 +333,9 @@ function hpmv2_podcast_generate() {
                         'ACL' => 'public-read',
                         'ContentType' => 'application/rss+xml'
                     ));
-                } catch (S3Exception $e) {
+                } catch ( S3Exception $e ) {
                     $error .= $podcast_title."\n".$e->getMessage()."\n\n";
-                } catch (AwsException $e) {
+                } catch ( AwsException $e ) {
                     $error .= $podcast_title . "\n" . $e->getAwsRequestId() . "\n" . $e->getAwsErrorType() . "\n" . $e->getAwsErrorCode() . "\n\n";
                 }
             elseif ( $pods['upload-media'] == 'ftp' ) :
