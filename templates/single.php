@@ -4,9 +4,20 @@
  *
  * @package WordPress
  */
+	$pods = get_option( 'hpm_podcasts' );
+	if ( !empty( $pods['upload-flats'] ) ) :
+		if ( $pods['upload-flats'] == 's3' ) :
+			$base_url = 'https://s3-'.$pods['credentials']['s3']['region'].'.amazonaws.com/'.$pods['credentials']['s3']['bucket'].'/'.$pods['credentials']['s3']['folder'].'/';
+		else :
+			$base_url = $pods['credentials'][$pods['upload-flats']]['url'].'/';
+		endif;
+	else :
+		$uploads = wp_upload_dir();
+		$base_url = $uploads['basedir'].'/hpm-podcasts/';
+	endif;
 	while ( have_posts() ) : the_post();
-		$podtitle = $post->post_name;
-		$content = file_get_contents( 'http://s3-us-west-2.amazonaws.com/hpmwebv2/assets/podcasts/'.$podtitle.'.xml' );
+		$podtitle = $post->post_name.".xml";
+		$content = file_get_contents( $base_url.$podtitle );
 		header('Content-Type: ' . feed_content_type('rss2') . '; charset=' . get_option('blog_charset'), true);
 		echo $content;
 	endwhile;
