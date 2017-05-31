@@ -9,7 +9,12 @@
 		if ( $pods['upload-flats'] == 's3' ) :
 			$base_url = 'https://s3-'.$pods['credentials']['s3']['region'].'.amazonaws.com/'.$pods['credentials']['s3']['bucket'].'/'.$pods['credentials']['s3']['folder'].'/';
 		else :
-			$base_url = $pods['credentials'][$pods['upload-flats']]['url'].'/';
+			if ( !empty( $pods['credentials'][$pods['upload-flats']]['folder'] ) ) :
+				$folder = "/".$pods['credentials'][$pods['upload-flats']]['folder']."/";
+			else :
+				$folder = "/";
+			endif;
+			$base_url = $pods['credentials'][$pods['upload-flats']]['url'].$folder;
 		endif;
 	else :
 		$uploads = wp_upload_dir();

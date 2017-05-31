@@ -49,7 +49,7 @@ get_header(); ?>
 						<header class="entry-header">
 							<h3>Podcast</h3>
 							<?php the_title( sprintf( '<h2 class="entry-title"><a href="%s" rel="bookmark">', $pod_link['page'] ), '</a></h2>' ); ?>
-                            <div class="screen-reader-text"><?PHP coauthors_posts_links( ' / ', ' / ', '<address class="vcard author">', '</address>', true ); ?> </div>
+							<div class="screen-reader-text"><?PHP coauthors_posts_links( ' / ', ' / ', '<address class="vcard author">', '</address>', true ); ?> </div>
 						</header><!-- .entry-header -->
 						<div class="entry-summary">
 							<p><?php echo get_the_excerpt(); ?> With host <?php coauthors(', ', ', ', '', '', true); ?></p>
@@ -107,7 +107,7 @@ get_header(); ?>
 		?>
 			</section>
 			<aside class="column-right">
-               <?php get_template_part( 'sidebar', 'none' ); ?>
+			   <?php get_template_part( 'sidebar', 'none' ); ?>
 			</aside>
 		</main><!-- .site-main -->
 	</section><!-- .content-area -->
