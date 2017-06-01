@@ -21,9 +21,7 @@
 		$base_url = $uploads['basedir'].'/hpm-podcasts/';
 	endif;
 	while ( have_posts() ) : the_post();
-		$podtitle = $post->post_name.".xml";
-		$content = file_get_contents( $base_url.$podtitle );
 		header('Content-Type: ' . feed_content_type('rss2') . '; charset=' . get_option('blog_charset'), true);
-		echo $content;
+		echo file_get_contents( $base_url.$post->post_name.".xml" );
 	endwhile;
 ?>

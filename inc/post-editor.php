@@ -28,6 +28,7 @@ function hpm_podcast_add_description() {
  */
 function hpm_podcast_description_box( $object, $box ) {
 	$pods = get_option( 'hpm_podcasts' );
+	global $post;
 	wp_nonce_field( basename( __FILE__ ), 'hpm_podcast_class_nonce' );
 	$hpm_pod_desc = get_post_meta( $object->ID, 'hpm_podcast_ep_meta', true );
 	if ( empty( $hpm_pod_desc ) ) :
@@ -42,9 +43,7 @@ function hpm_podcast_description_box( $object, $box ) {
 				'orderby' => 'name',
 				'order' => 'ASC'
 			)
-		);
-	endif;
-	if ( !empty( $pods['upload-media'] ) ) : ?>
+		); ?>
 <h3><?PHP _e( "Podcast Feed", 'hpm_podcasts' ); ?></h3>
 <p id="hpm-podcast-feeds">
 	<label for="hpm-podcast-ep-feed"><?php _e( "Podcast Feed:", 'hpm_podcasts' ); ?></label>
@@ -103,7 +102,7 @@ function hpm_podcast_description_box( $object, $box ) {
 					}
 					$('#hpm-upload-spinner').remove();
 					$( '<div class="notice notice-'+status+' is-dismissible"><p>'+response.data.message+'</p></div>' ).insertBefore( $('#hpm-pods-upload') );
-					$('#hpm-podcast-sg-file').val(response.data.url);
+					$('#hpm-podcast-sg-file').val(response.data.URL).addClass('refresh').removeClass('refresh');
 				}
 			});
 		});
@@ -142,12 +141,16 @@ function hpm_podcast_save_description( $post_id, $post ) {
 		add_post_meta( $post_id, 'hpm_podcast_ep_meta', $hpm_podcast_description, true );
 	endif;
 
+	$hpm_pod_sg_file = metadata_exists( 'post', $post_id, 'hpm_podcast_sg_file' );
 	if ( !empty( $pods['upload-media'] ) ) :
-		$hpm_pod_sg_file = metadata_exists( 'post', $post_id, 'hpm_podcast_sg_file' );
 		if ( $hpm_pod_sg_file ) :
 			update_post_meta( $post_id, 'hpm_podcast_sg_file', $sg_url );
 		else :
 			add_post_meta( $post_id, 'hpm_podcast_sg_file', $sg_url, true );
+		endif;
+	else :
+		if ( $hpm_pod_sg_file ) :
+			delete_post_meta( $post_id, 'hpm_podcast_sg_file', $sg_url );
 		endif;
 	endif;
 }

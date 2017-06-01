@@ -25,10 +25,20 @@ function hpm_podcast_settings_page() {
 	if ( !empty( $pods['upload-media'] ) ) :
 		$umedia = $pods['upload-media'];
 		${"upload_$umedia"} = '';
+	endif;
+	if ( !empty( $pods['last_updated'] ) ) :
+		$date_format = get_option( 'date_format' );
+		$time_format = get_option( 'time_format' );
+		$time = $pods['last_updated'];
+		$last_refresh = date( $date_format.' @ '.$time_format, $time );
+	else :
+		$last_refresh = 'Never';
 	endif; ?>
 <div class="wrap">
 	<h1><?php _e('Podcast Administration', 'hpm_podcasts' ); ?></h1>
+	<?php settings_errors(); ?>
 	<p><?php _e('Hello, and thank you for installing our plugin.  The following sections will walk you through all of the data we need to gather to properly set up your podcast feeds.', 'hpm_podcasts' ); ?></p>
+	<p><em>Feeds last refreshed: <span id="last-refresh-time"><?php echo $last_refresh; ?></span></em></p>
 	<form method="post" action="options.php">
 		<?php settings_fields( 'hpm-podcast-settings-group' ); ?>
 		<?php do_settings_sections( 'hpm-podcast-settings-group' ); ?>
@@ -123,7 +133,7 @@ function hpm_podcast_settings_page() {
 												?></label></th>
 										<td>
 											<select name="hpm_podcasts[upload-flats]" class="regular-text" id="hpm-flats">
-												<option value=""></option>
+												<option value="">Local</option>
 												<option value="s3" <?php selected( $pods['upload-flats'], 's3', TRUE); ?>>Amazon
 													S3</option>
 												<option value="ftp" <?php selected( $pods['upload-flats'], 'ftp', TRUE); ?>>FTP</option>
@@ -137,7 +147,7 @@ function hpm_podcast_settings_page() {
 												?></label></th>
 										<td>
 											<select name="hpm_podcasts[upload-media]" class="regular-text" id="hpm-media">
-												<option value=""></option>
+												<option value="">Local</option>
 												<option value="s3" <?php selected( $pods['upload-media'], 's3', TRUE); ?>>Amazon
 													S3</option>
 												<option value="ftp" <?php selected( $pods['upload-flats'], 'ftp', TRUE); ?>>FTP</option>
@@ -145,11 +155,6 @@ function hpm_podcast_settings_page() {
 												?>>SFTP</option>
 											</select>
 										</td>
-									</tr>
-									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[email]"><?php _e('Email for Error Notifications', 'hpm_podcasts' );
-												?></label></th>
-										<td><input type="email" name="hpm_podcasts[email]" value="<?php echo $pods['email']; ?>" class="regular-text" placeholder="bob@loblaw.com" /></td>
 									</tr>
 								</table>
 							</div>
@@ -296,6 +301,7 @@ function hpm_podcast_settings_page() {
 				</div>
 			</div>
 		</div>
+		<input type="hidden" id="last-refresh-input" value="<?php echo $pods['last_updated']; ?>" />
 		<br class="clear" />
 		<?php submit_button(); ?>
 	</form>
@@ -318,6 +324,8 @@ function hpm_podcast_settings_page() {
 					success: function (response) {
 						if (response.success) {
 							var status = 'success';
+							$('#last-refresh-input').val(response.data.timestamp);
+							$('#last-refresh-time').html(response.data.date);
 						} else {
 							var status = 'error';
 						}

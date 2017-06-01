@@ -13,10 +13,16 @@ function hpm_podcast_media_upload( $arg1, $arg2 ) {
 	elseif ( empty( $arg1 ) ) :
 		return array( 'state' => 'error', 'message' => 'No post ID provided, cannot upload media.  Please save your post and try again.' );
 	endif;
+
 	$pods = get_option( 'hpm_podcasts' );
+
 	if ( empty( $pods['upload-media'] ) ) :
 		return array( 'state' => 'error', 'message' => 'No media upload target was selected.  Please check your settings.' );
 	endif;
+
+	$message = '';
+	$download = false;
+
 	$dir = wp_upload_dir();
 	$save = $dir['basedir'];
 	$media = get_attached_media( 'audio', $arg1 );
@@ -26,13 +32,23 @@ function hpm_podcast_media_upload( $arg1, $arg2 ) {
 	if ( empty ( $media ) ) :
 		return array( 'state' => 'error', 'message' => 'No audio or video files are attached to this post.  Please attach one and try again.' );
 	endif;
-	$message = '';
+
 	$med = reset( $media );
 	$url = wp_get_attachment_url( $med->ID );
-	$parse = parse_url( $url );
-	$path = pathinfo( $parse['path'] );
-	$local = $save.$path['basename'];
-	file_put_contents( $local, fopen( $url, 'r' ) );
+	if ( strpos( $url, $dir['baseurl'] ) !== FALSE ) :
+		$meta = get_post_meta( $med->ID, '_wp_attached_file', true );
+		$local = $save . DIRECTORY_SEPARATOR . $meta;
+		$path = pathinfo( $meta );
+	else :
+		$download = true;
+		$parse = parse_url( $url );
+		$path = pathinfo( $parse['path'] );
+		$local = $save . DIRECTORY_SEPARATOR . $path['basename'];
+		if ( !file_put_contents( $local, file_get_contents( $url ) ) ) :
+			return array( 'state' => 'error', 'message' => 'Unable to download your media file to the local server.  Please try again.' );
+		endif;
+	endif;
+
 	if ( $pods['upload-media'] == 'ftp' ) :
 		$short = $pods['credentials']['ftp'];
 		try {
@@ -47,13 +63,10 @@ function hpm_podcast_media_upload( $arg1, $arg2 ) {
 			endif;
 
 			if ( !empty( $short['folder'] ) ) :
-				$ftp_folder = $short['folder'].'/';
 				if ( !ftp_chdir( $con, $short['folder'] ) ) :
 					ftp_mkdir( $con, $short['folder'] );
 					ftp_chdir( $con, $short['folder'] );
 				endif;
-			else :
-				$ftp_folder = '';
 			endif;
 
 			if ( !ftp_chdir( $con, $arg2 ) ) :
@@ -65,14 +78,14 @@ function hpm_podcast_media_upload( $arg1, $arg2 ) {
 			endif;
 			ftp_close( $con );
 
-			$sg_url = $short['url'].'/'.$ftp_folder.$arg2.'/'.$path['basename'];
+			$sg_url = $short['url'].'/'.$arg2.'/'.$path['basename'];
 
 		} catch ( Exception $e ) {
 			$message = $e->getMessage();
 		}
 	elseif ( $pods['upload-media'] == 'sftp' ) :
 		$short = $pods['credentials']['sftp'];
-		$ipath = HPM_PODCAST_PLUGIN_DIR .'phpseclib';
+		$ipath = HPM_PODCAST_PLUGIN_DIR .'vendor' . DIRECTORY_SEPARATOR . 'phpseclib';
 		set_include_path(get_include_path() . PATH_SEPARATOR . $ipath);
 		include( 'Net/SFTP.php' );
 		$sftp = new Net_SFTP( $short['host'] );
@@ -81,13 +94,10 @@ function hpm_podcast_media_upload( $arg1, $arg2 ) {
 		endif;
 
 		if ( !empty( $short['folder'] ) ) :
-			$sftp_folder = $short['folder'].'/';
 			if ( !$sftp->chdir( $short['folder'] ) ) :
 				$sftp->mkdir( $short['folder'] );
 				$sftp->chdir( $short['folder'] );
 			endif;
-		else :
-			$sftp_folder = '';
 		endif;
 
 		if ( !$sftp->chdir( $arg2 ) ) :
@@ -98,11 +108,11 @@ function hpm_podcast_media_upload( $arg1, $arg2 ) {
 			$message = "The file could not be saved on the SFTP server.  Please verify your permissions on that server and try again.";
 		endif;
 		unset( $sftp );
-		$sg_url = $short['url'].'/'.$sftp_folder.$arg2.'/'.$path['basename'];
+		$sg_url = $short['url'].'/'.$arg2.'/'.$path['basename'];
 
 	elseif ( $pods['upload-media'] == 's3' ) :
 		$short = $pods['credentials']['s3'];
-		require HPM_PODCAST_PLUGIN_DIR . 'aws/aws-autoloader.php';
+		require HPM_PODCAST_PLUGIN_DIR . 'vendor' . DIRECTORY_SEPARATOR . 'aws' . DIRECTORY_SEPARATOR . 'aws-autoloader.php';
 		$client = new Aws\S3\S3Client([
 			'version' => 'latest',
 			'region'  => $short['region'],
@@ -121,8 +131,8 @@ function hpm_podcast_media_upload( $arg1, $arg2 ) {
 		try {
 			$result = $client->putObject(array(
 				'Bucket' => $short['bucket'],
-				'Key' => $folder.$arg2.'/'.$podcast_title.'.xml',
-				'Body' => $local,
+				'Key' => $folder.$arg2.'/'.$path['basename'],
+				'SourceFile' => $local,
 				'ACL' => 'public-read',
 				'ContentType' => $med->post_mime_type
 			));
@@ -136,7 +146,9 @@ function hpm_podcast_media_upload( $arg1, $arg2 ) {
 		return array( 'state' => 'error', 'message' => 'No media upload target was selected.  Please check your settings.' );
 	endif;
 	if ( empty( $message ) ) :
-		unlink( $local );
+		if ( $download ) :
+			unlink( $local );
+		endif;
 		if ( !empty( $sg_url ) ) :
 			$hpm_pod_sg_file = metadata_exists( 'post', $arg1, 'hpm_podcast_sg_file' );
 			if ( $hpm_pod_sg_file ) :
@@ -169,6 +181,36 @@ function hpm_podcast_generate() {
 	endif;
 	global $wpdb;
 	$error = '';
+	$dir = wp_upload_dir();
+	$save = $dir['basedir'];
+	if ( !empty( $pods['upload-flats'] ) ) :
+		if ( $pods['upload-flats'] == 's3' ) :
+			$short = $pods['credentials']['s3'];
+			require HPM_PODCAST_PLUGIN_DIR . 'vendor' . DIRECTORY_SEPARATOR . 'aws' . DIRECTORY_SEPARATOR . 'aws-autoloader.php';
+			$client = new Aws\S3\S3Client([
+				'version' => 'latest',
+				'region'  => $short['region'],
+				'credentials' => [
+					'key' => $short['key'],
+					'secret' => $short['secret']
+				]
+			]);
+		elseif ( $pods['upload-media'] == 'ftp' ) :
+			$short = $pods['credentials']['ftp'];
+		elseif ( $pods['upload-media'] == 'sftp' ) :
+			$short = $pods['credentials']['sftp'];
+			$ipath = HPM_PODCAST_PLUGIN_DIR .'vendor' . DIRECTORY_SEPARATOR . 'phpseclib';
+			set_include_path(get_include_path() . PATH_SEPARATOR . $ipath);
+			include( 'Net/SFTP.php' );
+		else :
+			$error .= "No flat file upload target defined.  Please check your settings and try again.";
+		endif;
+	else :
+		if ( !file_exists( $save.'/hpm-podcasts' ) ) :
+			mkdir( $save.'/hpm-podcasts' );
+		endif;
+	endif;
+
 	$podcasts = new WP_Query(
 		array(
 			'post_type' => 'podcasts',
@@ -349,19 +391,10 @@ function hpm_podcast_generate() {
 			$getContent_mini = trim( preg_replace( '/\s+/', ' ', $getContent ) );
 			if ( !empty( $pods['upload-flats'] ) ) :
 				if ( $pods['upload-flats'] == 's3' ) :
-					require HPM_PODCAST_PLUGIN_DIR . 'aws/aws-autoloader.php';
-					$client = new Aws\S3\S3Client([
-						'version' => 'latest',
-						'region'  => $pods['credentials']['s3']['region'],
-						'credentials' => [
-							'key' => $pods['credentials']['s3']['key'],
-							'secret' => $pods['credentials']['s3']['secret']
-						]
-					]);
 					try {
 						$result = $client->putObject(array(
-							'Bucket' => $pods['credentials']['s3']['bucket'],
-							'Key' => ( !empty( $pods['credentials']['s3']['folder'] ) ? $pods['credentials']['s3']['folder'].'/' : '' ).$podcast_title.'.xml',
+							'Bucket' => $short['bucket'],
+							'Key' => ( !empty( $short['folder'] ) ? $short['folder'].'/' : '' ) .$podcast_title.'.xml',
 							'Body' => $getContent_mini,
 							'ACL' => 'public-read',
 							'ContentType' => 'application/rss+xml'
@@ -372,48 +405,64 @@ function hpm_podcast_generate() {
 						$error .= $podcast_title . ": " . $e->getAwsRequestId() . "<br />" . $e->getAwsErrorType() . "<br />" . $e->getAwsErrorCode() . "<br /><br />";
 					}
 				elseif ( $pods['upload-media'] == 'ftp' ) :
+					$local = $save . DIRECTORY_SEPARATOR . $podcast_title . '.xml';
+					if ( !file_put_contents( $local, $getContent_mini ) ) :
+						return array( 'state' => 'error', 'message' => 'Could not generate flat file.' );
+					endif;
 					try {
-						$con = ftp_connect($pods['credentials']['ftp']['host']);
+						$con = ftp_connect( $short['host'] );
 						if ( false === $con ) :
 							throw new Exception($podcast_title.": Unable to connect to the FTP server.  Please check your FTP Host URL or IP and try again.<br /><br />");
 						endif;
 
-						$loggedIn = ftp_login($con,  $pods['credentials']['ftp']['username'], $pods['credentials']['ftp']['password'] );
+						$loggedIn = ftp_login( $con,  $short['username'], $short['password'] );
 						if ( false === $loggedIn ) :
 							throw new Exception($podcast_title.": Unable to log in to the FTP server.  Please check your credentials and try again.<br /><br />");
 						endif;
-
-						if ( ! ftp_put( $con, $podcast_title.'.xml', $getContent_mini, FTP_BINARY ) ) :
+						if ( !empty( $short['folder'] ) ) :
+							if ( !ftp_chdir( $con, $short['folder'] ) ) :
+								ftp_mkdir( $con, $short['folder'] );
+								ftp_chdir( $con, $short['folder'] );
+							endif;
+						endif;
+						if ( ! ftp_put( $con, $podcast_title.'.xml', $local, FTP_BINARY ) ) :
 							throw new Exception($podcast_title.": Unable to upload your feed file to the FTP server.  Please check your permissions on that server and try again.<br /><br />" );
 						endif;
 						ftp_close( $con );
 					} catch (Exception $e) {
 						$error .= $e->getMessage();
 					}
+					unset( $con );
+					unset( $local );
 				elseif ( $pods['upload-media'] == 'sftp' ) :
-					$path = HPM_PODCAST_PLUGIN_DIR .'phpseclib';
-					set_include_path(get_include_path() . PATH_SEPARATOR . $path);
-					include( 'Net/SFTP.php' );
+					$local = $save . DIRECTORY_SEPARATOR . $podcast_title . '.xml';
+					if ( !file_put_contents( $local, $getContent_mini ) ) :
+						return array( 'state' => 'error', 'message' => 'Could not generate flat file.' );
+					endif;
 					try {
-						$sftp = new Net_SFTP( $pods['credentials']['sftp']['host'] );
-						if ( ! $sftp->login( $pods['credentials']['sftp']['username'], $pods['credentials']['sftp']['password'] ) ) :
+						$sftp = new Net_SFTP( $short['host'] );
+						if ( ! $sftp->login( $short['username'], $short['password'] ) ) :
 							throw new Exception( $podcast_title . ": SFTP Login Failed.  Please check your credentials and try again.<br /><br />" );
 						endif;
-						if ( ! $sftp->put( $podcast_title . '.xml', $getContent_mini, NET_SFTP_LOCAL_FILE ) ) :
+						if ( !empty( $short['folder'] ) ) :
+							if ( !$sftp->chdir( $short['folder'] ) ) :
+								$sftp->mkdir( $short['folder'] );
+								$sftp->chdir( $short['folder'] );
+							endif;
+						endif;
+						if ( ! $sftp->put( $podcast_title . '.xml', $local, NET_SFTP_LOCAL_FILE ) ) :
 							throw new Exception( $podcast_title . ": Unable to upload your feed file to the SFTP server.  Please check your permissions on that server and try again.<br /><br />" );
 						endif;
 					} catch (Exception $e) {
 						$error .= $e->getMessage();
 					}
+					unset( $sftp );
+					unset( $local );
 				else :
 					$error .= "No flat file upload target defined.  Please check your settings and try again.";
 				endif;
 			else :
-				$uploads = wp_upload_dir();
-				if ( !file_exists( $uploads['basedir'].'/hpm-podcasts' ) ) :
-					mkdir( $uploads['basedir'].'/hpm-podcasts' );
-				endif;
-				$file_write = file_put_contents( $uploads['basedir'].'/hpm-podcasts/'.$podcast_title.'.xml',
+				$file_write = file_put_contents( $save.'/hpm-podcasts/'.$podcast_title.'.xml',
 					$getContent_mini );
 				if ( $file_write === FALSE ) :
 					$error .= $podcast_title.": There was an error writing your cache file into the Uploads directory.  Please check the error log.<br /><br />";
@@ -424,7 +473,15 @@ function hpm_podcast_generate() {
 		if ( !empty( $error ) ) :
 			return array( 'state' => 'error', 'message' => $error );
 		else :
-			return array( 'state' => 'success', 'message' => 'Podcast feeds successfully updated!' );
+			$t = time();
+			$date_format = get_option( 'date_format' );
+			$time_format = get_option( 'time_format' );
+			$offset = get_option('gmt_offset')*3600;
+			$time = $t + $offset;
+			$date = date( $date_format.' @ '.$time_format, $time );
+			$pods['last_updated'] = $time;
+			update_option( 'hpm_podcasts', $pods );
+			return array( 'state' => 'success', 'message' => 'Podcast feeds successfully updated!', 'date' => $date, 'timestamp' =>	$time );
 		endif;
 	else :
 		return array( 'state' => 'error', 'message' => 'No podcast feeds have been defined.  Please create one and try again.' );

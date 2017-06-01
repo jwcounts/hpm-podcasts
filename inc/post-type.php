@@ -122,10 +122,10 @@ function hpm_podcast_meta_box( $object, $box ) {
 	if ( $exists_link ) :
 		$hpm_podcast_link = get_post_meta( $object->ID, 'hpm_pod_link', true );
 		if ( empty( $hpm_podcast_link ) ) :
-			$hpm_podcast_link = array('page' => '', 'limit' => 0, 'itunes' => '', 'gplay' => '', 'categories' => array( 'first' => '', 'second' => '', 'third' => '') );
+			$hpm_podcast_link = array('page' => '', 'limit' => 0, 'itunes' => '', 'gplay' => '', 'analytics' => '', 'categories' => array( 'first' => '', 'second' => '', 'third' => '') );
 		endif;
 	else :
-		$hpm_podcast_link = array('page' => '', 'limit' => 0, 'itunes' => '', 'gplay' => '', 'categories' => array( 'first' => '', 'second' => '', 'third' => '') );
+		$hpm_podcast_link = array('page' => '', 'limit' => 0, 'itunes' => '', 'gplay' => '', 'analytics' => '', 'categories' => array( 'first' => '', 'second' => '', 'third' => '') );
 	endif; ?>
 <h3><?PHP _e( "Category and Page", 'hpm_podcasts' ); ?></h3>
 <p><?PHP _e( "Select the post category for this podcast:", 'hpm_podcasts' );

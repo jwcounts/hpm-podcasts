@@ -48,8 +48,8 @@ function hpm_podcast_activation() {
 					'secret' => ''
 				)
 			),
-			'email' => '',
-			'https' => ''
+			'https' => '',
+			'last_updated' => ''
 		);
 		add_option( 'hpm_podcasts', $pods );
 	endif;
@@ -135,7 +135,9 @@ add_action('init', function () {
 		if ( $output['state'] == 'success' ) :
 			wp_send_json_success(array(
 				'action' => $_POST['action'],
-				'message' => $output['message']
+				'message' => $output['message'],
+				'date' => $output['date'],
+				'timestamp' => $output['timestamp']
 			));
 		elseif ( $output['state'] == 'error' ) :
 			wp_send_json_error(array(
@@ -160,11 +162,14 @@ add_action('init', function () {
 	}
 });
 
+add_action( 'hpm_podcast_update', 'hpm_podcast_generate' );
 add_action('update_option_hpm_podcasts', function( $old_value, $value ) {
 	if ( !empty( $value['recurrence'] ) ) :
-		add_action( 'hpm_podcast_update', 'hpm_podcast_generate' );
 		$timestamp = wp_next_scheduled( 'hpm_podcast_update' );
 		if ( empty( $timestamp ) ) :
+			wp_schedule_event( time(), $value['recurrence'], 'hpm_podcast_update' );
+		else :
+			wp_clear_scheduled_hook( 'hpm_podcast_update' );
 			wp_schedule_event( time(), $value['recurrence'], 'hpm_podcast_update' );
 		endif;
 	endif;

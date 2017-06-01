@@ -1,19 +1,10 @@
 <?php
 /**
- * The template for displaying archive pages
- *
- * Used to display archive-type pages if nothing more specific matches a query.
- * For example, puts together date-based pages if no date.php file exists.
- *
- * If you'd like to further customize these archive views, you may create a
- * new template file for each one. For example, tag.php (Tag archives),
- * category.php (Category archives), author.php (Author archives), etc.
+ * The template for displaying the Podcasts archive
  *
  * @link https://codex.wordpress.org/Template_Hierarchy
  *
- * @package WordPress
- * @subpackage Twenty_Fifteen
- * @since Twenty Fifteen 1.0
+ * @package HPM_Podcasts
  */
 
 get_header(); ?>
@@ -31,8 +22,7 @@ get_header(); ?>
 			<section id="search-results" class="page-content">
 			<?php
 			// Start the loop.
-			while ( have_posts() ) : the_post(); 
-				$perma = str_replace( 'http:', 'https:', get_the_permalink() );
+			while ( have_posts() ) : the_post();
 				$pod_link = get_post_meta( get_the_ID(), 'hpm_pod_link', true ); ?>
 				<article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
 					<?php
@@ -49,13 +39,31 @@ get_header(); ?>
 						<header class="entry-header">
 							<h3>Podcast</h3>
 							<?php the_title( sprintf( '<h2 class="entry-title"><a href="%s" rel="bookmark">', $pod_link['page'] ), '</a></h2>' ); ?>
-							<div class="screen-reader-text"><?PHP coauthors_posts_links( ' / ', ' / ', '<address class="vcard author">', '</address>', true ); ?> </div>
+							<div class="screen-reader-text"><?PHP
+								if ( function_exists( 'coauthors_posts_links' ) ) :
+									coauthors_posts_links( ' / ', ' / ', '<address class="vcard author">', '</address>',	true );
+								else :
+									$byline = sprintf(
+									/* translators: %s: post author */
+										__( 'by %s', 'hpm_podcasts' ),
+										'<span class="author vcard"><a class="url fn n" href="' . esc_url( get_author_posts_url( get_the_author_meta( 'ID' ) ) ) . '">' . get_the_author() . '</a></span>'
+									);
+
+									// Finally, let's write all of this to the page.
+									echo '<span class="byline"> ' . $byline . '</span>';
+								endif;
+								?> </div>
 						</header><!-- .entry-header -->
 						<div class="entry-summary">
-							<p><?php echo get_the_excerpt(); ?> With host <?php coauthors(', ', ', ', '', '', true); ?></p>
+							<p><?php echo get_the_excerpt(); ?> With host <?php
+								if ( function_exists( 'coauthors' ) ) :
+									coauthors(', ', ', ', '', '', true);
+								else :
+									echo get_the_author();
+								endif;?></p>
 							<ul>
 								<li><a href="<?php echo $pod_link['page']; ?>">Episode Archive</a></li>
-								<li><a href="<?php echo $perma; ?>">RSS Feed</a></li>
+								<li><a href="<?php the_permalink(); ?>">RSS Feed</a></li>
 						<?php
 							if ( !empty( $pod_link['itunes'] ) ) : ?>
 								<li><a href="<?php echo $pod_link['itunes']; ?>">iTunes</a></li>
@@ -94,9 +102,9 @@ get_header(); ?>
 
 			// Previous/next page navigation.
 			the_posts_pagination( array(
-				'prev_text' => __( '&lt;', 'hpmv2' ),
-				'next_text' => __( '&gt;', 'hpmv2' ),
-				'before_page_number' => '<span class="meta-nav screen-reader-text">' . __( 'Page', 'hpmv2' ) . ' </span>',
+				'prev_text' => __( '&lt;', 'hpm_podcasts' ),
+				'next_text' => __( '&gt;', 'hpm_podcasts' ),
+				'before_page_number' => '<span class="meta-nav screen-reader-text">' . __( 'Page', 'hpm_podcasts' ) . ' </span>',
 			) );
 
 		// If no content, include the "No posts found" template.
