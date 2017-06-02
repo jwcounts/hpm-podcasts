@@ -13,6 +13,12 @@ define( 'HPM_PODCAST_PLUGIN_DIR', plugin_dir_path(__FILE__) );
 register_activation_hook( HPM_PODCAST_PLUGIN_DIR . 'main.php', 'hpm_podcast_activation' );
 register_deactivation_hook( HPM_PODCAST_PLUGIN_DIR . 'main.php', 'hpm_podcast_deactivation' );
 
+require_once( HPM_PODCAST_PLUGIN_DIR . 'inc/post-type.php' );
+require_once( HPM_PODCAST_PLUGIN_DIR . 'inc/post-editor.php' );
+require_once( HPM_PODCAST_PLUGIN_DIR . 'inc/admin.php' );
+require_once( HPM_PODCAST_PLUGIN_DIR . 'inc/upload-cache.php' );
+require_once( HPM_PODCAST_PLUGIN_DIR . 'inc/templates.php' );
+
 function hpm_podcast_activation() {
 	$pods = get_option( 'hpm_podcasts' );
 	$pods_last = get_option( 'hpm_podcasts_last_update' );
@@ -57,6 +63,8 @@ function hpm_podcast_activation() {
 	if ( empty( $pods_last ) ) :
 		add_option( 'hpm_podcasts_last_update', '' );
 	endif;
+	create_hpm_podcasts();
+	flush_rewrite_rules();
 }
 
 function hpm_podcast_deactivation() {
@@ -69,6 +77,7 @@ function hpm_podcast_deactivation() {
 	if ( !empty( $pods_last ) ) :
 		delete_option( 'hpm_podcasts_last_update' );
 	endif;
+	flush_rewrite_rules();
 }
 
 add_filter( 'cron_schedules', 'hpm_cron_sched' );
@@ -186,9 +195,3 @@ add_action( 'update_option_hpm_podcasts', function( $old_value, $value ) {
 		endif;
 	endif;
 }, 10, 2);
-
-require_once( HPM_PODCAST_PLUGIN_DIR . 'inc/post-type.php' );
-require_once( HPM_PODCAST_PLUGIN_DIR . 'inc/post-editor.php' );
-require_once( HPM_PODCAST_PLUGIN_DIR . 'inc/admin.php' );
-require_once( HPM_PODCAST_PLUGIN_DIR . 'inc/upload-cache.php' );
-require_once( HPM_PODCAST_PLUGIN_DIR . 'inc/templates.php' );

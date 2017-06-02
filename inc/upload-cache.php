@@ -126,7 +126,6 @@ function hpm_podcast_media_upload( $arg1, $arg2 ) {
 
 	elseif ( $pods['upload-media'] == 's3' ) :
 		$short = $pods['credentials']['s3'];
-		require HPM_PODCAST_PLUGIN_DIR . 'vendor' . DIRECTORY_SEPARATOR . 'aws' . DIRECTORY_SEPARATOR . 'aws-autoloader.php';
 		if ( defined( 'AWS_ACCESS_KEY_ID' ) && defined( 'AWS_SECRET_ACCESS_KEY' ) ) :
 			$aws_key = AWS_ACCESS_KEY_ID;
 			$aws_secret = AWS_SECRET_ACCESS_KEY;
@@ -137,14 +136,22 @@ function hpm_podcast_media_upload( $arg1, $arg2 ) {
 			return array( 'state' => 'error', 'message' => 'No S3 credentials provided.  Please check your settings.' );
 		endif;
 
-		$client = new Aws\S3\S3Client([
-			'version' => 'latest',
-			'region'  => $short['region'],
-			'credentials' => [
+		if ( is_plugin_active( 'amazon-web-services/amazon-web-services.php' ) ) :
+			$client = Aws\S3\S3Client::factory(array(
 				'key' => $aws_key,
 				'secret' => $aws_secret
-			]
-		]);
+			));
+		else :
+			require HPM_PODCAST_PLUGIN_DIR . 'vendor' . DIRECTORY_SEPARATOR . 'aws' . DIRECTORY_SEPARATOR . 'aws-autoloader.php';
+			$client = new Aws\S3\S3Client([
+				'version' => 'latest',
+				'region'  => $short['region'],
+				'credentials' => [
+					'key' => $aws_key,
+					'secret' => $aws_secret
+				]
+			]);
+		endif;
 
 		if ( !empty( $short['folder'] ) ) :
 			$folder = $short['folder'].'/';
@@ -210,7 +217,6 @@ function hpm_podcast_generate() {
 	if ( !empty( $pods['upload-flats'] ) ) :
 		if ( $pods['upload-flats'] == 's3' ) :
 			$short = $pods['credentials']['s3'];
-			require HPM_PODCAST_PLUGIN_DIR . 'vendor' . DIRECTORY_SEPARATOR . 'aws' . DIRECTORY_SEPARATOR . 'aws-autoloader.php';
 			if ( defined( 'AWS_ACCESS_KEY_ID' ) && defined( 'AWS_SECRET_ACCESS_KEY' ) ) :
 				$aws_key = AWS_ACCESS_KEY_ID;
 				$aws_secret = AWS_SECRET_ACCESS_KEY;
@@ -221,14 +227,22 @@ function hpm_podcast_generate() {
 				return array( 'state' => 'error', 'message' => 'No S3 credentials provided.  Please check your settings.' );
 			endif;
 
-			$client = new Aws\S3\S3Client([
-				'version' => 'latest',
-				'region'  => $short['region'],
-				'credentials' => [
+			if ( is_plugin_active( 'amazon-web-services/amazon-web-services.php' ) ) :
+				$client = Aws\S3\S3Client::factory(array(
 					'key' => $aws_key,
 					'secret' => $aws_secret
-				]
-			]);
+				));
+			else :
+				require HPM_PODCAST_PLUGIN_DIR . 'vendor' . DIRECTORY_SEPARATOR . 'aws' . DIRECTORY_SEPARATOR . 'aws-autoloader.php';
+				$client = new Aws\S3\S3Client([
+					'version' => 'latest',
+					'region'  => $short['region'],
+					'credentials' => [
+						'key' => $aws_key,
+						'secret' => $aws_secret
+					]
+				]);
+			endif;
 		elseif ( $pods['upload-media'] == 'ftp' ) :
 			$short = $pods['credentials']['ftp'];
 			if ( defined( 'HPM_FTP_PASSWORD' ) ) :

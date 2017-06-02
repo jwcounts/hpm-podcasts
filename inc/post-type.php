@@ -123,6 +123,17 @@ function hpm_podcast_meta_box( $object, $box ) {
 		$hpm_podcast_link = get_post_meta( $object->ID, 'hpm_pod_link', true );
 		if ( empty( $hpm_podcast_link ) ) :
 			$hpm_podcast_link = array('page' => '', 'limit' => 0, 'itunes' => '', 'gplay' => '', 'stitcher' => '', 'analytics' => '', 'categories' => array( 'first' => '', 'second' => '', 'third' => '') );
+		else :
+			if ( empty( $hpm_podcast_link['categories'] ) ) :
+				$hpm_podcast_link['categories'] = array(
+					'first' => $hpm_podcast_link['cat-prime'],
+					'second' => $hpm_podcast_link['cat-second'],
+					'third' => $hpm_podcast_link['cat-third']
+				);
+				unset( $hpm_podcast_link['cat-prime'] );
+				unset( $hpm_podcast_link['cat-second'] );
+				unset( $hpm_podcast_link['cat-third'] );
+			endif;
 		endif;
 	else :
 		$hpm_podcast_link = array('page' => '', 'limit' => 0, 'itunes' => '', 'gplay' => '', 'stitcher' => '', 'analytics' => '', 'categories' => array( 'first' => '', 'second' => '', 'third' => '') );

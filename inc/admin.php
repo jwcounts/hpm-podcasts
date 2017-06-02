@@ -149,11 +149,9 @@ function hpm_podcast_settings_page() {
 										<td>
 											<select name="hpm_podcasts[upload-media]" class="regular-text" id="hpm-media">
 												<option value="">Local</option>
-												<option value="s3" <?php selected( $pods['upload-media'], 's3', TRUE); ?>>Amazon
-													S3</option>
-												<option value="ftp" <?php selected( $pods['upload-flats'], 'ftp', TRUE); ?>>FTP</option>
-												<option value="sftp" <?php selected( $pods['upload-flats'], 'sftp', TRUE);
-												?>>SFTP</option>
+												<option value="s3" <?php selected( $pods['upload-media'], 's3', TRUE); ?>>AmazonS3</option>
+												<option value="ftp" <?php selected( $pods['upload-media'], 'ftp', TRUE); ?>>FTP</option>
+												<option value="sftp" <?php selected( $pods['upload-media'], 'sftp', TRUE); ?>>SFTP</option>
 											</select>
 										</td>
 									</tr>
@@ -305,7 +303,7 @@ define('AWS_SECRET_ACCESS_KEY', 'YOUR_AWS_SECRET');</pre>
 									<tr valign="top">
 										<th scope="row"><label for="hpm_podcasts[https]"><?php _e('Force HTTPS in Feed?', 'hpm_podcasts' );
 												?></label></th>
-										<td><input type="checkbox" name="hpm_podcasts[https]" value="force-https" class="regular-text" <?php echo ( !empty( $pods['https'] ) ? " selected" : '' ); ?> /></td>
+										<td><input type="checkbox" name="hpm_podcasts[https]" value="force-https" class="regular-text" <?php checked( $pods['https'], 'force-https', TRUE); ?> /></td>
 									</tr>
 								</table>
 							</div>
