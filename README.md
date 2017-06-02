@@ -14,6 +14,14 @@ Download this repo, unzip it, and drop the hpm-podcasts folder into your wp-cont
 
 Once it is activated, look for Podcasts in the left-hand menu of the Admin Dashboard.  If you are logged in as an admin, you will see `Settings` listed in that section.  From there, you can set up the owner of the podcast, how frequently the feeds are updated, and all of your upload options.
 
+If you aren't comfortable adding your S3 key/secret or (S)FTP passwords to your database, you can always set them as variables in your Wordpress configuration.  Add the following lines (where applicable) to `wp-config.php`:
+```
+define('AWS_ACCESS_KEY_ID', 'YOUR_AWS_KEY');
+define('AWS_SECRET_ACCESS_KEY','YOUR_AWS_SECRET');
+define('HPM_FTP_PASSWORD', 'YOUR_FTP_PASSWORD');
+define('HPM_SFTP_PASSWORD', 'YOUR_SFTP_PASSWORD');
+```
+
 ## Your Podcast Feeds
 
 You create them in much the same way as you would create a page or post.  Start by finding the 'Podcasts' menu in the left-hand menu in the admin dashboard.

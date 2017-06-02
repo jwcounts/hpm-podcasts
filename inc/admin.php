@@ -166,17 +166,31 @@ function hpm_podcast_settings_page() {
 							<div class="handlediv" title="Click to toggle"><br></div>
 							<h2 class="hndle"><span><?php _e('Amazon S3 Credentials', 'hpm_podcasts' ); ?></span></h2>
 							<div class="inside">
+								<p><?php _e("If you aren't comfortable storing your AWS key and secret in your database, you can define them as Wordpress defaults.  Add the following lines to your wp-config.php file:",	'hpm_podcasts' );
+									?></p>
+								<pre>define('AWS_ACCESS_KEY_ID', 'YOUR_AWS_KEY');
+define('AWS_SECRET_ACCESS_KEY', 'YOUR_AWS_SECRET');</pre>
 								<table class="form-table">
 									<tr valign="top">
 										<th scope="row"><label for="hpm_podcasts[credentials][s3][key]"><?php _e('Amazon S3 Access Key', 'hpm_podcasts' );
 												?></label></th>
-										<td><input type="text" name="hpm_podcasts[credentials][s3][key]" value="<?php echo $pods['credentials']['s3']['key']; ?>"
-												   class="regular-text" placeholder="" /></td>
+										<td><input type="text" name="hpm_podcasts[credentials][s3][key]" <?php
+											if ( defined( 'AWS_ACCESS_KEY_ID' ) ) :
+												echo 'value="Set in wp-config.php" disabled ';
+											else :
+												echo 'value ="'.$pods['credentials']['s3']['key'].'" ';
+											endif;
+											?>class="regular-text" placeholder="S3 Key" /></td>
 									</tr>
 									<tr valign="top">
 										<th scope="row"><label for="hpm_podcasts[credentials][s3][secret]"><?php _e('Amazon S3 Secret Key', 'hpm_podcasts' );
 												?></label></th>
-										<td><input type="text" name="hpm_podcasts[credentials][s3][secret]" value="<?php echo $pods['credentials']['s3']['secret']; ?>" class="regular-text" placeholder="" /></td>
+										<td><input type="text" name="hpm_podcasts[credentials][s3][secret]" <?php
+											if ( defined( 'AWS_SECRET_ACCESS_KEY' ) ) :
+												echo 'value="Set in wp-config.php" disabled ';
+											else :
+												echo 'value ="'.$pods['credentials']['s3']['secret'].'" ';
+											endif; ?>class="regular-text" placeholder="S3 Secret" /></td>
 									</tr>
 									<tr valign="top">
 										<th scope="row"><label for="hpm_podcasts[credentials][s3][region]"><?php _e('Amazon S3 Region', 'hpm_podcasts' );
@@ -205,6 +219,9 @@ function hpm_podcast_settings_page() {
 							<div class="handlediv" title="Click to toggle"><br></div>
 							<h2 class="hndle"><span><?php _e('FTP Credentials', 'hpm_podcasts' ); ?></span></h2>
 							<div class="inside">
+								<p><?php _e("If you aren't comfortable storing your FTP password in your database, you can define it as a Wordpress default.  Add the following line to your wp-config.php file:",	'hpm_podcasts' );
+									?></p>
+								<pre>define('HPM_FTP_PASSWORD', 'YOUR_FTP_PASSWORD');</pre>
 								<table class="form-table">
 									<tr valign="top">
 										<th scope="row"><label for="hpm_podcasts[credentials][ftp][host]"><?php _e('FTP Host', 'hpm_podcasts' ); ?></label></th>
@@ -222,8 +239,12 @@ function hpm_podcast_settings_page() {
 									</tr>
 									<tr valign="top">
 										<th scope="row"><label for="hpm_podcasts[credentials][ftp][password]"><?php _e('FTP Host', 'hpm_podcasts' ); ?></label></th>
-										<td><input type="password" name="hpm_podcasts[credentials][ftp][password]" value="<?php echo $pods['credentials']['ftp']['password']; ?>" class="regular-text" placeholder="P@assw0rd"
-											/></td>
+										<td><input type="password" name="hpm_podcasts[credentials][ftp][password]" <?php
+											if ( defined( 'HPM_FTP_PASSWORD' ) ) :
+												echo 'value="Set in wp-config.php" disabled ';
+											else :
+												echo 'value ="'.$pods['credentials']['ftp']['password'].'" ';
+											endif; ?>class="regular-text" placeholder="P@assw0rd" /></td>
 									</tr>
 									<tr valign="top">
 										<th scope="row"><label for="hpm_podcasts[credentials][ftp][folder]"><?php _e('FTP Folder', 'hpm_podcasts' ); ?></label></th>
@@ -238,6 +259,9 @@ function hpm_podcast_settings_page() {
 							<div class="handlediv" title="Click to toggle"><br></div>
 							<h2 class="hndle"><span><?php _e('SFTP Credentials', 'hpm_podcasts' ); ?></span></h2>
 							<div class="inside">
+								<p><?php _e("If you aren't comfortable storing your SFTP password in your database, you can define it as a Wordpress default.  Add the following line to your wp-config.php file:",	'hpm_podcasts' );
+									?></p>
+								<pre>define('HPM_SFTP_PASSWORD', 'YOUR_SFTP_PASSWORD');</pre>
 								<table class="form-table">
 									<tr valign="top">
 										<th scope="row"><label for="hpm_podcasts[credentials][sftp][host]"><?php _e('SFTP Host', 'hpm_podcasts' ); ?></label></th>
@@ -255,8 +279,13 @@ function hpm_podcast_settings_page() {
 											/></td>
 									</tr>
 									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[credentials][sftp][password]"><?php _e('SFTP Host', 'hpm_podcasts' ); ?></label></th>
-										<td><input type="password" name="hpm_podcasts[credentials][sftp][password]" value="<?php echo $pods['credentials']['sftp']['password']; ?>" class="regular-text" placeholder="P@assw0rd" /></td>
+										<th scope="row"><label for="hpm_podcasts[credentials][sftp][password]"><?php _e('SFTP Password', 'hpm_podcasts' ); ?></label></th>
+										<td><input type="password" name="hpm_podcasts[credentials][sftp][password]" <?php
+											if ( defined( 'HPM_SFTP_PASSWORD' ) ) :
+												echo 'value="Set in wp-config.php" disabled ';
+											else :
+												echo 'value ="'.$pods['credentials']['sftp']['password'].'" ';
+											endif; ?>class="regular-text" placeholder="P@assw0rd" /></td>
 									</tr>
 									<tr valign="top">
 										<th scope="row"><label for="hpm_podcasts[credentials][sftp][folder]"><?php _e('SFTP Folder', 'hpm_podcasts' ); ?></label></th>

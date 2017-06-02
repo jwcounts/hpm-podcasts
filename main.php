@@ -163,6 +163,10 @@ add_action('init', function () {
 			foreach ( $credv as $k => $v ) :
 				if ( !empty( $v ) && ( $k != 'key' || $k != 'secret' || $k != 'password' ) ) :
 					$new_value['credentials'][$credk][$k] = preg_replace( $find, $replace, $v );
+				elseif ( $k == 'key' || $k == 'secret' || $k == 'password' ) :
+					if ( $v == 'Set in wp-config.php' ) :
+						$new_value['credentials'][$credk][$k] = '';
+					endif;
 				endif;
 			endforeach;
 		endforeach;

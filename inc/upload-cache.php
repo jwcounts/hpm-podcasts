@@ -51,13 +51,20 @@ function hpm_podcast_media_upload( $arg1, $arg2 ) {
 
 	if ( $pods['upload-media'] == 'ftp' ) :
 		$short = $pods['credentials']['ftp'];
+		if ( defined( 'HPM_FTP_PASSWORD' ) ) :
+			$ftp_password = HPM_FTP_PASSWORD;
+		elseif ( !empty( $short['password'] ) ) :
+			$ftp_password = $short['password'];
+		else :
+			return array( 'state' => 'error', 'message' => 'No FTP password provided.  Please check your settings.' );
+		endif;
 		try {
 			$con = ftp_connect($short['host']);
 			if ( false === $con ) :
 				throw new Exception("Unable to connect to the FTP server.  Please check your FTP Host URL or IP and try again." );
 			endif;
 
-			$loggedIn = ftp_login( $con, $short['username'], $short['password'] );
+			$loggedIn = ftp_login( $con, $short['username'], $ftp_password );
 			if ( false === $loggedIn ) :
 				throw new Exception("Unable to log in to the FTP server.  Please check your credentials and try again." );
 			endif;
@@ -89,7 +96,14 @@ function hpm_podcast_media_upload( $arg1, $arg2 ) {
 		set_include_path(get_include_path() . PATH_SEPARATOR . $ipath);
 		include( 'Net/SFTP.php' );
 		$sftp = new Net_SFTP( $short['host'] );
-		if ( !$sftp->login( $short['username'], $short['password'] ) ) :
+		if ( defined( 'HPM_SFTP_PASSWORD' ) ) :
+			$sftp_password = HPM_SFTP_PASSWORD;
+		elseif ( !empty( $short['password'] ) ) :
+			$sftp_password = $short['password'];
+		else :
+			return array( 'state' => 'error', 'message' => 'No SFTP password provided.  Please check your settings.' );
+		endif;
+		if ( !$sftp->login( $short['username'], $sftp_password ) ) :
 			$message = "Unable to connect to the SFTP server.  Please check your SFTP Host URL or IP and try again.";
 		endif;
 
@@ -113,12 +127,22 @@ function hpm_podcast_media_upload( $arg1, $arg2 ) {
 	elseif ( $pods['upload-media'] == 's3' ) :
 		$short = $pods['credentials']['s3'];
 		require HPM_PODCAST_PLUGIN_DIR . 'vendor' . DIRECTORY_SEPARATOR . 'aws' . DIRECTORY_SEPARATOR . 'aws-autoloader.php';
+		if ( defined( 'AWS_ACCESS_KEY_ID' ) && defined( 'AWS_SECRET_ACCESS_KEY' ) ) :
+			$aws_key = AWS_ACCESS_KEY_ID;
+			$aws_secret = AWS_SECRET_ACCESS_KEY;
+		elseif ( !empty( $short['key'] ) && !empty( $short['secret'] ) ) :
+			$aws_key = $short['key'];
+			$aws_secret = $short['secret'];
+		else :
+			return array( 'state' => 'error', 'message' => 'No S3 credentials provided.  Please check your settings.' );
+		endif;
+
 		$client = new Aws\S3\S3Client([
 			'version' => 'latest',
 			'region'  => $short['region'],
 			'credentials' => [
-				'key' => $short['key'],
-				'secret' => $short['secret']
+				'key' => $aws_key,
+				'secret' => $aws_secret
 			]
 		]);
 
@@ -187,21 +211,45 @@ function hpm_podcast_generate() {
 		if ( $pods['upload-flats'] == 's3' ) :
 			$short = $pods['credentials']['s3'];
 			require HPM_PODCAST_PLUGIN_DIR . 'vendor' . DIRECTORY_SEPARATOR . 'aws' . DIRECTORY_SEPARATOR . 'aws-autoloader.php';
+			if ( defined( 'AWS_ACCESS_KEY_ID' ) && defined( 'AWS_SECRET_ACCESS_KEY' ) ) :
+				$aws_key = AWS_ACCESS_KEY_ID;
+				$aws_secret = AWS_SECRET_ACCESS_KEY;
+			elseif ( !empty( $short['key'] ) && !empty( $short['secret'] ) ) :
+				$aws_key = $short['key'];
+				$aws_secret = $short['secret'];
+			else :
+				return array( 'state' => 'error', 'message' => 'No S3 credentials provided.  Please check your settings.' );
+			endif;
+
 			$client = new Aws\S3\S3Client([
 				'version' => 'latest',
 				'region'  => $short['region'],
 				'credentials' => [
-					'key' => $short['key'],
-					'secret' => $short['secret']
+					'key' => $aws_key,
+					'secret' => $aws_secret
 				]
 			]);
 		elseif ( $pods['upload-media'] == 'ftp' ) :
 			$short = $pods['credentials']['ftp'];
+			if ( defined( 'HPM_FTP_PASSWORD' ) ) :
+				$ftp_password = HPM_FTP_PASSWORD;
+			elseif ( !empty( $short['password'] ) ) :
+				$ftp_password = $short['password'];
+			else :
+				return array( 'state' => 'error', 'message' => 'No FTP password provided.  Please check your settings.' );
+			endif;
 		elseif ( $pods['upload-media'] == 'sftp' ) :
 			$short = $pods['credentials']['sftp'];
 			$ipath = HPM_PODCAST_PLUGIN_DIR .'vendor' . DIRECTORY_SEPARATOR . 'phpseclib';
 			set_include_path(get_include_path() . PATH_SEPARATOR . $ipath);
 			include( 'Net/SFTP.php' );
+			if ( defined( 'HPM_SFTP_PASSWORD' ) ) :
+				$sftp_password = HPM_SFTP_PASSWORD;
+			elseif ( !empty( $short['password'] ) ) :
+				$sftp_password = $short['password'];
+			else :
+				return array( 'state' => 'error', 'message' => 'No FTP password provided.  Please check your settings.' );
+			endif;
 		else :
 			$error .= "No flat file upload target defined.  Please check your settings and try again.";
 		endif;
@@ -415,7 +463,7 @@ function hpm_podcast_generate() {
 							throw new Exception($podcast_title.": Unable to connect to the FTP server.  Please check your FTP Host URL or IP and try again.<br /><br />");
 						endif;
 
-						$loggedIn = ftp_login( $con,  $short['username'], $short['password'] );
+						$loggedIn = ftp_login( $con,  $short['username'], $ftp_password );
 						if ( false === $loggedIn ) :
 							throw new Exception($podcast_title.": Unable to log in to the FTP server.  Please check your credentials and try again.<br /><br />");
 						endif;
@@ -441,7 +489,7 @@ function hpm_podcast_generate() {
 					endif;
 					try {
 						$sftp = new Net_SFTP( $short['host'] );
-						if ( ! $sftp->login( $short['username'], $short['password'] ) ) :
+						if ( ! $sftp->login( $short['username'], $sftp_password ) ) :
 							throw new Exception( $podcast_title . ": SFTP Login Failed.  Please check your credentials and try again.<br /><br />" );
 						endif;
 						if ( !empty( $short['folder'] ) ) :
