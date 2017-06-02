@@ -72,6 +72,10 @@ get_header(); ?>
 							if ( !empty( $pod_link['gplay'] ) ) : ?>
 								<li><a href="<?php echo $pod_link['gplay']; ?>">Google Play</a></li>							
 						<?php
+							endif;
+							if ( !empty( $pod_link['stitcher'] ) ) : ?>
+								<li><a href="<?php echo $pod_link['stitcher']; ?>">Stitcher</a></li>
+						<?php
 							endif; ?>
 							</ul>
 						</div><!-- .entry-summary -->

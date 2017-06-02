@@ -1,6 +1,6 @@
 # Podcasts by Category
 
-A Wordpress plugin that allows you to create a podcast feed from any category, either video or audio. It also has the option to periodically cache the feeds as flat XML files (on a separate server via FTP or SFTP, on Amazon S3, or locally) to speed up delivery.  It can also be set up to upload the media files to those other servers.
+A Wordpress plugin that allows you to create a podcast feed from any category, either audio or video. It has the option to periodically cache the feeds as flat XML files (on a separate server via FTP or SFTP, on Amazon S3, or locally) to speed up delivery, and upload your media files to those other servers.
 
 ## Why does this exist?
 
@@ -16,11 +16,44 @@ Once it is activated, look for Podcasts in the left-hand menu of the Admin Dashb
 
 ## Your Podcast Feeds
 
-You create them in much the same way as you would create a page, but with more metadata to populate.  I will flesh this out more later.
+You create them in much the same way as you would create a page or post.  Start by finding the 'Podcasts' menu in the left-hand menu in the admin dashboard.
+
+![Find the Podcasts menu in the admin dashboard](screenshots/podcasts-1.png)
+
+All of your podcast feeds will be listed in the order that they were created, just like posts.  Click 'Add New' to create a new feed.
+
+The editor is the same as your normal post editor, though several of the fields have been renamed ('Excerpt' becomes 'iTunes Subtitle', 'Featured Image' becomes 'Podcast Logo', etc.).  The tags are included in the feed and are useful for search in iTunes, Google Play, etc.
+
+![The editor is really similar you guys, not even joking here](screenshots/podcasts-2.png)
+
+The real fun starts in the box called 'Podcast Metadata' (catchy, I know).  Here is where you select what post category you want to be included in this podcast, where the episode archive resides, how many episodes, etc.  You can also select your categories for iTunes.  Note that they are displayed in your feed in order, and the first one is the default category in which your podcast will appear.
+
+![Podcast metadata: Where the magic happens](screenshots/podcasts-3.png)
+
+Once your podcast is set up and has been submitted to iTunes, Google Play, etc., you can enter the URLs here, which will show up on the archive page.
+
+You can also define analytics pass-through URLs you want to use (if you're using Blubrry or the like).
+
 
 ## Creating Episodes
 
-Create a post and attach it to the category you selected when setting up your podcast feed.  That's pretty much it.  There are some options to create an podcast feed-specific description for your episode, but that is purely optional.
+Create a post, add it to the category you selected when setting up your podcast feed, and attach your audio or video file (you can insert them into the posts, but it isn't necessary).
+
+Tags and the featured image (if you have it enabled in your theme) will be attached to the episode in your feed, if present.
+
+![The post editor, which is largely unchanged](screenshots/podcasts-4.png)
+
+You can create a description for your episode that is specific to your podcast feed in the box marked 'Podcast Feed Information.' This way, you can post a full-sized article on your site but still be concise in the episode description on whatever podcast platform it's being viewed on.  If this isn't set, the feed will pull the first 75 words or so and create the description out of that.
+
+![Podcast feed-specific information](screenshots/podcasts-5.png)
+
+If you have enabled media file uploading, a couple of other options will show up below the Excerpt box.
+
+![Media file uploading options](screenshots/podcasts-6.png)
+
+Select the name of the feed from the dropdown to which this episode belongs, and click "Upload Media File".  The feed dropdown is mainly used to help organize your files on the remote server (i.e. the files for 'Test Podcast' will be stored in a `/test-podcast/` folder on the remote server).
+
+Once the media upload function is done, it will give you either a "Success!" or an "Error" message. If successful, it will also update the External URL field below.  If you don't want to rely on the uploader, you can manually enter the URL.
 
 ## Customizing Your Podcasts or Archive Listing
 

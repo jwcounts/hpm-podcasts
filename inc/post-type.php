@@ -122,10 +122,10 @@ function hpm_podcast_meta_box( $object, $box ) {
 	if ( $exists_link ) :
 		$hpm_podcast_link = get_post_meta( $object->ID, 'hpm_pod_link', true );
 		if ( empty( $hpm_podcast_link ) ) :
-			$hpm_podcast_link = array('page' => '', 'limit' => 0, 'itunes' => '', 'gplay' => '', 'analytics' => '', 'categories' => array( 'first' => '', 'second' => '', 'third' => '') );
+			$hpm_podcast_link = array('page' => '', 'limit' => 0, 'itunes' => '', 'gplay' => '', 'stitcher' => '', 'analytics' => '', 'categories' => array( 'first' => '', 'second' => '', 'third' => '') );
 		endif;
 	else :
-		$hpm_podcast_link = array('page' => '', 'limit' => 0, 'itunes' => '', 'gplay' => '', 'analytics' => '', 'categories' => array( 'first' => '', 'second' => '', 'third' => '') );
+		$hpm_podcast_link = array('page' => '', 'limit' => 0, 'itunes' => '', 'gplay' => '', 'stitcher' => '', 'analytics' => '', 'categories' => array( 'first' => '', 'second' => '', 'third' => '') );
 	endif; ?>
 <h3><?PHP _e( "Category and Page", 'hpm_podcasts' ); ?></h3>
 <p><?PHP _e( "Select the post category for this podcast:", 'hpm_podcasts' );
@@ -175,10 +175,10 @@ function hpm_podcast_meta_box( $object, $box ) {
 </ul>
 <p>&nbsp;</p>
 <h3><?PHP _e( "External Services", 'hpm_podcasts' ); ?></h3>
-<p><strong><?PHP _e( "Enter the page URL for this podcast on iTunes", 'hpm_podcasts' ); ?></strong><br />
-<label for="hpm-podcast-link-itunes"><?php _e( "URL:", 'hpm_podcasts' ); ?></label> <input type="text" id="hpm-podcast-link-itunes" name="hpm-podcast-link-itunes" value="<?PHP echo $hpm_podcast_link['itunes']; ?>" placeholder="https://itunes.apple.com/us/podcast/law-blog-with-bob-loblaw/id123456789?mt=2" style="width: 60%;" /></p>
-<p><strong><?PHP _e( "Enter the page URL for this podcast on Google Play", 'hpm_podcasts' ); ?></strong><br />
-<label for="hpm-podcast-link-gplay"><?php _e( "URL:", 'hpm_podcasts' ); ?></label> <input type="text" id="hpm-podcast-link-gplay" name="hpm-podcast-link-gplay" value="<?PHP echo $hpm_podcast_link['gplay']; ?>" placeholder="http://play.google.com/blahblahblah" style="width: 60%;" /></p>
+<p><label for="hpm-podcast-link-itunes"><?php _e( "iTunes:", 'hpm_podcasts' ); ?></label> <input type="text" id="hpm-podcast-link-itunes" name="hpm-podcast-link-itunes" value="<?PHP echo $hpm_podcast_link['itunes']; ?>" placeholder="https://itunes.apple.com/us/podcast/law-blog-with-bob-loblaw/id123456789?mt=2" style="width: 60%;" /></p>
+<p><label for="hpm-podcast-link-gplay"><?php _e( "Google Play:", 'hpm_podcasts' ); ?></label> <input type="text" id="hpm-podcast-link-gplay" name="hpm-podcast-link-gplay" value="<?PHP echo $hpm_podcast_link['gplay']; ?>" placeholder="http://play.google.com/blahblahblah" style="width: 60%;" /></p>
+<p><label for="hpm-podcast-link-stitcher"><?php _e( "Stitcher:", 'hpm_podcasts' ); ?></label> <input type="text" id="hpm-podcast-link-stitcher" name="hpm-podcast-link-stitcher" value="<?PHP echo $hpm_podcast_link['stitcher']; ?>" placeholder="http://stitcher.com/blah" style="width: 60%;" /></p>
+<p>&nbsp;</p>
 <h3><?PHP _e( "Analytics Tracking", 'hpm_podcasts' ); ?></h3>
 <p><strong><?PHP _e( "If you're using an analytics tracking service like Blubrry that appends a tracking link at the beginning of your media URLs, you can enter it here.", 'hpm_podcasts' );
 ?></strong><br />
@@ -220,8 +220,8 @@ function hpm_podcast_save_meta( $post_id, $post ) {
 			'page' => ( isset( $_POST['hpm-podcast-link'] ) ? sanitize_text_field( $_POST['hpm-podcast-link'] ) : '' ),
 			'itunes' => ( isset( $_POST['hpm-podcast-link-itunes'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-itunes'] ) : '' ),
 			'gplay' => ( isset( $_POST['hpm-podcast-link-gplay'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-gplay'] ) : '' ),
-			'analytics' => ( isset( $_POST['hpm-podcast-analytics'] ) ? sanitize_text_field(
-					$_POST['hpm-podcast-analytics'] ) : '' ),
+			'stitcher' => ( isset( $_POST['hpm-podcast-link-stitcher'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-stitcher'] ) : '' ),
+			'analytics' => ( isset( $_POST['hpm-podcast-analytics'] ) ? sanitize_text_field( $_POST['hpm-podcast-analytics'] ) : '' ),
 			'limit' => ( isset( $_POST['hpm-podcast-limit'] ) ? sanitize_text_field( $_POST['hpm-podcast-limit'] ) : 0 ),
 			'categories' => array(
 				'first' => $_POST['hpm-podcast-icat-first'],

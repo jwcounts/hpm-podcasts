@@ -17,6 +17,7 @@ function register_hpm_podcast_settings() {
  */
 function hpm_podcast_settings_page() {
 	$pods = get_option( 'hpm_podcasts' );
+	$pods_last = get_option( 'hpm_podcasts_last_update' );
 	$upload_s3 = $upload_ftp = $upload_sftp = ' hidden';
 	if ( !empty( $pods['upload-flats'] ) ) :
 		$uflats = $pods['upload-flats'];
@@ -26,11 +27,10 @@ function hpm_podcast_settings_page() {
 		$umedia = $pods['upload-media'];
 		${"upload_$umedia"} = '';
 	endif;
-	if ( !empty( $pods['last_updated'] ) ) :
+	if ( !empty( $pods_last ) ) :
 		$date_format = get_option( 'date_format' );
 		$time_format = get_option( 'time_format' );
-		$time = $pods['last_updated'];
-		$last_refresh = date( $date_format.' @ '.$time_format, $time );
+		$last_refresh = date( $date_format.' @ '.$time_format, $pods_last );
 	else :
 		$last_refresh = 'Never';
 	endif; ?>
@@ -38,7 +38,7 @@ function hpm_podcast_settings_page() {
 	<h1><?php _e('Podcast Administration', 'hpm_podcasts' ); ?></h1>
 	<?php settings_errors(); ?>
 	<p><?php _e('Hello, and thank you for installing our plugin.  The following sections will walk you through all of the data we need to gather to properly set up your podcast feeds.', 'hpm_podcasts' ); ?></p>
-	<p><em>Feeds last refreshed: <span id="last-refresh-time"><?php echo $last_refresh; ?></span></em></p>
+	<p><em>Feeds last refreshed: <span class="hpm-last-refresh-time"><?php echo $last_refresh; ?></span></em></p>
 	<form method="post" action="options.php">
 		<?php settings_fields( 'hpm-podcast-settings-group' ); ?>
 		<?php do_settings_sections( 'hpm-podcast-settings-group' ); ?>
@@ -125,7 +125,8 @@ function hpm_podcast_settings_page() {
 								<ul>
 									<li><a href="http://docs.aws.amazon.com/AmazonS3/latest/dev/walkthrough1.html" target="_blank">Amazon IAM User Documentation</a></li>
 								</ul>
-								<p><?php _e('**ALSO NOTE**: Please do not include any leading or trailing slashes in your domains, URLs, folder names, etc.',	'hpm_podcasts' );
+								<p><?php _e('**ALSO NOTE**: Please do not include any leading or trailing slashes in your domains, URLs, folder names, etc. You can include slashes within them (e.g. you might store your files in the "files/podcasts" folder, but the public URL is "http://example.com/podcasts").',
+										'hpm_podcasts' );
 									?></p>
 								<table class="form-table">
 									<tr valign="top">
@@ -259,7 +260,7 @@ function hpm_podcast_settings_page() {
 									</tr>
 									<tr valign="top">
 										<th scope="row"><label for="hpm_podcasts[credentials][sftp][folder]"><?php _e('SFTP Folder', 'hpm_podcasts' ); ?></label></th>
-										<td><input type="text" name="hpm_podcasts[credentials][sftp][folder]" value="<?php echo $pods['credentials']['sftp']['folder']; ?>" class="regular-text" placeholder="folder" /><br /><i>No slashes before or after the folder name, please.</i></td>
+										<td><input type="text" name="hpm_podcasts[credentials][sftp][folder]" value="<?php echo $pods['credentials']['sftp']['folder']; ?>" class="regular-text" placeholder="folder" /></td>
 									</tr>
 								</table>
 							</div>
@@ -286,8 +287,8 @@ function hpm_podcast_settings_page() {
 							<div class="handlediv" title="Click to toggle"><br></div>
 							<h2 class="hndle"><span><?php _e('Feed Refresh', 'hpm_podcasts' ); ?></span></h2>
 							<div class="inside">
-								<p><?php _e("Made some changes to your podcast feeds and don't want to wait for the cron job to fire? Click the button below to force a refresh.", 'hpm_podcasts'	);
-								?></p>
+								<p><?php _e("Made some changes to your podcast feeds and don't want to wait for the cron job to fire? Click the button below to force a refresh.", 'hpm_podcasts'	); ?></p>
+								<p><em>Feeds last refreshed: <span class="hpm-last-refresh-time"><?php echo $last_refresh; ?></span></em></p>
 								<table class="form-table">
 									<tr valign="top">
 										<th scope="row"><label><?php _e('Force Feed Refresh?', 'hpm_podcasts' );
@@ -301,7 +302,6 @@ function hpm_podcast_settings_page() {
 				</div>
 			</div>
 		</div>
-		<input type="hidden" id="last-refresh-input" value="<?php echo $pods['last_updated']; ?>" />
 		<br class="clear" />
 		<?php submit_button(); ?>
 	</form>
@@ -324,8 +324,7 @@ function hpm_podcast_settings_page() {
 					success: function (response) {
 						if (response.success) {
 							var status = 'success';
-							$('#last-refresh-input').val(response.data.timestamp);
-							$('#last-refresh-time').html(response.data.date);
+							$('.hpm-last-refresh-time').html(response.data.date);
 						} else {
 							var status = 'error';
 						}

@@ -476,11 +476,15 @@ function hpm_podcast_generate() {
 			$t = time();
 			$date_format = get_option( 'date_format' );
 			$time_format = get_option( 'time_format' );
+			$update_last = get_option( 'hpm_podcasts_last_update' );
 			$offset = get_option('gmt_offset')*3600;
 			$time = $t + $offset;
 			$date = date( $date_format.' @ '.$time_format, $time );
-			$pods['last_updated'] = $time;
-			update_option( 'hpm_podcasts', $pods );
+			if ( empty( $update_last ) ) :
+				add_option( 'hpm_podcasts_last_update', $time );
+			else :
+				update_option( 'hpm_podcasts_last_update', $time );
+			endif;
 			return array( 'state' => 'success', 'message' => 'Podcast feeds successfully updated!', 'date' => $date, 'timestamp' =>	$time );
 		endif;
 	else :

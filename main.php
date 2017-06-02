@@ -15,6 +15,7 @@ register_deactivation_hook( HPM_PODCAST_PLUGIN_DIR . 'main.php', 'hpm_podcast_de
 
 function hpm_podcast_activation() {
 	$pods = get_option( 'hpm_podcasts' );
+	$pods_last = get_option( 'hpm_podcasts_last_update' );
 	if ( empty( $pods ) ) :
 		$pods = array(
 			'owner' => array(
@@ -53,6 +54,9 @@ function hpm_podcast_activation() {
 		);
 		add_option( 'hpm_podcasts', $pods );
 	endif;
+	if ( empty( $pods_last ) ) :
+		add_option( 'hpm_podcasts_last_update', '' );
+	endif;
 }
 
 function hpm_podcast_deactivation() {
@@ -60,6 +64,10 @@ function hpm_podcast_deactivation() {
 	$pods =  get_option( 'hpm_podcasts' );
 	if ( !empty( $pods ) ) :
 		delete_option( 'hpm_podcasts' );
+	endif;
+	$pods_last =  get_option( 'hpm_podcasts' );
+	if ( !empty( $pods_last ) ) :
+		delete_option( 'hpm_podcasts_last_update' );
 	endif;
 }
 
@@ -163,7 +171,7 @@ add_action('init', function () {
 });
 
 add_action( 'hpm_podcast_update', 'hpm_podcast_generate' );
-add_action('update_option_hpm_podcasts', function( $old_value, $value ) {
+add_action( 'update_option_hpm_podcasts', function( $old_value, $value ) {
 	if ( !empty( $value['recurrence'] ) ) :
 		$timestamp = wp_next_scheduled( 'hpm_podcast_update' );
 		if ( empty( $timestamp ) ) :

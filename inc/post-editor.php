@@ -33,7 +33,14 @@ function hpm_podcast_description_box( $object, $box ) {
 	$hpm_pod_desc = get_post_meta( $object->ID, 'hpm_podcast_ep_meta', true );
 	if ( empty( $hpm_pod_desc ) ) :
 		$hpm_pod_desc = array( 'feed' => '', 'description' => '' );
-	endif;
+	endif; ?>
+<h3><?PHP _e( "Feed-Specific Excerpt", 'hpm_podcasts' ); ?></h3>
+<p><?PHP _e( "If this post is part of a podcast, and you would like something other than the content of this post to appear in iTunes, put your content here. <br /><br /><i><b>**NOTE**</b>: Any HTML formatting will have to be entered manually, so be careful.</i>", 'hpm_podcasts' ); ?></p>
+<p>
+	<label for="hpm-podcast-description"><?php _e( "Feed-Specific Description:", 'hpm_podcasts' ); ?></label><br />
+	<textarea style="width: 100%; height: 200px;" name="hpm-podcast-description" id="hpm-podcast-description"><?php echo $hpm_pod_desc['description']; ?></textarea>
+</p>
+<?php
 	if ( !empty( $pods['upload-media'] ) ) :
 		$hpm_pod_sg = get_post_meta( $object->ID, 'hpm_podcast_sg_file', true );
 		$podcasts = new WP_Query(
@@ -44,34 +51,26 @@ function hpm_podcast_description_box( $object, $box ) {
 				'order' => 'ASC'
 			)
 		); ?>
-<h3><?PHP _e( "Podcast Feed", 'hpm_podcasts' ); ?></h3>
-<p id="hpm-podcast-feeds">
-	<label for="hpm-podcast-ep-feed"><?php _e( "Podcast Feed:", 'hpm_podcasts' ); ?></label>
-	<select name="hpm-podcast-ep-feed" id="hpm-podcast-ep-feed">
-		<option value=""<?PHP selected( '', $hpm_pod_desc['feed'], TRUE ); ?>><?PHP _e( "Select One", 'hpm_podcasts' ); ?></option>
-<?php
-		if ( $podcasts->have_posts() ) :
-			while ( $podcasts->have_posts() ) : $podcasts->the_post(); ?>
-		<option value="<?PHP echo $post->post_name; ?>"<?PHP selected( $hpm_pod_desc['feed'], $post->post_name,
-			TRUE );?>><?PHP the_title(); ?></option>
-<?php
-			endwhile;
-		endif;
-		wp_reset_postdata(); ?>
-	</select>
-</p>
-<p><a href="#" class="button button-secondary" id="hpm-pods-upload">Upload Media File</a></p>
-<h3><?PHP _e( "External URL", 'hpm_podcasts' ); ?></h3>
-<p><?PHP _e( "If you want to upload your audio file manually, you can paste the URL here:", 'hpm_podcasts' ); ?><br />
-	<label for="hpm-podcast-sg-file"><?php _e( "URL:", 'hpm_podcasts' ); ?></label> <input type="text" id="hpm-podcast-sg-file" name="hpm-podcast-sg-file" value="<?PHP echo $hpm_pod_sg; ?>" placeholder="https://ondemand.example.com/blah/blah.mp3" style="width: 75%;" /></p>
+	<p>&nbsp;</p>
+	<h3><?PHP _e( "Podcast Feed", 'hpm_podcasts' ); ?></h3>
+	<p id="hpm-podcast-feeds">
+		<label for="hpm-podcast-ep-feed"><?php _e( "Podcast Feed:", 'hpm_podcasts' ); ?></label>
+		<select name="hpm-podcast-ep-feed" id="hpm-podcast-ep-feed">
+			<option value=""<?PHP selected( '', $hpm_pod_desc['feed'], TRUE ); ?>><?PHP _e( "Select One", 'hpm_podcasts' ); ?></option>
+				<?php
+				if ( $podcasts->have_posts() ) :
+					while ( $podcasts->have_posts() ) : $podcasts->the_post(); ?>
+			<option value="<?PHP echo $post->post_name; ?>"<?PHP selected( $hpm_pod_desc['feed'], $post->post_name, TRUE );?>><?PHP the_title(); ?></option>
+						<?php
+					endwhile;
+				endif;
+				wp_reset_postdata(); ?>
+		</select>&nbsp;&nbsp;&nbsp;<a href="#" class="button button-secondary" id="hpm-pods-upload">Upload Media File</a></p>
+	<h3><?PHP _e( "External URL", 'hpm_podcasts' ); ?></h3>
+	<p><?PHP _e( "If you want to upload your audio file manually, you can paste the URL here:", 'hpm_podcasts' ); ?><br />
+		<label for="hpm-podcast-sg-file"><?php _e( "URL:", 'hpm_podcasts' ); ?></label> <input type="text" id="hpm-podcast-sg-file" name="hpm-podcast-sg-file" value="<?PHP echo $hpm_pod_sg; ?>" placeholder="https://ondemand.example.com/blah/blah.mp3" style="width: 75%;" /></p>
 <?php
 	endif; ?>
-<h3><?PHP _e( "Feed-Specific Excerpt", 'hpm_podcasts' ); ?></h3>
-<p><?PHP _e( "If this post is part of a podcast, and you would like something other than the content of this post to appear in iTunes, put your content here. <br /><br /><i><b>**NOTE**</b>: Any HTML formatting will have to be entered manually, so be careful.</i>", 'hpm_podcasts' ); ?></p>
-<p>
-	<label for="hpm-podcast-description"><?php _e( "Feed-Specific Description:", 'hpm_podcasts' ); ?></label><br />
-	<textarea style="width: 100%; height: 250px;" name="hpm-podcast-description" id="hpm-podcast-description"><?php echo $hpm_pod_desc['description']; ?></textarea>
-</p>
 <script>
 	jQuery(document).ready(function($){
 		$("#hpm-podcast-meta-class .handlediv").after("<div style=\"position:absolute;top:12px;right:34px;color:#666;\"><small>Excerpt length: </small><span id=\"excerpt_counter\"></span><span style=\"font-weight:bold; padding-left:7px;\">/ 4000</span><small><span style=\"font-weight:bold; padding-left:7px;\">character(s).</span></small></div>");
