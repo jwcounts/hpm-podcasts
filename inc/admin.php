@@ -28,9 +28,7 @@ function hpm_podcast_settings_page() {
 		${"upload_$umedia"} = '';
 	endif;
 	if ( !empty( $pods_last ) ) :
-		$date_format = get_option( 'date_format' );
-		$time_format = get_option( 'time_format' );
-		$last_refresh = date( $date_format.' @ '.$time_format, $pods_last );
+		$last_refresh = date( 'F j, Y @ g:i A', $pods_last );
 	else :
 		$last_refresh = 'Never';
 	endif; ?>
@@ -138,8 +136,8 @@ function hpm_podcast_settings_page() {
 												<option value="s3" <?php selected( $pods['upload-flats'], 's3', TRUE); ?>>Amazon
 													S3</option>
 												<option value="ftp" <?php selected( $pods['upload-flats'], 'ftp', TRUE); ?>>FTP</option>
-												<option value="sftp" <?php selected( $pods['upload-flats'], 'sftp', TRUE);
-												?>>SFTP</option>
+												<option value="sftp" <?php selected( $pods['upload-flats'], 'sftp', TRUE); ?>>SFTP</option>
+												<option value="sftp" <?php selected( $pods['upload-flats'], 'database', TRUE); ?>>Database</option>
 											</select>
 										</td>
 									</tr>

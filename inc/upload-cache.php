@@ -243,7 +243,7 @@ function hpm_podcast_generate() {
 					]
 				]);
 			endif;
-		elseif ( $pods['upload-media'] == 'ftp' ) :
+		elseif ( $pods['upload-flats'] == 'ftp' ) :
 			$short = $pods['credentials']['ftp'];
 			if ( defined( 'HPM_FTP_PASSWORD' ) ) :
 				$ftp_password = HPM_FTP_PASSWORD;
@@ -252,7 +252,7 @@ function hpm_podcast_generate() {
 			else :
 				return array( 'state' => 'error', 'message' => 'No FTP password provided.  Please check your settings.' );
 			endif;
-		elseif ( $pods['upload-media'] == 'sftp' ) :
+		elseif ( $pods['upload-flats'] == 'sftp' ) :
 			$short = $pods['credentials']['sftp'];
 			$ipath = HPM_PODCAST_PLUGIN_DIR .'vendor' . DIRECTORY_SEPARATOR . 'phpseclib';
 			set_include_path(get_include_path() . PATH_SEPARATOR . $ipath);
@@ -264,6 +264,8 @@ function hpm_podcast_generate() {
 			else :
 				return array( 'state' => 'error', 'message' => 'No FTP password provided.  Please check your settings.' );
 			endif;
+		elseif ( $pods['upload-flats'] == 'database' ) :
+
 		else :
 			$error .= "No flat file upload target defined.  Please check your settings and try again.";
 		endif;
@@ -466,7 +468,7 @@ function hpm_podcast_generate() {
 					} catch ( AwsException $e ) {
 						$error .= $podcast_title . ": " . $e->getAwsRequestId() . "<br />" . $e->getAwsErrorType() . "<br />" . $e->getAwsErrorCode() . "<br /><br />";
 					}
-				elseif ( $pods['upload-media'] == 'ftp' ) :
+				elseif ( $pods['upload-flats'] == 'ftp' ) :
 					$local = $save . DIRECTORY_SEPARATOR . $podcast_title . '.xml';
 					if ( !file_put_contents( $local, $getContent_mini ) ) :
 						return array( 'state' => 'error', 'message' => 'Could not generate flat file.' );
@@ -496,7 +498,7 @@ function hpm_podcast_generate() {
 					}
 					unset( $con );
 					unset( $local );
-				elseif ( $pods['upload-media'] == 'sftp' ) :
+				elseif ( $pods['upload-flats'] == 'sftp' ) :
 					$local = $save . DIRECTORY_SEPARATOR . $podcast_title . '.xml';
 					if ( !file_put_contents( $local, $getContent_mini ) ) :
 						return array( 'state' => 'error', 'message' => 'Could not generate flat file.' );
@@ -520,6 +522,13 @@ function hpm_podcast_generate() {
 					}
 					unset( $sftp );
 					unset( $local );
+				elseif ( $pods['upload-flats'] == 'database' ) :
+					$option = get_option( 'hpm_podcasts-'.$podcast_title );
+					if ( empty( $option ) ) :
+						add_option( 'hpm_podcasts-'.$podcast_title, $getContent_mini );
+					else :
+						update_option( 'hpm_podcasts-'.$podcast_title, $getContent_mini );
+					endif;
 				else :
 					$error .= "No flat file upload target defined.  Please check your settings and try again.";
 				endif;
@@ -536,12 +545,10 @@ function hpm_podcast_generate() {
 			return array( 'state' => 'error', 'message' => $error );
 		else :
 			$t = time();
-			$date_format = get_option( 'date_format' );
-			$time_format = get_option( 'time_format' );
 			$update_last = get_option( 'hpm_podcasts_last_update' );
 			$offset = get_option('gmt_offset')*3600;
 			$time = $t + $offset;
-			$date = date( $date_format.' @ '.$time_format, $time );
+			$date = date( 'F j, Y @ g:i A', $time );
 			if ( empty( $update_last ) ) :
 				add_option( 'hpm_podcasts_last_update', $time );
 			else :
