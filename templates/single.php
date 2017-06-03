@@ -22,6 +22,10 @@
 	endif;
 	while ( have_posts() ) : the_post();
 		header('Content-Type: ' . feed_content_type('rss2') . '; charset=' . get_option('blog_charset'), true);
-		echo file_get_contents( $base_url.$post->post_name.".xml" );
+		if ( $pods['upload-flats'] == 'database' ) :
+			echo get_option( 'hpm_podcasts-'.$post->post_name );
+		else :
+			echo file_get_contents( $base_url.$post->post_name.".xml" );
+		endif;
 	endwhile;
 ?>
