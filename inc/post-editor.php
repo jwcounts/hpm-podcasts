@@ -83,25 +83,21 @@ function hpm_podcast_description_box( $object, $box ) {
 		});
 		$('#hpm-pods-upload').click(function(e){
 			e.preventDefault();
-			data = {
-				action: 'hpm_podcasts_upload',
-				id: $('#post_ID').val(),
-				feed: $('#hpm-podcast-ep-feed').val()
-			};
+			var id = $('#post_ID').val();
+			var feed = $('#hpm-podcast-ep-feed').val();
 			$(this).after( ' <img id="hpm-upload-spinner" src="/wp-includes/images/spinner.gif">' );
 			$.ajax({
-				type: 'POST',
-				url: ajaxurl,
-				data: data,
+				type: 'GET',
+				url: '/wp-json/hpm-podcast/v1/upload/'+feed+'/'+id,
+				data: '',
 				success: function (response) {
-					if (response.success) {
-						var status = 'success';
-					} else {
-						var status = 'error';
-					}
 					$('#hpm-upload-spinner').remove();
-					$( '<div class="notice notice-'+status+' is-dismissible"><p>'+response.data.message+'</p></div>' ).insertBefore( $('#hpm-pods-upload') );
-					$('#hpm-podcast-sg-file').val(response.data.URL).addClass('refresh').removeClass('refresh');
+					$('#hpm-podcast-sg-file').val(response.data.url).addClass('refresh').removeClass('refresh');
+					$( '<div class="notice notice-success is-dismissible"><p>'+response.message+'</p></div>' ).insertBefore( $('#hpm-pods-upload') );
+				},
+				error: function (response) {
+					$('#hpm-upload-spinner').remove();
+					$( '<div class="notice notice-error is-dismissible"><p>'+response.message+'</p></div>' ).insertBefore( $('#hpm-pods-upload') );
 				}
 			});
 		});

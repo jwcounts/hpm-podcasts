@@ -16,8 +16,8 @@ register_deactivation_hook( HPM_PODCAST_PLUGIN_DIR . 'main.php', 'hpm_podcast_de
 require_once( HPM_PODCAST_PLUGIN_DIR . 'inc/post-type.php' );
 require_once( HPM_PODCAST_PLUGIN_DIR . 'inc/post-editor.php' );
 require_once( HPM_PODCAST_PLUGIN_DIR . 'inc/admin.php' );
-require_once( HPM_PODCAST_PLUGIN_DIR . 'inc/upload-cache.php' );
 require_once( HPM_PODCAST_PLUGIN_DIR . 'inc/templates.php' );
+require_once( HPM_PODCAST_PLUGIN_DIR . 'inc/rest.php' );
 
 function hpm_podcast_activation() {
 	$pods = get_option( 'hpm_podcasts' );
@@ -102,68 +102,7 @@ function hpm_cron_sched( $schedules ) {
  *
  */
 add_action('init', function () {
-
-	add_action( 'wp_ajax_hpm_podcasts_upload', 'hpm_podcast_upload_handler' );
-	add_action( 'wp_ajax_hpm_podcasts_refresh', 'hpm_podcast_refresh_handler' );
 	add_filter( 'pre_update_option_hpm_podcasts', 'hpm_podcast_option_strip', 10, 2 );
-
-	function hpm_podcast_upload_handler() {
-		if ( empty ( $_POST['action'] ) || $_POST['action'] !== 'hpm_podcasts_upload' ) :
-			if ( !empty ( $fail_message ) ) :
-				wp_send_json_error( array(
-					'message' => "Sorry, you don't have permission to do that."
-				) );
-			endif;
-		endif;
-
-		$id = $_POST['id'];
-		$feed = $_POST['feed'];
-
-		$output = hpm_podcast_media_upload( $id, $feed );
-		if ( $output['state'] == 'success' ) :
-			wp_send_json_success(array(
-				'action' => $_POST['action'],
-				'message' => $output['message'],
-				'feed' => $feed,
-				'ID' => $id,
-				'URL' => $output['url']
-			));
-		elseif ( $output['state'] == 'error' ) :
-			wp_send_json_error(array(
-				'action' => $_POST['action'],
-				'message' => $output['message'],
-				'feed' => $feed,
-				'ID' => $id
-			));
-		endif;
-	}
-
-	function hpm_podcast_refresh_handler() {
-		if ( empty ( $_POST['action'] ) || $_POST['action'] !== 'hpm_podcasts_refresh' ) :
-			if ( !empty ( $fail_message ) ) :
-				wp_send_json_error( array(
-					'message' => "Sorry, you don't have permission to do that."
-				) );
-			endif;
-		endif;
-
-		$output = hpm_podcast_generate();
-
-		if ( $output['state'] == 'success' ) :
-			wp_send_json_success(array(
-				'action' => $_POST['action'],
-				'message' => $output['message'],
-				'date' => $output['date'],
-				'timestamp' => $output['timestamp']
-			));
-		elseif ( $output['state'] == 'error' ) :
-			wp_send_json_error(array(
-				'action' => $_POST['action'],
-				'message' => $output['message']
-			));
-		endif;
-
-	}
 
 	function hpm_podcast_option_strip( $new_value, $old_value ) {
 		$find = array( '{/$}', '{^/}' );
@@ -183,7 +122,7 @@ add_action('init', function () {
 	}
 });
 
-add_action( 'hpm_podcast_update', 'hpm_podcast_generate' );
+add_action( 'hpm_podcast_update', 'hpm_podcast_rest_generate' );
 add_action( 'update_option_hpm_podcasts', function( $old_value, $value ) {
 	if ( !empty( $value['recurrence'] ) ) :
 		$timestamp = wp_next_scheduled( 'hpm_podcast_update' );
