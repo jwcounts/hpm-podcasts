@@ -33,7 +33,7 @@ function hpm_podcast_rest_media_upload( WP_REST_Request $request ) {
 		return new WP_Error( 'rest_api_sad', esc_html__( 'No post ID provided, cannot upload media. Please save your post and try again.', 'hpm-podcasts' ), array( 'status' => 500 ) );
 	endif;
 
-	$pods = get_option( 'hpm_podcasts' );
+	$pods = get_option( 'hpm_podcast_settings' );
 
 	if ( empty( $pods['upload-media'] ) ) :
 		return new WP_Error( 'rest_api_sad', esc_html__( 'No media upload target was selected. Please check your settings.', 'hpm-podcasts' ), array( 'status' => 500 ) );
@@ -222,7 +222,7 @@ function hpm_podcast_rest_media_upload( WP_REST_Request $request ) {
  * @return mixed
  */
 function hpm_podcast_rest_generate() {
-	$pods = get_option( 'hpm_podcasts' );
+	$pods = get_option( 'hpm_podcast_settings' );
 	if ( !empty( $pods['https'] ) ) :
 		$protocol = 'https://';
 		$_SERVER['HTTPS'] = 'on';
@@ -542,11 +542,11 @@ function hpm_podcast_rest_generate() {
 					unset( $sftp );
 					unset( $local );
 				elseif ( $pods['upload-flats'] == 'database' ) :
-					$option = get_option( 'hpm_podcasts-'.$podcast_title );
+					$option = get_option( 'hpm_podcast-'.$podcast_title );
 					if ( empty( $option ) ) :
-						add_option( 'hpm_podcasts-'.$podcast_title, $getContent_mini );
+						add_option( 'hpm_podcast-'.$podcast_title, $getContent_mini );
 					else :
-						update_option( 'hpm_podcasts-'.$podcast_title, $getContent_mini );
+						update_option( 'hpm_podcast-'.$podcast_title, $getContent_mini );
 					endif;
 				else :
 					$error .= "No flat file upload target defined. Please check your settings and try again.";
@@ -564,14 +564,14 @@ function hpm_podcast_rest_generate() {
 			return new WP_Error( 'rest_api_sad', esc_html__( $error, 'hpm-podcasts' ), array( 'status' => 500 ) );
 		else :
 			$t = time();
-			$update_last = get_option( 'hpm_podcasts_last_update' );
+			$update_last = get_option( 'hpm_podcast_last_update' );
 			$offset = get_option('gmt_offset')*3600;
 			$time = $t + $offset;
 			$date = date( 'F j, Y @ g:i A', $time );
 			if ( empty( $update_last ) ) :
-				add_option( 'hpm_podcasts_last_update', $time );
+				add_option( 'hpm_podcast_last_update', $time );
 			else :
-				update_option( 'hpm_podcasts_last_update', $time );
+				update_option( 'hpm_podcast_last_update', $time );
 			endif;
 			return rest_ensure_response( array( 'code' => 'rest_api_success', 'message' => esc_html__('Podcast feeds successfully updated!', 'hpm-podcasts' ), 'data' => array( 'date' => $date, 'timestamp' => $time, 'status' =>
 				200 ) ) );

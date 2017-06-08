@@ -42,7 +42,7 @@ function create_hpm_podcasts() {
  */
 add_action( 'admin_init', 'hpm_podcast_add_role_caps', 999 );
 function hpm_podcast_add_role_caps() {
-	$pods = get_option( 'hpm_podcasts' );
+	$pods = get_option( 'hpm_podcast_settings' );
 	foreach( $pods['roles'] as $the_role ) :
 		$role = get_role($the_role);
 		$role->add_cap( 'read' );

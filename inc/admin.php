@@ -9,15 +9,15 @@ function hpm_podcast_create_menu() {
 }
 
 function register_hpm_podcast_settings() {
-	register_setting( 'hpm-podcast-settings-group', 'hpm_podcasts' );
+	register_setting( 'hpm-podcast-settings-group', 'hpm_podcast_settings' );
 }
 
 /**
  * Build out options page
  */
 function hpm_podcast_settings_page() {
-	$pods = get_option( 'hpm_podcasts' );
-	$pods_last = get_option( 'hpm_podcasts_last_update' );
+	$pods = get_option( 'hpm_podcast_settings' );
+	$pods_last = get_option( 'hpm_podcast_last_update' );
 	$upload_s3 = $upload_ftp = $upload_sftp = ' hidden';
 	if ( !empty( $pods['upload-flats'] ) ) :
 		$uflats = $pods['upload-flats'];
@@ -51,12 +51,12 @@ function hpm_podcast_settings_page() {
 								<p><?php _e('iTunes and other podcasting directories ask for you to give a name and email address of the "owner" of the podcast, which can be a single person or an organization.', 'hpm_podcasts' ); ?></p>
 								<table class="form-table">
 									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[owner][name]"><?php _e('Owner Name', 'hpm_podcasts' ); ?></label></th>
-										<td><input type="text" name="hpm_podcasts[owner][name]" value="<?php echo $pods['owner']['name']; ?>" class="regular-text" /></td>
+										<th scope="row"><label for="hpm_podcast_settings[owner][name]"><?php _e('Owner Name', 'hpm_podcasts' ); ?></label></th>
+										<td><input type="text" name="hpm_podcast_settings[owner][name]" value="<?php echo $pods['owner']['name']; ?>" class="regular-text" /></td>
 									</tr>
 									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[owner][email]"><?php _e('Owner Email', 'hpm_podcasts' ); ?></label></th>
-										<td><input type="email" name="hpm_podcasts[owner][email]" value="<?php echo $pods['owner']['email']; ?>" class="regular-text" /></td>
+										<th scope="row"><label for="hpm_podcast_settings[owner][email]"><?php _e('Owner Email', 'hpm_podcasts' ); ?></label></th>
+										<td><input type="email" name="hpm_podcast_settings[owner][email]" value="<?php echo $pods['owner']['email']; ?>" class="regular-text" /></td>
 									</tr>
 								</table>
 							</div>
@@ -73,10 +73,10 @@ function hpm_podcast_settings_page() {
 								<p><?php _e('To select more than one, hold down Ctrl (on Windows) or Command (on Mac) and click the roles you want included.', 'hpm_podcasts' ); ?></p>
 								<table class="form-table">
 									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[roles]"><?php _e('Select Your Roles', 'hpm_podcasts' );
+										<th scope="row"><label for="hpm_podcast_settings[roles]"><?php _e('Select Your Roles', 'hpm_podcasts' );
 										?></label></th>
 										<td>
-											<select name="hpm_podcasts[roles][ ]" multiple class="regular-text">
+											<select name="hpm_podcast_settings[roles][ ]" multiple class="regular-text">
 											<?php foreach ( get_editable_roles() as $role_name => $role_info ) : ?>
 												<option value="<?php echo $role_name; ?>"<?php echo ( in_array( $role_name, $pods['roles'] ) ? " selected" : '' ); ?>><?php echo $role_name; ?></option>
 											<?php endforeach; ?>
@@ -95,10 +95,10 @@ function hpm_podcast_settings_page() {
 								<p><?php _e('To save server resources, we use a cron job to generate a flat XML file.  Use the options below to choose how often you want to run that job.', 'hpm_podcasts' ); ?></p>
 								<table class="form-table">
 									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[recurrence]"><?php _e('Select Your Time Period', 'hpm_podcasts' );
+										<th scope="row"><label for="hpm_podcast_settings[recurrence]"><?php _e('Select Your Time Period', 'hpm_podcasts' );
 												?></label></th>
 										<td>
-											<select name="hpm_podcasts[recurrence]" class="regular-text">
+											<select name="hpm_podcast_settings[recurrence]" class="regular-text">
 												<option value="hourly" <?php selected( $pods['recurrence'], 'hourly', TRUE );
 												?>>Hourly</option>
 												<option value="hpm_30min" <?php selected( $pods['recurrence'], 'hpm_30min', TRUE ); ?>>Every 30 Minutes</option>
@@ -128,10 +128,10 @@ function hpm_podcast_settings_page() {
 									?></p>
 								<table class="form-table">
 									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[upload-flats]"><?php _e('Flat XML File Upload?', 'hpm_podcasts' );
+										<th scope="row"><label for="hpm_podcast_settings[upload-flats]"><?php _e('Flat XML File Upload?', 'hpm_podcasts' );
 												?></label></th>
 										<td>
-											<select name="hpm_podcasts[upload-flats]" class="regular-text" id="hpm-flats">
+											<select name="hpm_podcast_settings[upload-flats]" class="regular-text" id="hpm-flats">
 												<option value="">Local</option>
 												<option value="s3" <?php selected( $pods['upload-flats'], 's3', TRUE); ?>>Amazon
 													S3</option>
@@ -142,10 +142,10 @@ function hpm_podcast_settings_page() {
 										</td>
 									</tr>
 									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[upload-media]"><?php _e('Media File Upload?', 'hpm_podcasts' );
+										<th scope="row"><label for="hpm_podcast_settings[upload-media]"><?php _e('Media File Upload?', 'hpm_podcasts' );
 												?></label></th>
 										<td>
-											<select name="hpm_podcasts[upload-media]" class="regular-text" id="hpm-media">
+											<select name="hpm_podcast_settings[upload-media]" class="regular-text" id="hpm-media">
 												<option value="">Local</option>
 												<option value="s3" <?php selected( $pods['upload-media'], 's3', TRUE); ?>>AmazonS3</option>
 												<option value="ftp" <?php selected( $pods['upload-media'], 'ftp', TRUE); ?>>FTP</option>
@@ -168,9 +168,9 @@ function hpm_podcast_settings_page() {
 define('AWS_SECRET_ACCESS_KEY', 'YOUR_AWS_SECRET');</pre>
 								<table class="form-table">
 									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[credentials][s3][key]"><?php _e('Amazon S3 Access Key', 'hpm_podcasts' );
+										<th scope="row"><label for="hpm_podcast_settings[credentials][s3][key]"><?php _e('Amazon S3 Access Key', 'hpm_podcasts' );
 												?></label></th>
-										<td><input type="text" name="hpm_podcasts[credentials][s3][key]" <?php
+										<td><input type="text" name="hpm_podcast_settings[credentials][s3][key]" <?php
 											if ( defined( 'AWS_ACCESS_KEY_ID' ) ) :
 												echo 'value="Set in wp-config.php" disabled ';
 											else :
@@ -179,9 +179,9 @@ define('AWS_SECRET_ACCESS_KEY', 'YOUR_AWS_SECRET');</pre>
 											?>class="regular-text" placeholder="S3 Key" /></td>
 									</tr>
 									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[credentials][s3][secret]"><?php _e('Amazon S3 Secret Key', 'hpm_podcasts' );
+										<th scope="row"><label for="hpm_podcast_settings[credentials][s3][secret]"><?php _e('Amazon S3 Secret Key', 'hpm_podcasts' );
 												?></label></th>
-										<td><input type="text" name="hpm_podcasts[credentials][s3][secret]" <?php
+										<td><input type="text" name="hpm_podcast_settings[credentials][s3][secret]" <?php
 											if ( defined( 'AWS_SECRET_ACCESS_KEY' ) ) :
 												echo 'value="Set in wp-config.php" disabled ';
 											else :
@@ -189,21 +189,21 @@ define('AWS_SECRET_ACCESS_KEY', 'YOUR_AWS_SECRET');</pre>
 											endif; ?>class="regular-text" placeholder="S3 Secret" /></td>
 									</tr>
 									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[credentials][s3][region]"><?php _e('Amazon S3 Region', 'hpm_podcasts' );
+										<th scope="row"><label for="hpm_podcast_settings[credentials][s3][region]"><?php _e('Amazon S3 Region', 'hpm_podcasts' );
 												?></label></th>
-										<td><input type="text" name="hpm_podcasts[credentials][s3][region]" value="<?php echo $pods['credentials']['s3']['region']; ?>" class="regular-text" placeholder="us-west-2"
+										<td><input type="text" name="hpm_podcast_settings[credentials][s3][region]" value="<?php echo $pods['credentials']['s3']['region']; ?>" class="regular-text" placeholder="us-west-2"
 											/></td>
 									</tr>
 									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[credentials][s3][bucket]"><?php _e('Amazon S3 Bucket', 'hpm_podcasts' );
+										<th scope="row"><label for="hpm_podcast_settings[credentials][s3][bucket]"><?php _e('Amazon S3 Bucket', 'hpm_podcasts' );
 												?></label></th>
-										<td><input type="text" name="hpm_podcasts[credentials][s3][bucket]" value="<?php echo $pods['credentials']['s3']['bucket']; ?>" class="regular-text" placeholder="mybucket"
+										<td><input type="text" name="hpm_podcast_settings[credentials][s3][bucket]" value="<?php echo $pods['credentials']['s3']['bucket']; ?>" class="regular-text" placeholder="mybucket"
 											/></td>
 									</tr>
 									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[credentials][s3][folder]"><?php _e('Amazon S3 Folder Path', 'hpm_podcasts' );
+										<th scope="row"><label for="hpm_podcast_settings[credentials][s3][folder]"><?php _e('Amazon S3 Folder Path', 'hpm_podcasts' );
 												?></label></th>
-										<td><input type="text" name="hpm_podcasts[credentials][s3][folder]" value="<?php echo $pods['credentials']['s3']['folder']; ?>" class="regular-text" placeholder="podcasts"
+										<td><input type="text" name="hpm_podcast_settings[credentials][s3][folder]" value="<?php echo $pods['credentials']['s3']['folder']; ?>" class="regular-text" placeholder="podcasts"
 											/></td>
 									</tr>
 								</table>
@@ -220,22 +220,22 @@ define('AWS_SECRET_ACCESS_KEY', 'YOUR_AWS_SECRET');</pre>
 								<pre>define('HPM_FTP_PASSWORD', 'YOUR_FTP_PASSWORD');</pre>
 								<table class="form-table">
 									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[credentials][ftp][host]"><?php _e('FTP Host', 'hpm_podcasts' ); ?></label></th>
-										<td><input type="text" name="hpm_podcasts[credentials][ftp][host]" value="<?php echo $pods['credentials']['ftp']['host']; ?>" class="regular-text" placeholder="URL or IP Address" /></td>
+										<th scope="row"><label for="hpm_podcast_settings[credentials][ftp][host]"><?php _e('FTP Host', 'hpm_podcasts' ); ?></label></th>
+										<td><input type="text" name="hpm_podcast_settings[credentials][ftp][host]" value="<?php echo $pods['credentials']['ftp']['host']; ?>" class="regular-text" placeholder="URL or IP Address" /></td>
 									</tr>
 									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[credentials][ftp][url]"><?php _e('FTP Public URL', 'hpm_podcasts' ); ?></label></th>
-										<td><input type="text" name="hpm_podcasts[credentials][ftp][url]" value="<?php echo $pods['credentials']['ftp']['url']; ?>" class="regular-text" placeholder="http://ondemand.example.com" /></td>
+										<th scope="row"><label for="hpm_podcast_settings[credentials][ftp][url]"><?php _e('FTP Public URL', 'hpm_podcasts' ); ?></label></th>
+										<td><input type="text" name="hpm_podcast_settings[credentials][ftp][url]" value="<?php echo $pods['credentials']['ftp']['url']; ?>" class="regular-text" placeholder="http://ondemand.example.com" /></td>
 									</tr>
 									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[credentials][ftp][username]"><?php _e('FTP Username', 'hpm_podcasts' ); ?></label></th>
-										<td><input type="text" name="hpm_podcasts[credentials][ftp][username]" value="<?php echo
+										<th scope="row"><label for="hpm_podcast_settings[credentials][ftp][username]"><?php _e('FTP Username', 'hpm_podcasts' ); ?></label></th>
+										<td><input type="text" name="hpm_podcast_settings[credentials][ftp][username]" value="<?php echo
 											$pods['credentials']['ftp']['username']; ?>" class="regular-text" placeholder="thisguy"
 											/></td>
 									</tr>
 									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[credentials][ftp][password]"><?php _e('FTP Host', 'hpm_podcasts' ); ?></label></th>
-										<td><input name="hpm_podcasts[credentials][ftp][password]" <?php
+										<th scope="row"><label for="hpm_podcast_settings[credentials][ftp][password]"><?php _e('FTP Host', 'hpm_podcasts' ); ?></label></th>
+										<td><input name="hpm_podcast_settings[credentials][ftp][password]" <?php
 											if ( defined( 'HPM_FTP_PASSWORD' ) ) :
 												echo 'value="Set in wp-config.php" disabled type="text" ';
 											else :
@@ -243,8 +243,8 @@ define('AWS_SECRET_ACCESS_KEY', 'YOUR_AWS_SECRET');</pre>
 											endif; ?>class="regular-text" placeholder="P@assw0rd" /></td>
 									</tr>
 									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[credentials][ftp][folder]"><?php _e('FTP Folder', 'hpm_podcasts' ); ?></label></th>
-										<td><input type="text" name="hpm_podcasts[credentials][ftp][folder]" value="<?php echo $pods['credentials']['ftp']['folder']; ?>" class="regular-text" placeholder="folder" /></td>
+										<th scope="row"><label for="hpm_podcast_settings[credentials][ftp][folder]"><?php _e('FTP Folder', 'hpm_podcasts' ); ?></label></th>
+										<td><input type="text" name="hpm_podcast_settings[credentials][ftp][folder]" value="<?php echo $pods['credentials']['ftp']['folder']; ?>" class="regular-text" placeholder="folder" /></td>
 									</tr>
 								</table>
 							</div>
@@ -260,23 +260,23 @@ define('AWS_SECRET_ACCESS_KEY', 'YOUR_AWS_SECRET');</pre>
 								<pre>define('HPM_SFTP_PASSWORD', 'YOUR_SFTP_PASSWORD');</pre>
 								<table class="form-table">
 									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[credentials][sftp][host]"><?php _e('SFTP Host', 'hpm_podcasts' ); ?></label></th>
-										<td><input type="text" name="hpm_podcasts[credentials][sftp][host]" value="<?php echo $pods['credentials']['sftp']['host']; ?>" class="regular-text" placeholder="URL or IP
+										<th scope="row"><label for="hpm_podcast_settings[credentials][sftp][host]"><?php _e('SFTP Host', 'hpm_podcasts' ); ?></label></th>
+										<td><input type="text" name="hpm_podcast_settings[credentials][sftp][host]" value="<?php echo $pods['credentials']['sftp']['host']; ?>" class="regular-text" placeholder="URL or IP
 										Address" /></td>
 									</tr>
 									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[credentials][sftp][url]"><?php _e('SFTP Public URL', 'hpm_podcasts' ); ?></label></th>
-										<td><input type="text" name="hpm_podcasts[credentials][sftp][url]" value="<?php echo $pods['credentials']['sftp']['url']; ?>" class="regular-text" placeholder="http://ondemand.example.com" /></td>
+										<th scope="row"><label for="hpm_podcast_settings[credentials][sftp][url]"><?php _e('SFTP Public URL', 'hpm_podcasts' ); ?></label></th>
+										<td><input type="text" name="hpm_podcast_settings[credentials][sftp][url]" value="<?php echo $pods['credentials']['sftp']['url']; ?>" class="regular-text" placeholder="http://ondemand.example.com" /></td>
 									</tr>
 									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[credentials][sftp][username]"><?php _e('SFTP Username', 'hpm_podcasts' ); ?></label></th>
-										<td><input type="text" name="hpm_podcasts[credentials][sftp][username]" value="<?php echo
+										<th scope="row"><label for="hpm_podcast_settings[credentials][sftp][username]"><?php _e('SFTP Username', 'hpm_podcasts' ); ?></label></th>
+										<td><input type="text" name="hpm_podcast_settings[credentials][sftp][username]" value="<?php echo
 											$pods['credentials']['sftp']['username']; ?>" class="regular-text" placeholder="thisguy"
 											/></td>
 									</tr>
 									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[credentials][sftp][password]"><?php _e('SFTP Password', 'hpm_podcasts' ); ?></label></th>
-										<td><input name="hpm_podcasts[credentials][sftp][password]" <?php
+										<th scope="row"><label for="hpm_podcast_settings[credentials][sftp][password]"><?php _e('SFTP Password', 'hpm_podcasts' ); ?></label></th>
+										<td><input name="hpm_podcast_settings[credentials][sftp][password]" <?php
 											if ( defined( 'HPM_SFTP_PASSWORD' ) ) :
 												echo 'value="Set in wp-config.php" disabled type="text" ';
 											else :
@@ -284,8 +284,8 @@ define('AWS_SECRET_ACCESS_KEY', 'YOUR_AWS_SECRET');</pre>
 											endif; ?>class="regular-text" placeholder="P@assw0rd" /></td>
 									</tr>
 									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[credentials][sftp][folder]"><?php _e('SFTP Folder', 'hpm_podcasts' ); ?></label></th>
-										<td><input type="text" name="hpm_podcasts[credentials][sftp][folder]" value="<?php echo $pods['credentials']['sftp']['folder']; ?>" class="regular-text" placeholder="folder" /></td>
+										<th scope="row"><label for="hpm_podcast_settings[credentials][sftp][folder]"><?php _e('SFTP Folder', 'hpm_podcasts' ); ?></label></th>
+										<td><input type="text" name="hpm_podcast_settings[credentials][sftp][folder]" value="<?php echo $pods['credentials']['sftp']['folder']; ?>" class="regular-text" placeholder="folder" /></td>
 									</tr>
 								</table>
 							</div>
@@ -299,9 +299,9 @@ define('AWS_SECRET_ACCESS_KEY', 'YOUR_AWS_SECRET');</pre>
 								<p><?php _e('Apple Podcasts/iTunes, as well as other podcasting directories, are starting to favor or even require HTTPS for your feeds and media enclosures.  If you\'re already using HTTPS, or if you want to force your feeds and the associated background processes to use HTTPS, then check the box below.', 'hpm_podcasts' ); ?></p>
 								<table class="form-table">
 									<tr valign="top">
-										<th scope="row"><label for="hpm_podcasts[https]"><?php _e('Force HTTPS in Feed?', 'hpm_podcasts' );
+										<th scope="row"><label for="hpm_podcast_settings[https]"><?php _e('Force HTTPS in Feed?', 'hpm_podcasts' );
 												?></label></th>
-										<td><input type="checkbox" name="hpm_podcasts[https]" value="force-https" class="regular-text"<?php
+										<td><input type="checkbox" name="hpm_podcast_settings[https]" value="force-https" class="regular-text"<?php
 												if ( !empty( $pods['https'] ) ) :
 													if ( $pods['https'] == 'force-https' ) :
 														echo ' checked';

@@ -21,8 +21,8 @@ require_once( HPM_PODCAST_PLUGIN_DIR . 'inc/templates.php' );
 require_once( HPM_PODCAST_PLUGIN_DIR . 'inc/rest.php' );
 
 function hpm_podcast_activation() {
-	$pods = get_option( 'hpm_podcasts' );
-	$pods_last = get_option( 'hpm_podcasts_last_update' );
+	$pods = get_option( 'hpm_podcast_settings' );
+	$pods_last = get_option( 'hpm_podcast_last_update' );
 	if ( empty( $pods ) ) :
 		$pods = array(
 			'owner' => array(
@@ -59,10 +59,10 @@ function hpm_podcast_activation() {
 			'https' => '',
 			'last_updated' => ''
 		);
-		add_option( 'hpm_podcasts', $pods );
+		add_option( 'hpm_podcast', $pods );
 	endif;
 	if ( empty( $pods_last ) ) :
-		add_option( 'hpm_podcasts_last_update', '' );
+		add_option( 'hpm_podcast_last_update', '' );
 	endif;
 	create_hpm_podcasts();
 	flush_rewrite_rules();
@@ -70,13 +70,13 @@ function hpm_podcast_activation() {
 
 function hpm_podcast_deactivation() {
 	wp_clear_scheduled_hook( 'hpm_podcast_update' );
-	$pods =  get_option( 'hpm_podcasts' );
+	$pods =  get_option( 'hpm_podcast_settings' );
 	if ( !empty( $pods ) ) :
-		delete_option( 'hpm_podcasts' );
+		delete_option( 'hpm_podcast_settings' );
 	endif;
-	$pods_last =  get_option( 'hpm_podcasts' );
+	$pods_last =  get_option( 'hpm_podcast_settings' );
 	if ( !empty( $pods_last ) ) :
-		delete_option( 'hpm_podcasts_last_update' );
+		delete_option( 'hpm_podcast_last_update' );
 	endif;
 	flush_rewrite_rules();
 }
@@ -103,7 +103,7 @@ function hpm_cron_sched( $schedules ) {
  *
  */
 add_action('init', function () {
-	add_filter( 'pre_update_option_hpm_podcasts', 'hpm_podcast_option_strip', 10, 2 );
+	add_filter( 'pre_update_option_hpm_podcast_settings', 'hpm_podcast_option_strip', 10, 2 );
 
 	function hpm_podcast_option_strip( $new_value, $old_value ) {
 		$find = array( '{/$}', '{^/}' );
@@ -124,7 +124,7 @@ add_action('init', function () {
 });
 
 add_action( 'hpm_podcast_update', 'hpm_podcast_rest_generate' );
-add_action( 'update_option_hpm_podcasts', function( $old_value, $value ) {
+add_action( 'update_option_hpm_podcast_settings', function( $old_value, $value ) {
 	if ( !empty( $value['recurrence'] ) ) :
 		$timestamp = wp_next_scheduled( 'hpm_podcast_update' );
 		if ( empty( $timestamp ) ) :

@@ -27,7 +27,7 @@ function hpm_podcast_add_description() {
  * feed, so that the files can be organized on the remote server, will appear, as well as an area for manual URL entry.
  */
 function hpm_podcast_description_box( $object, $box ) {
-	$pods = get_option( 'hpm_podcasts' );
+	$pods = get_option( 'hpm_podcast_settings' );
 	global $post;
 	wp_nonce_field( basename( __FILE__ ), 'hpm_podcast_class_nonce' );
 	$hpm_pod_desc = get_post_meta( $object->ID, 'hpm_podcast_ep_meta', true );
@@ -115,7 +115,7 @@ function hpm_podcast_save_description( $post_id, $post ) {
 	if ( empty( $_POST['hpm_podcast_class_nonce'] ) || !wp_verify_nonce( $_POST['hpm_podcast_class_nonce'], basename( __FILE__ ) ) ) :
 		return $post_id;
 	endif;
-	$pods = get_option( 'hpm_podcasts' );
+	$pods = get_option( 'hpm_podcast_settings' );
 
 	$post_type = get_post_type_object( $post->post_type );
 
