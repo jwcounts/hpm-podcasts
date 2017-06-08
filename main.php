@@ -3,10 +3,11 @@
  * Plugin Name: HPM Podcasts
  * Plugin URI: http://www.houstonpublicmedia.org
  * Description: A plugin that allows you to create a podcast feed from any category, either video or audio. It also has the option to periodically cache the feeds as flat XML in Amazon S3 or on a separate FTP to speed up delivery, and to store the media files themselves there as well.
- * Version: 1.0
+ * Version: 20170608
  * Author: Jared Counts
  * Author URI: http://www.houstonpublicmedia.org/staff/jared-counts/
  * License: GPL2
+ * Text Domain: hpm-podcasts
  */
 define( 'HPM_PODCAST_PLUGIN_DIR', plugin_dir_path(__FILE__) );
 

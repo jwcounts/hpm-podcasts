@@ -235,11 +235,11 @@ define('AWS_SECRET_ACCESS_KEY', 'YOUR_AWS_SECRET');</pre>
 									</tr>
 									<tr valign="top">
 										<th scope="row"><label for="hpm_podcasts[credentials][ftp][password]"><?php _e('FTP Host', 'hpm_podcasts' ); ?></label></th>
-										<td><input type="password" name="hpm_podcasts[credentials][ftp][password]" <?php
+										<td><input name="hpm_podcasts[credentials][ftp][password]" <?php
 											if ( defined( 'HPM_FTP_PASSWORD' ) ) :
-												echo 'value="Set in wp-config.php" disabled ';
+												echo 'value="Set in wp-config.php" disabled type="text" ';
 											else :
-												echo 'value ="'.$pods['credentials']['ftp']['password'].'" ';
+												echo 'value ="'.$pods['credentials']['ftp']['password'].'" type="password" ';
 											endif; ?>class="regular-text" placeholder="P@assw0rd" /></td>
 									</tr>
 									<tr valign="top">
@@ -276,11 +276,11 @@ define('AWS_SECRET_ACCESS_KEY', 'YOUR_AWS_SECRET');</pre>
 									</tr>
 									<tr valign="top">
 										<th scope="row"><label for="hpm_podcasts[credentials][sftp][password]"><?php _e('SFTP Password', 'hpm_podcasts' ); ?></label></th>
-										<td><input type="password" name="hpm_podcasts[credentials][sftp][password]" <?php
+										<td><input name="hpm_podcasts[credentials][sftp][password]" <?php
 											if ( defined( 'HPM_SFTP_PASSWORD' ) ) :
-												echo 'value="Set in wp-config.php" disabled ';
+												echo 'value="Set in wp-config.php" disabled type="text" ';
 											else :
-												echo 'value ="'.$pods['credentials']['sftp']['password'].'" ';
+												echo 'value ="'.$pods['credentials']['sftp']['password'].'" type="password" ';
 											endif; ?>class="regular-text" placeholder="P@assw0rd" /></td>
 									</tr>
 									<tr valign="top">

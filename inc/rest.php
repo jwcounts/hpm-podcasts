@@ -155,15 +155,22 @@ function hpm_podcast_rest_media_upload( WP_REST_Request $request ) {
 			return array( 'state' => 'error', 'message' => 'No S3 credentials provided. Please check your settings.' );
 		endif;
 
-		require HPM_PODCAST_PLUGIN_DIR . 'vendor' . DIRECTORY_SEPARATOR . 'aws' . DIRECTORY_SEPARATOR . 'aws-autoloader.php';
-		$client = new Aws\S3\S3Client([
-			'version' => 'latest',
-			'region'  => $short['region'],
-			'credentials' => [
+		if ( is_plugin_active( 'amazon-web-services/amazon-web-services.php' ) ) :
+			$client = Aws\S3\S3Client::factory(array(
 				'key' => $aws_key,
 				'secret' => $aws_secret
-			]
-		]);
+			));
+		else :
+			require HPM_PODCAST_PLUGIN_DIR . 'vendor' . DIRECTORY_SEPARATOR . 'aws' . DIRECTORY_SEPARATOR . 'aws-autoloader.php';
+			$client = new Aws\S3\S3Client([
+				'version' => 'latest',
+				'region'  => $short['region'],
+				'credentials' => [
+					'key' => $aws_key,
+					'secret' => $aws_secret
+				]
+			]);
+		endif;
 
 		if ( !empty( $short['folder'] ) ) :
 			$folder = $short['folder'].'/';
@@ -239,15 +246,22 @@ function hpm_podcast_rest_generate() {
 				return new WP_Error( 'rest_api_sad', esc_html__( 'No S3 credentials provided. Please check your settings.', 'hpm-podcasts' ), array( 'status' => 500 ) );
 			endif;
 
-			require HPM_PODCAST_PLUGIN_DIR . 'vendor' . DIRECTORY_SEPARATOR . 'aws' . DIRECTORY_SEPARATOR . 'aws-autoloader.php';
-			$client = new Aws\S3\S3Client([
-				'version' => 'latest',
-				'region'  => $short['region'],
-				'credentials' => [
+			if ( is_plugin_active( 'amazon-web-services/amazon-web-services.php' ) ) :
+				$client = Aws\S3\S3Client::factory(array(
 					'key' => $aws_key,
 					'secret' => $aws_secret
-				]
-			]);
+				));
+			else :
+				require HPM_PODCAST_PLUGIN_DIR . 'vendor' . DIRECTORY_SEPARATOR . 'aws' . DIRECTORY_SEPARATOR . 'aws-autoloader.php';
+				$client = new Aws\S3\S3Client([
+					'version' => 'latest',
+					'region'  => $short['region'],
+					'credentials' => [
+						'key' => $aws_key,
+						'secret' => $aws_secret
+					]
+				]);
+			endif;
 		elseif ( $pods['upload-flats'] == 'ftp' ) :
 			$short = $pods['credentials']['ftp'];
 			if ( defined( 'HPM_FTP_PASSWORD' ) ) :
@@ -326,12 +340,11 @@ function hpm_podcast_rest_generate() {
 					<description><![CDATA[<?php the_content_feed(); ?>]]></description>
 					<language><?php bloginfo_rss( 'language' ); ?></language>
 					<copyright>All Rights Reserved</copyright>
-					<webMaster><?php echo $pods['owner']['name']."(".$pods['owner']['email'].")"; ?></webMaster>
 					<ttl><?php echo $frequency; ?></ttl>
 					<pubDate><?php echo date('r'); ?></pubDate>
 					<itunes:summary><![CDATA[<?php the_content_feed(); ?>]]></itunes:summary>
 					<itunes:owner>
-						<itunes:name><?php echo $pods['owner']['name']; ?></itunes:name>
+						<itunes:name><![CDATA[<?php echo $pods['owner']['name']; ?>]]></itunes:name>
 						<itunes:email><?php echo $pods['owner']['email']; ?></itunes:email>
 					</itunes:owner>
 					<itunes:keywords><?php echo strip_tags( get_the_tag_list( '', ',', '' ) ); ?></itunes:keywords>
