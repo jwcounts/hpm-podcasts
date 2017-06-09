@@ -4,7 +4,7 @@
  *
  * @package WordPress
  */
-	$pods = get_option( 'hpm_podcasts' );
+	$pods = get_option( 'hpm_podcast_settings' );
 	if ( !empty( $pods['upload-flats'] ) ) :
 		if ( $pods['upload-flats'] == 's3' ) :
 			$base_url = 'https://s3-'.$pods['credentials']['s3']['region'].'.amazonaws.com/'.$pods['credentials']['s3']['bucket'].'/'.$pods['credentials']['s3']['folder'].'/';
