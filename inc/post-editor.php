@@ -97,7 +97,11 @@ function hpm_podcast_description_box( $object, $box ) {
 				},
 				error: function (response) {
 					$('#hpm-upload-spinner').remove();
-					$( '<div class="notice notice-error is-dismissible"><p>'+response.message+'</p></div>' ).insertBefore( $('#hpm-pods-upload') );
+					if (response && typeof response.message !== 'undefined') {
+						$('<div class="notice notice-error is-dismissible"><p>' + response.message + '</p></div>').insertBefore($('#hpm-pods-upload'));
+					} else {
+						$('<div class="notice notice-error is-dismissible">' + response + '</div>').insertBefore($('#hpm-pods-upload'));
+					}
 				}
 			});
 		});

@@ -357,7 +357,11 @@ define('AWS_SECRET_ACCESS_KEY', 'YOUR_AWS_SECRET');</pre>
 					},
 					error: function (response) {
 						$('#hpm-refresh-spinner').remove();
-						$( '<div class="notice notice-error is-dismissible"><p>'+response.responseJSON.message+'</p></div>' ).insertBefore( $('#hpm-pods-refresh').closest('table.form-table') );
+						if (response && typeof response.message !== 'undefined') {
+							$( '<div class="notice notice-error is-dismissible"><p>'+response.message+'</p></div>' ).insertBefore( $('#hpm-pods-refresh').closest('table.form-table') );
+						} else {
+							$( '<div class="notice notice-error is-dismissible">'+response+'</div>' ).insertBefore( $('#hpm-pods-refresh').closest('table.form-table') );
+						}
 					}
 				});
 			});
