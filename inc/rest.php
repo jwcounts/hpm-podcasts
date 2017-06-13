@@ -155,7 +155,7 @@ function hpm_podcast_rest_media_upload( WP_REST_Request $request ) {
 			return array( 'state' => 'error', 'message' => 'No S3 credentials provided. Please check your settings.' );
 		endif;
 
-		if ( is_plugin_active( 'amazon-web-services/amazon-web-services.php' ) ) :
+		if ( class_exists( 'Amazon_Web_Services' ) ) :
 			$client = Aws\S3\S3Client::factory(array(
 				'key' => $aws_key,
 				'secret' => $aws_secret
@@ -246,7 +246,7 @@ function hpm_podcast_rest_generate() {
 				return new WP_Error( 'rest_api_sad', esc_html__( 'No S3 credentials provided. Please check your settings.', 'hpm-podcasts' ), array( 'status' => 500 ) );
 			endif;
 
-			if ( is_plugin_active( 'amazon-web-services/amazon-web-services.php' ) ) :
+			if ( class_exists( 'Amazon_Web_Services' ) ) :
 				$client = Aws\S3\S3Client::factory(array(
 					'key' => $aws_key,
 					'secret' => $aws_secret
