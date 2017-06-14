@@ -59,7 +59,7 @@ function hpm_podcast_activation() {
 			'https' => '',
 			'last_updated' => ''
 		);
-		add_option( 'hpm_podcast', $pods );
+		add_option( 'hpm_podcast_settings', $pods );
 	endif;
 	if ( empty( $pods_last ) ) :
 		add_option( 'hpm_podcast_last_update', '' );

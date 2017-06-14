@@ -12,7 +12,7 @@ function hpm_podcast_description_setup() {
 function hpm_podcast_add_description() {
 	add_meta_box(
 		'hpm-podcast-meta-class',
-		esc_html__( 'Podcast Feed Information', 'hpm_podcasts' ),
+		esc_html__( 'Podcast Feed Information', 'hpm-podcasts' ),
 		'hpm_podcast_description_box',
 		'post',
 		'advanced',
@@ -29,15 +29,16 @@ function hpm_podcast_add_description() {
 function hpm_podcast_description_box( $object, $box ) {
 	$pods = get_option( 'hpm_podcast_settings' );
 	global $post;
+	$post_old = $post;
 	wp_nonce_field( basename( __FILE__ ), 'hpm_podcast_class_nonce' );
 	$hpm_pod_desc = get_post_meta( $object->ID, 'hpm_podcast_ep_meta', true );
 	if ( empty( $hpm_pod_desc ) ) :
 		$hpm_pod_desc = array( 'feed' => '', 'description' => '' );
 	endif; ?>
-<h3><?PHP _e( "Feed-Specific Excerpt", 'hpm_podcasts' ); ?></h3>
-<p><?PHP _e( "If this post is part of a podcast, and you would like something other than the content of this post to appear in iTunes, put your content here. <br /><br /><i><b>**NOTE**</b>: Any HTML formatting will have to be entered manually, so be careful.</i>", 'hpm_podcasts' ); ?></p>
+<h3><?PHP _e( "Feed-Specific Excerpt", 'hpm-podcasts' ); ?></h3>
+<p><?PHP _e( "If this post is part of a podcast, and you would like something other than the content of this post to appear in iTunes, put your content here. <br /><br /><i><b>**NOTE**</b>: Any HTML formatting will have to be entered manually, so be careful.</i>", 'hpm-podcasts' ); ?></p>
 <p>
-	<label for="hpm-podcast-description"><?php _e( "Feed-Specific Description:", 'hpm_podcasts' ); ?></label><br />
+	<label for="hpm-podcast-description"><?php _e( "Feed-Specific Description:", 'hpm-podcasts' ); ?></label><br />
 	<textarea style="width: 100%; height: 200px;" name="hpm-podcast-description" id="hpm-podcast-description"><?php echo $hpm_pod_desc['description']; ?></textarea>
 </p>
 <?php
@@ -52,11 +53,11 @@ function hpm_podcast_description_box( $object, $box ) {
 			)
 		); ?>
 	<p>&nbsp;</p>
-	<h3><?PHP _e( "Podcast Feed", 'hpm_podcasts' ); ?></h3>
+	<h3><?PHP _e( "Podcast Feed", 'hpm-podcasts' ); ?></h3>
 	<p id="hpm-podcast-feeds">
-		<label for="hpm-podcast-ep-feed"><?php _e( "Podcast Feed:", 'hpm_podcasts' ); ?></label>
+		<label for="hpm-podcast-ep-feed"><?php _e( "Podcast Feed:", 'hpm-podcasts' ); ?></label>
 		<select name="hpm-podcast-ep-feed" id="hpm-podcast-ep-feed">
-			<option value=""<?PHP selected( '', $hpm_pod_desc['feed'], TRUE ); ?>><?PHP _e( "Select One", 'hpm_podcasts' ); ?></option>
+			<option value=""<?PHP selected( '', $hpm_pod_desc['feed'], TRUE ); ?>><?PHP _e( "Select One", 'hpm-podcasts' ); ?></option>
 				<?php
 				if ( $podcasts->have_posts() ) :
 					while ( $podcasts->have_posts() ) : $podcasts->the_post(); ?>
@@ -64,11 +65,13 @@ function hpm_podcast_description_box( $object, $box ) {
 						<?php
 					endwhile;
 				endif;
-				wp_reset_postdata(); ?>
+				wp_reset_query();
+				$post = $post_old; ?>
 		</select>&nbsp;&nbsp;&nbsp;<a href="#" class="button button-secondary" id="hpm-pods-upload">Upload Media File</a></p>
-	<h3><?PHP _e( "External URL", 'hpm_podcasts' ); ?></h3>
-	<p><?PHP _e( "If you want to upload your audio file manually, you can paste the URL here:", 'hpm_podcasts' ); ?><br />
-		<label for="hpm-podcast-sg-file"><?php _e( "URL:", 'hpm_podcasts' ); ?></label> <input type="text" id="hpm-podcast-sg-file" name="hpm-podcast-sg-file" value="<?PHP echo $hpm_pod_sg; ?>" placeholder="https://ondemand.example.com/blah/blah.mp3" style="width: 75%;" /></p>
+	<h3><?PHP _e( "External URL", 'hpm-podcasts' ); ?></h3>
+	<p><?PHP _e( "If you want to upload your audio file manually, you can paste the URL here:", 'hpm-podcasts' );
+	?><br />
+		<label for="hpm-podcast-sg-file"><?php _e( "URL:", 'hpm-podcasts' ); ?></label> <input type="text" id="hpm-podcast-sg-file" name="hpm-podcast-sg-file" value="<?PHP echo $hpm_pod_sg; ?>" placeholder="https://ondemand.example.com/blah/blah.mp3" style="width: 75%;" /></p>
 <?php
 	endif; ?>
 <script>
@@ -88,7 +91,7 @@ function hpm_podcast_description_box( $object, $box ) {
 			$(this).after( ' <img id="hpm-upload-spinner" src="/wp-includes/images/spinner.gif">' );
 			$.ajax({
 				type: 'GET',
-				url: '/wp-json/hpm-podcast/v1/upload/'+feed+'/'+id,
+				url: 'http://hpmv2test-env.elasticbeanstalk.com/wp-json/hpm-podcast/v1/upload/'+feed+'/'+id,
 				data: '',
 				success: function (response) {
 					$('#hpm-upload-spinner').remove();
@@ -97,10 +100,11 @@ function hpm_podcast_description_box( $object, $box ) {
 				},
 				error: function (response) {
 					$('#hpm-upload-spinner').remove();
-					if (response && typeof response.message !== 'undefined') {
+					if (typeof response.message !== 'undefined') {
 						$('<div class="notice notice-error is-dismissible"><p>' + response.message + '</p></div>').insertBefore($('#hpm-pods-upload'));
 					} else {
-						$('<div class="notice notice-error is-dismissible">' + response + '</div>').insertBefore($('#hpm-pods-upload'));
+						console.log(response);
+						$('<div class="notice notice-error is-dismissible">There was an error while performing this function. Please consult your javascript console for more information.</div>').insertBefore($('#hpm-pods-upload'));
 					}
 				}
 			});
