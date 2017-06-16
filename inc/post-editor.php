@@ -91,7 +91,7 @@ function hpm_podcast_description_box( $object, $box ) {
 			$(this).after( ' <img id="hpm-upload-spinner" src="/wp-includes/images/spinner.gif">' );
 			$.ajax({
 				type: 'GET',
-				url: 'http://hpmv2test-env.elasticbeanstalk.com/wp-json/hpm-podcast/v1/upload/'+feed+'/'+id,
+				url: '/wp-json/hpm-podcast/v1/upload/'+feed+'/'+id,
 				data: '',
 				success: function (response) {
 					$('#hpm-upload-spinner').remove();
@@ -100,8 +100,8 @@ function hpm_podcast_description_box( $object, $box ) {
 				},
 				error: function (response) {
 					$('#hpm-upload-spinner').remove();
-					if (typeof response.message !== 'undefined') {
-						$('<div class="notice notice-error is-dismissible"><p>' + response.message + '</p></div>').insertBefore($('#hpm-pods-upload'));
+					if (typeof response.responseJSON.message !== 'undefined') {
+						$('<div class="notice notice-error is-dismissible"><p>' + response.responseJSON.message + '</p></div>').insertBefore($('#hpm-pods-upload'));
 					} else {
 						console.log(response);
 						$('<div class="notice notice-error is-dismissible">There was an error while performing this function. Please consult your javascript console for more information.</div>').insertBefore($('#hpm-pods-upload'));

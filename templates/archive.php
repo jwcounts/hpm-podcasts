@@ -45,7 +45,7 @@ get_header(); ?>
 								else :
 									$byline = sprintf(
 									/* translators: %s: post author */
-										__( 'by %s', 'hpm_podcasts' ),
+										__( 'by %s', 'hpm-podcasts' ),
 										'<span class="author vcard"><a class="url fn n" href="' . esc_url( get_author_posts_url( get_the_author_meta( 'ID' ) ) ) . '">' . get_the_author() . '</a></span>'
 									);
 
@@ -106,9 +106,10 @@ get_header(); ?>
 
 			// Previous/next page navigation.
 			the_posts_pagination( array(
-				'prev_text' => __( '&lt;', 'hpm_podcasts' ),
-				'next_text' => __( '&gt;', 'hpm_podcasts' ),
-				'before_page_number' => '<span class="meta-nav screen-reader-text">' . __( 'Page', 'hpm_podcasts' ) . ' </span>',
+				'prev_text' => __( '&lt;', 'hpm-podcasts' ),
+				'next_text' => __( '&gt;', 'hpm-podcasts' ),
+				'before_page_number' => '<span class="meta-nav screen-reader-text">' . __( 'Page', 'hpm-podcasts' ) .
+				                        ' </span>',
 			) );
 
 		// If no content, include the "No posts found" template.

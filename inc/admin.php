@@ -363,8 +363,8 @@ define('AWS_SECRET_ACCESS_KEY', 'YOUR_AWS_SECRET');</pre>
 					},
 					error: function (response) {
 						$('#hpm-refresh-spinner').remove();
-						if (typeof response.message !== 'undefined') {
-							$( '<div class="notice notice-error is-dismissible"><p>'+response.message+'</p></div>' ).insertBefore( $('#hpm-pods-refresh').closest('table.form-table') );
+						if (typeof response.responseJSON.message !== 'undefined') {
+							$( '<div class="notice notice-error is-dismissible"><p>'+response.responseJSON.message+'</p></div>' ).insertBefore( $('#hpm-pods-refresh').closest('table.form-table') );
 						} else {
 							console.log(response);
 							$( '<div class="notice notice-error is-dismissible">There was an error while performing this function. Please consult your javascript console for more information.</div>' ).insertBefore( $('#hpm-pods-refresh').closest('table.form-table') );
