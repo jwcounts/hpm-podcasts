@@ -11,14 +11,59 @@
  */
 define( 'HPM_PODCAST_PLUGIN_DIR', plugin_dir_path(__FILE__) );
 
-register_activation_hook( HPM_PODCAST_PLUGIN_DIR . 'main.php', 'hpm_podcast_activation' );
-register_deactivation_hook( HPM_PODCAST_PLUGIN_DIR . 'main.php', 'hpm_podcast_deactivation' );
-
 require_once( HPM_PODCAST_PLUGIN_DIR . 'inc/post-type.php' );
 require_once( HPM_PODCAST_PLUGIN_DIR . 'inc/post-editor.php' );
 require_once( HPM_PODCAST_PLUGIN_DIR . 'inc/admin.php' );
 require_once( HPM_PODCAST_PLUGIN_DIR . 'inc/templates.php' );
 require_once( HPM_PODCAST_PLUGIN_DIR . 'inc/rest.php' );
+
+add_filter( 'cron_schedules', 'hpm_cron_sched', 10, 2 );
+function hpm_cron_sched( $schedules ) {
+	$schedules['hpm_5min'] = array(
+		'interval' => 300,
+		'display' => __( 'Every 5 Minutes' )
+	);
+	$schedules['hpm_15min'] = array(
+		'interval' => 900,
+		'display' => __( 'Every 15 Minutes' )
+	);
+	$schedules['hpm_30min'] = array(
+		'interval' => 1800,
+		'display' => __( 'Every 30 Minutes' )
+	);
+	return $schedules;
+}
+
+/**
+ * Register WP_AJAX functions for uploads and feed refresh
+ *
+ */
+add_action( 'hpm_podcast_update_refresh', 'hpm_podcast_rest_generate' );
+add_filter( 'pre_update_option_hpm_podcast_settings', 'hpm_podcast_options_clean', 10, 2 );
+function hpm_podcast_options_clean( $new_value, $old_value ) {
+	$find = array( '{/$}', '{^/}' );
+	$replace = array( '', '' );
+	foreach ( $new_value['credentials'] as $credk => $credv ) :
+		foreach ( $credv as $k => $v ) :
+			if ( !empty( $v ) && ( $k != 'key' || $k != 'secret' || $k != 'password' ) ) :
+				$new_value['credentials'][$credk][$k] = preg_replace( $find, $replace, $v );
+			elseif ( $k == 'key' || $k == 'secret' || $k == 'password' ) :
+				if ( $v == 'Set in wp-config.php' ) :
+					$new_value['credentials'][$credk][$k] = '';
+				endif;
+			endif;
+		endforeach;
+	endforeach;
+	if ( $new_value['recurrence'] != $old_value['recurrence'] ) :
+		if ( ! wp_next_scheduled( 'hpm_podcast_update_refresh' ) ) :
+			wp_schedule_event( time(), $new_value['recurrence'], 'hpm_podcast_update_refresh' );
+		else :
+			wp_clear_scheduled_hook( 'hpm_podcast_update_refresh' );
+			wp_schedule_event( time(), $new_value['recurrence'], 'hpm_podcast_update_refresh' );
+		endif;
+	endif;
+	return $new_value;
+}
 
 function hpm_podcast_activation() {
 	$pods = get_option( 'hpm_podcast_settings' );
@@ -29,7 +74,7 @@ function hpm_podcast_activation() {
 				'name' => '',
 				'email' => ''
 			),
-			'recurrence' => '',
+			'recurrence' => 'hourly',
 			'roles' => array('editor','administrator'),
 			'upload-flats' => '',
 			'upload-media' => '',
@@ -56,8 +101,7 @@ function hpm_podcast_activation() {
 					'secret' => ''
 				)
 			),
-			'https' => '',
-			'last_updated' => ''
+			'https' => ''
 		);
 		add_option( 'hpm_podcast_settings', $pods );
 	endif;
@@ -66,10 +110,13 @@ function hpm_podcast_activation() {
 	endif;
 	create_hpm_podcasts();
 	flush_rewrite_rules();
+	if ( ! wp_next_scheduled( 'hpm_podcast_update_refresh' ) ) :
+		wp_schedule_event( time(), 'hourly', 'hpm_podcast_update_refresh' );
+	endif;
 }
 
 function hpm_podcast_deactivation() {
-	wp_clear_scheduled_hook( 'hpm_podcast_update' );
+	wp_clear_scheduled_hook( 'hpm_podcast_update_refresh' );
 	$pods =  get_option( 'hpm_podcast_settings' );
 	if ( !empty( $pods ) ) :
 		delete_option( 'hpm_podcast_settings' );
@@ -81,57 +128,10 @@ function hpm_podcast_deactivation() {
 	flush_rewrite_rules();
 }
 
-add_filter( 'cron_schedules', 'hpm_cron_sched' );
-function hpm_cron_sched( $schedules ) {
-	$schedules['hpm_5min'] = array(
-		'interval' => 300,
-		'display' => __( 'Every 5 Minutes' )
-	);
-	$schedules['hpm_15min'] = array(
-		'interval' => 900,
-		'display' => __( 'Every 15 Minutes' )
-	);
-	$schedules['hpm_30min'] = array(
-		'interval' => 1800,
-		'display' => __( 'Every 30 Minutes' )
-	);
-	return $schedules;
-}
+register_activation_hook( __FILE__, 'hpm_podcast_activation' );
+register_deactivation_hook( __FILE__, 'hpm_podcast_deactivation' );
 
-/**
- * Register WP_AJAX functions for uploads and feed refresh
- *
- */
-add_action('init', function () {
-	add_filter( 'pre_update_option_hpm_podcast_settings', 'hpm_podcast_option_strip', 10, 2 );
-
-	function hpm_podcast_option_strip( $new_value, $old_value ) {
-		$find = array( '{/$}', '{^/}' );
-		$replace = array( '', '' );
-		foreach ( $new_value['credentials'] as $credk => $credv ) :
-			foreach ( $credv as $k => $v ) :
-				if ( !empty( $v ) && ( $k != 'key' || $k != 'secret' || $k != 'password' ) ) :
-					$new_value['credentials'][$credk][$k] = preg_replace( $find, $replace, $v );
-				elseif ( $k == 'key' || $k == 'secret' || $k == 'password' ) :
-					if ( $v == 'Set in wp-config.php' ) :
-						$new_value['credentials'][$credk][$k] = '';
-					endif;
-				endif;
-			endforeach;
-		endforeach;
-		return $new_value;
-	}
-});
-
-add_action( 'hpm_podcast_update', 'hpm_podcast_rest_generate' );
-add_action( 'update_option_hpm_podcast_settings', function( $old_value, $value ) {
-	if ( !empty( $value['recurrence'] ) ) :
-		$timestamp = wp_next_scheduled( 'hpm_podcast_update' );
-		if ( empty( $timestamp ) ) :
-			wp_schedule_event( time(), $value['recurrence'], 'hpm_podcast_update' );
-		else :
-			wp_clear_scheduled_hook( 'hpm_podcast_update' );
-			wp_schedule_event( time(), $value['recurrence'], 'hpm_podcast_update' );
-		endif;
-	endif;
-}, 10, 2);
+$pods = get_option( 'hpm_podcast_settings' );
+if ( ! wp_next_scheduled( 'hpm_podcast_update_refresh' ) ) :
+	wp_schedule_event( time(), $pods['recurrence'], 'hpm_podcast_update_refresh' );
+endif;
