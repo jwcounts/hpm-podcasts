@@ -272,20 +272,10 @@ class HPM_Podcasts {
 		);
 		$sg_url = ( isset( $_POST['hpm-podcast-sg-file'] ) ? sanitize_text_field( $_POST['hpm-podcast-sg-file'] ) : '' );
 
-		$hpm_pod_desc_exists = metadata_exists( 'post', $post_id, 'hpm_podcast_ep_meta' );
-		if ( $hpm_pod_desc_exists ) :
-			update_post_meta( $post_id, 'hpm_podcast_ep_meta', $hpm_podcast_description );
-		else :
-			add_post_meta( $post_id, 'hpm_podcast_ep_meta', $hpm_podcast_description, true );
-		endif;
+		update_post_meta( $post_id, 'hpm_podcast_ep_meta', $hpm_podcast_description );
 
-		$hpm_pod_sg_file = metadata_exists( 'post', $post_id, 'hpm_podcast_sg_file' );
 		if ( !empty( $pods['upload-media'] ) ) :
-			if ( $hpm_pod_sg_file ) :
-				update_post_meta( $post_id, 'hpm_podcast_sg_file', $sg_url );
-			else :
-				add_post_meta( $post_id, 'hpm_podcast_sg_file', $sg_url, true );
-			endif;
+			update_post_meta( $post_id, 'hpm_podcast_sg_file', $sg_url );
 		else :
 			if ( $hpm_pod_sg_file ) :
 				delete_post_meta( $post_id, 'hpm_podcast_sg_file', $sg_url );
@@ -463,19 +453,8 @@ class HPM_Podcasts {
 				)
 			);
 
-			$exists_cat = metadata_exists( 'post', $post_id, 'hpm_pod_cat' );
-			$exists_link = metadata_exists( 'post', $post_id, 'hpm_pod_link' );
-
-			if ( $exists_cat ) :
-				update_post_meta( $post_id, 'hpm_pod_cat', $hpm_podcast_cat );
-			else :
-				add_post_meta( $post_id, 'hpm_pod_cat', $hpm_podcast_cat, true );
-			endif;
-			if ( $exists_link ) :
-				update_post_meta( $post_id, 'hpm_pod_link', $hpm_podcast_link );
-			else :
-				add_post_meta( $post_id, 'hpm_pod_link', $hpm_podcast_link, true );
-			endif;
+			update_post_meta( $post_id, 'hpm_pod_cat', $hpm_podcast_cat );
+			update_post_meta( $post_id, 'hpm_pod_link', $hpm_podcast_link );
 		endif;
 	}
 
@@ -699,12 +678,7 @@ class HPM_Podcasts {
 				unlink( $local );
 			endif;
 			if ( !empty( $sg_url ) ) :
-				$hpm_pod_sg_file = metadata_exists( 'post', $request['id'], 'hpm_podcast_sg_file' );
-				if ( $hpm_pod_sg_file ) :
-					update_post_meta( $request['id'], 'hpm_podcast_sg_file', $sg_url );
-				else :
-					add_post_meta( $request['id'], 'hpm_podcast_sg_file', $sg_url, true );
-				endif;
+				update_post_meta( $request['id'], 'hpm_podcast_sg_file', $sg_url );
 				return rest_ensure_response( array( 'code' => 'rest_api_success', 'message' => esc_html__( 'Podcast media file uploaded successfully.', 'hpm-podcasts' ), 'data' => array( 'url' => $sg_url, 'status' => 200 ) ) );
 			else :
 				return new WP_Error( 'rest_api_sad', esc_html__( 'Unable to determine the remote URL of your media file. Please check your settings and try again.', 'hpm-podcasts' ), array( 'status' => 500 ) );
