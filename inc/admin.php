@@ -1,37 +1,3 @@
-<?php
-/**
- * Create options page in Podcasts menu in Admin Dashboard
- */
-add_action('admin_menu', 'hpm_podcast_create_menu');
-function hpm_podcast_create_menu() {
-	add_submenu_page( 'edit.php?post_type=podcasts', 'HPM Podcast Settings', 'Settings', 'manage_options', 'hpm-podcast-settings', 'hpm_podcast_settings_page' );
-	add_action( 'admin_init', 'register_hpm_podcast_settings' );
-}
-
-function register_hpm_podcast_settings() {
-	register_setting( 'hpm-podcast-settings-group', 'hpm_podcast_settings' );
-}
-
-/**
- * Build out options page
- */
-function hpm_podcast_settings_page() {
-	$pods = get_option( 'hpm_podcast_settings' );
-	$pods_last = get_option( 'hpm_podcast_last_update' );
-	$upload_s3 = $upload_ftp = $upload_sftp = ' hidden';
-	if ( !empty( $pods['upload-flats'] ) ) :
-		$uflats = $pods['upload-flats'];
-		${"upload_$uflats"} = '';
-	endif;
-	if ( !empty( $pods['upload-media'] ) ) :
-		$umedia = $pods['upload-media'];
-		${"upload_$umedia"} = '';
-	endif;
-	if ( !empty( $pods_last ) ) :
-		$last_refresh = date( 'F j, Y @ g:i A', $pods_last );
-	else :
-		$last_refresh = 'Never';
-	endif; ?>
 <div class="wrap">
 	<h1><?php _e('Podcast Administration', 'hpm-podcasts' ); ?></h1>
 	<?php settings_errors(); ?>
@@ -68,18 +34,18 @@ function hpm_podcast_settings_page() {
 							<h2 class="hndle"><span><?php _e('User Roles', 'hpm-podcasts' ); ?></span></h2>
 							<div class="inside">
 								<p><?php _e('Select all of the user roles that you would like to be able to manage your podcast feeds.  Anyone 
-									who can create new posts can create an episode of a podcast, but only the roles selected here can 
-									create, alter, or delete podcast feeds.', 'hpm-podcasts' ); ?></p>
+										who can create new posts can create an episode of a podcast, but only the roles selected here can 
+										create, alter, or delete podcast feeds.', 'hpm-podcasts' ); ?></p>
 								<p><?php _e('To select more than one, hold down Ctrl (on Windows) or Command (on Mac) and click the roles you want included.', 'hpm-podcasts' ); ?></p>
 								<table class="form-table">
 									<tr valign="top">
 										<th scope="row"><label for="hpm_podcast_settings[roles]"><?php _e('Select Your Roles', 'hpm-podcasts' );
-										?></label></th>
+												?></label></th>
 										<td>
 											<select name="hpm_podcast_settings[roles][ ]" multiple class="regular-text">
-											<?php foreach ( get_editable_roles() as $role_name => $role_info ) : ?>
-												<option value="<?php echo $role_name; ?>"<?php echo ( in_array( $role_name, $pods['roles'] ) ? " selected" : '' ); ?>><?php echo $role_name; ?></option>
-											<?php endforeach; ?>
+												<?php foreach ( get_editable_roles() as $role_name => $role_info ) : ?>
+													<option value="<?php echo $role_name; ?>"<?php echo ( in_array( $role_name, $pods['roles'] ) ? " selected" : '' ); ?>><?php echo $role_name; ?></option>
+												<?php endforeach; ?>
 											</select>
 										</td>
 									</tr>
@@ -165,7 +131,7 @@ function hpm_podcast_settings_page() {
 								<p><?php _e("If you aren't comfortable storing your AWS key and secret in your database, you can define them as Wordpress defaults.  Add the following lines to your wp-config.php file:",	'hpm-podcasts' );
 									?></p>
 								<pre>define('AWS_ACCESS_KEY_ID', 'YOUR_AWS_KEY');
-define('AWS_SECRET_ACCESS_KEY', 'YOUR_AWS_SECRET');</pre>
+	define('AWS_SECRET_ACCESS_KEY', 'YOUR_AWS_SECRET');</pre>
 								<table class="form-table">
 									<tr valign="top">
 										<th scope="row"><label for="hpm_podcast_settings[credentials][s3][key]"><?php
@@ -268,7 +234,7 @@ define('AWS_SECRET_ACCESS_KEY', 'YOUR_AWS_SECRET');</pre>
 									<tr valign="top">
 										<th scope="row"><label for="hpm_podcast_settings[credentials][sftp][host]"><?php _e('SFTP Host', 'hpm-podcasts' ); ?></label></th>
 										<td><input type="text" name="hpm_podcast_settings[credentials][sftp][host]" value="<?php echo $pods['credentials']['sftp']['host']; ?>" class="regular-text" placeholder="URL or IP
-										Address" /></td>
+											Address" /></td>
 									</tr>
 									<tr valign="top">
 										<th scope="row"><label for="hpm_podcast_settings[credentials][sftp][url]"><?php _e('SFTP Public URL', 'hpm-podcasts' ); ?></label></th>
@@ -308,11 +274,11 @@ define('AWS_SECRET_ACCESS_KEY', 'YOUR_AWS_SECRET');</pre>
 										<th scope="row"><label for="hpm_podcast_settings[https]"><?php _e('Force HTTPS in Feed?', 'hpm-podcasts' );
 												?></label></th>
 										<td><input type="checkbox" name="hpm_podcast_settings[https]" value="force-https" class="regular-text"<?php
-												if ( !empty( $pods['https'] ) ) :
-													if ( $pods['https'] == 'force-https' ) :
-														echo ' checked';
-													endif;
-												endif; ?>/></td>
+											if ( !empty( $pods['https'] ) ) :
+												if ( $pods['https'] == 'force-https' ) :
+													echo ' checked';
+												endif;
+											endif; ?>/></td>
 									</tr>
 								</table>
 							</div>
@@ -375,5 +341,3 @@ define('AWS_SECRET_ACCESS_KEY', 'YOUR_AWS_SECRET');</pre>
 		});
 	</script>
 </div>
-<?php
-}
