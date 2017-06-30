@@ -240,7 +240,7 @@ class HPM_Podcasts {
 		if ( empty( $hpm_pod_desc ) ) :
 			$hpm_pod_desc = array( 'feed' => '', 'description' => '' );
 		endif;
-		include __DIR__ . '/inc/post-editor.php';
+		include __DIR__ . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR .'post-editor.php';
 	}
 
 	/**
@@ -417,7 +417,7 @@ class HPM_Podcasts {
 				'categories' => array( 'first' => '', 'second' => '', 'third' => '' )
 			);
 		endif;
-		include __DIR__ . '/inc/post-type.php';
+		include __DIR__ . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR . 'post-type.php';
 	}
 
 	/**
@@ -493,7 +493,7 @@ class HPM_Podcasts {
 		else :
 			$last_refresh = 'Never';
 		endif;
-		include __DIR__ . '/inc/admin.php';
+		include __DIR__ . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR . 'admin.php';
 	}
 
 	/**
@@ -589,7 +589,7 @@ class HPM_Podcasts {
 			}
 		elseif ( $pods['upload-media'] == 'sftp' ) :
 			$short = $pods['credentials']['sftp'];
-			$ipath = __DIR__ .'vendor' . $ds . 'phpseclib';
+			$ipath = __DIR__ . $ds . 'vendor' . $ds . 'phpseclib';
 			set_include_path(get_include_path() . PATH_SEPARATOR . $ipath);
 			include( 'Net/SFTP.php' );
 			$sftp = new Net_SFTP( $short['host'] );
@@ -639,7 +639,7 @@ class HPM_Podcasts {
 					'secret' => $aws_secret
 				));
 			else :
-				require __DIR__ . 'vendor' . $ds . 'aws' . $ds . 'aws-autoloader.php';
+				require __DIR__ . $ds . 'vendor' . $ds . 'aws' . $ds . 'aws-autoloader.php';
 				$client = new Aws\S3\S3Client([
 					'version' => 'latest',
 					'region'  => $short['region'],
@@ -763,8 +763,8 @@ class HPM_Podcasts {
 				$error .= "No flat file upload target defined. Please check your settings and try again.";
 			endif;
 		else :
-			if ( !file_exists( $save.$ds.'hpm-podcasts' ) ) :
-				mkdir( $save.$ds.'hpm-podcasts' );
+			if ( !file_exists( $save . $ds . 'hpm-podcasts' ) ) :
+				mkdir( $save . $ds . 'hpm-podcasts' );
 			endif;
 		endif;
 
