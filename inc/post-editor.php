@@ -6,7 +6,11 @@
 </p>
 <?php
 if ( !empty( $pods['upload-media'] ) ) :
-	$hpm_pod_sg = get_post_meta( $object->ID, 'hpm_podcast_sg_file', true );
+	$hpm_pod_sg = get_post_meta( $object->ID, 'hpm_podcast_enclosure', true );
+	$sg_url = '';
+	if ( !empty( $hpm_pod_sg ) ) :
+		$sg_url = $hpm_pod_sg['url'];
+	endif;
 	$podcasts = new WP_Query(
 		array(
 			'post_type' => 'podcasts',
@@ -27,14 +31,13 @@ if ( !empty( $pods['upload-media'] ) ) :
 					<option value="<?PHP echo $post->post_name; ?>"<?PHP selected( $hpm_pod_desc['feed'], $post->post_name, TRUE );?>><?PHP the_title(); ?></option>
 					<?php
 				endwhile;
-			endif;
-			wp_reset_query();
-			$post = $post_old; ?>
+			endif; ?>
 		</select>&nbsp;&nbsp;&nbsp;<a href="#" class="button button-secondary" id="hpm-pods-upload">Upload Media File</a></p>
 	<h3><?PHP _e( "External URL", 'hpm-podcasts' ); ?></h3>
 	<p><?PHP _e( "If you want to upload your audio file manually, you can paste the URL here:", 'hpm-podcasts' );
 		?><br />
-		<label for="hpm-podcast-sg-file"><?php _e( "URL:", 'hpm-podcasts' ); ?></label> <input type="text" id="hpm-podcast-sg-file" name="hpm-podcast-sg-file" value="<?PHP echo $hpm_pod_sg; ?>" placeholder="https://ondemand.example.com/blah/blah.mp3" style="width: 75%;" /></p>
+		<label for="hpm-podcast-sg-file"><?php _e( "URL:", 'hpm-podcasts' ); ?></label> <input type="text" id="hpm-podcast-sg-file" name="hpm-podcast-sg-file" value="<?PHP echo $sg_url; ?>" placeholder="https://ondemand.example
+		.com/blah/blah.mp3" style="width: 75%;" /></p>
 	<?php
 endif; ?>
 <script>
