@@ -12,6 +12,11 @@
 
 class HPM_Podcasts {
 
+	/**
+	 * @var WP_Media_Upload
+	 */
+	protected $process_upload;
+
 	protected $options;
 
 	protected $last_update;
@@ -29,6 +34,10 @@ class HPM_Podcasts {
 	public function init() {
 		$this->options = get_option( 'hpm_podcast_settings' );
 		$this->last_update = get_option( 'hpm_podcast_last_update' );
+
+		require_once HPM_PODCAST_PLUGIN_DIR . 'classes' . DIRECTORY_SEPARATOR . 'class-background-process.php';
+
+		$this->process_upload = new HPM_Media_Upload();
 
 		add_filter( 'cron_schedules', array( $this, 'cron' ), 10, 2 );
 		add_action( 'hpm_podcast_update_refresh', array( $this, 'generate' ) );
@@ -61,7 +70,20 @@ class HPM_Podcasts {
 
 			register_rest_route( 'hpm-podcast/v1', '/upload/(?P<feed>[a-zA-Z0-9\-_]+)/(?P<id>[\d]+)', array(
 				'methods'  => 'GET',
-				'callback' => array( $this, 'media_upload'),
+				'callback' => array( $this, 'upload'),
+				'args' => array(
+					'id' => array(
+						'required' => true
+					),
+					'feed' => array(
+						'required' => true
+					)
+				)
+			) );
+
+			register_rest_route( 'hpm-podcast/v1', '/upload/(?P<feed>[a-zA-Z0-9\-_]+)/(?P<id>[\d]+)/progress', array(
+				'methods'  => 'GET',
+				'callback' => array( $this, 'upload_progress'),
 				'args' => array(
 					'id' => array(
 						'required' => true
@@ -274,7 +296,7 @@ class HPM_Podcasts {
 			'description' => balanceTags( $_POST['hpm-podcast-description'], true )
 		);
 
-		if ( !empty( $hpm_podcast['feed'] ) && !empty( $hpm_podcast['description'] ) ) :
+		if ( !empty( $hpm_podcast['feed'] ) || !empty( $hpm_podcast['description'] ) ) :
 			update_post_meta( $post_id, 'hpm_podcast_ep_meta', $hpm_podcast );
 		endif;
 
@@ -587,192 +609,45 @@ class HPM_Podcasts {
 	 *
 	 * @return mixed
 	 */
-	public function media_upload( WP_REST_Request $request ) {
+	public function upload( WP_REST_Request $request ) {
 		if ( empty( $request['feed'] ) ) :
 			return new WP_Error( 'rest_api_sad', esc_html__( 'Unable to upload media. Please choose a podcast feed.', 'hpm-podcasts' ), array( 'status' => 500 ) );
 		elseif ( empty( $request['id'] ) ) :
 			return new WP_Error( 'rest_api_sad', esc_html__( 'No post ID provided, cannot upload media. Please save your post and try again.', 'hpm-podcasts' ), array( 'status' => 500 ) );
 		endif;
 
-		$pods = $this->options;
-		$ds = DIRECTORY_SEPARATOR;
+		$this->process_upload->data( array( 'id' => $request['id'], 'feed' => $request['feed'] ) )->dispatch();
 
-		if ( empty( $pods['upload-media'] ) ) :
-			return new WP_Error( 'rest_api_sad', esc_html__( 'No media upload target was selected. Please check your settings.', 'hpm-podcasts' ), array( 'status' => 500 ) );
+		return rest_ensure_response( array( 'code' => 'rest_api_success', 'message' => esc_html__( 'Podcast upload started successfully.', 'hpm-podcasts' ), 'data' => array( 'status' => 200 ) ) );
+	}
+
+	/**
+	 * Upload progress reports
+	 *
+	 * @param WP_REST_Request $request This function accepts a rest request to process data.
+	 *
+	 * @return mixed
+	 */
+	public function upload_progress( WP_REST_Request $request ) {
+		if ( empty( $request['id'] ) ) :
+			return new WP_Error( 'rest_api_sad', esc_html__( 'No post ID provided, cannot find upload status. Please save your post and try again.', 'hpm-podcasts' ), array( 'status' => 500 ) );
 		endif;
 
-		$message = '';
-		$download = false;
+		$status = get_post_meta( $request['id'], 'hpm_podcast_status', true );
 
-		$dir = wp_upload_dir();
-		$save = $dir['basedir'];
-		$media = get_attached_media( 'audio', $request['id'] );
-		if ( empty ( $media ) ) :
-			return new WP_Error( 'rest_api_sad', esc_html__( 'No audio are attached to this post. Please attach one and try again.', 'hpm-podcasts' ), array( 'status' => 500 ) );
-		endif;
-
-		$med = reset( $media );
-		$url = wp_get_attachment_url( $med->ID );
-		$metadata = get_post_meta( $med->ID, '_wp_attachment_metadata', true );
-		if ( strpos( $url, $dir['baseurl'] ) !== FALSE ) :
-			$meta = get_post_meta( $med->ID, '_wp_attached_file', true );
-			$local = $save . $ds . $meta;
-			$path = pathinfo( $meta );
+		if ( empty( $status ) ) :
+			return new WP_Error( 'rest_api_sad', esc_html__( 'No upload status found, please try your upload again.', 'hpm-podcasts' ), array( 'status' => 500 ) );
 		else :
-			$download = true;
-			$parse = parse_url( $url );
-			$path = pathinfo( $parse['path'] );
-			$local = $save . $ds . $path['basename'];
-			if ( !file_put_contents( $local, file_get_contents( $url ) ) ) :
-				return new WP_Error( 'rest_api_sad', esc_html__( 'Unable to download your media file to the local server. Please try again.', 'hpm-podcasts' ), array( 'status' => 500 ) );
+			if ( $status['status'] == 'error' ) :
+				return new WP_Error( 'rest_api_sad', esc_html__( $status['message'], 'hpm-podcasts' ), array( 'status' => 500
+				) );
+			elseif ( $status['status'] == 'in progress' ) :
+				return rest_ensure_response( array( 'code' => 'rest_api_success', 'message' => esc_html__( $status['message'], 'hpm-podcasts' ), 'data' => array( 'current' => 'in-progress', 'status' => 200 ) ) );
+			elseif ( $status['status'] == 'success' ) :
+				delete_post_meta( $request['id'], 'hpm_podcast_status', '' );
+				$data = get_post_meta( $request['id'], 'hpm_podcast_enclosure', true );
+				return rest_ensure_response( array( 'code' => 'rest_api_success', 'message' => esc_html__( $status['message'], 'hpm-podcasts' ), 'data' => array( 'url' => $data['url'], 'current' => 'success', 'status' => 200 ) ) );
 			endif;
-		endif;
-
-		if ( $pods['upload-media'] == 'ftp' ) :
-			$short = $pods['credentials']['ftp'];
-			if ( defined( 'HPM_FTP_PASSWORD' ) ) :
-				$ftp_password = HPM_FTP_PASSWORD;
-			elseif ( !empty( $short['password'] ) ) :
-				$ftp_password = $short['password'];
-			else :
-				return new WP_Error( 'rest_api_sad', esc_html__( 'No FTP password provided. Please check your settings.', 'hpm-podcasts' ), array( 'status' => 500 ) );
-			endif;
-			try {
-				$con = ftp_connect($short['host']);
-				if ( false === $con ) :
-					throw new Exception("Unable to connect to the FTP server. Please check your FTP Host URL or IP and try again." );
-				endif;
-
-				$loggedIn = ftp_login( $con, $short['username'], $ftp_password );
-				if ( false === $loggedIn ) :
-					throw new Exception("Unable to log in to the FTP server. Please check your credentials and try again." );
-				endif;
-
-				if ( !empty( $short['folder'] ) ) :
-					if ( !ftp_chdir( $con, $short['folder'] ) ) :
-						ftp_mkdir( $con, $short['folder'] );
-						ftp_chdir( $con, $short['folder'] );
-					endif;
-				endif;
-
-				if ( !ftp_chdir( $con, $request['feed'] ) ) :
-					ftp_mkdir( $con, $request['feed'] );
-					ftp_chdir( $con, $request['feed'] );
-				endif;
-				if ( ! ftp_put( $con, $path['basename'], $local, FTP_BINARY ) ) :
-					throw new Exception("The file could not be saved on the FTP server. Please verify your permissions on that server and try again." );
-				endif;
-				ftp_close( $con );
-
-				$sg_url = $short['url'].'/'.$request['feed'].'/'.$path['basename'];
-
-			} catch ( Exception $e ) {
-				$message = $e->getMessage();
-			}
-		elseif ( $pods['upload-media'] == 'sftp' ) :
-			$short = $pods['credentials']['sftp'];
-			$ipath = __DIR__ . $ds . 'vendor' . $ds . 'phpseclib';
-			set_include_path(get_include_path() . PATH_SEPARATOR . $ipath);
-			include( 'Net/SFTP.php' );
-			$sftp = new Net_SFTP( $short['host'] );
-			if ( defined( 'HPM_SFTP_PASSWORD' ) ) :
-				$sftp_password = HPM_SFTP_PASSWORD;
-			elseif ( !empty( $short['password'] ) ) :
-				$sftp_password = $short['password'];
-			else :
-				return new WP_Error( 'rest_api_sad', esc_html__( 'No SFTP password provided. Please check your settings.', 'hpm-podcasts' ), array( 'status' => 500 ) );
-			endif;
-			if ( !$sftp->login( $short['username'], $sftp_password ) ) :
-				$message = "Unable to connect to the SFTP server. Please check your SFTP Host URL or IP and try again.";
-			endif;
-
-			if ( !empty( $short['folder'] ) ) :
-				if ( !$sftp->chdir( $short['folder'] ) ) :
-					$sftp->mkdir( $short['folder'] );
-					$sftp->chdir( $short['folder'] );
-				endif;
-			endif;
-
-			if ( !$sftp->chdir( $request['feed'] ) ) :
-				$sftp->mkdir( $request['feed'] );
-				$sftp->chdir( $request['feed'] );
-			endif;
-			if ( !$sftp->put( $path['basename'], $local, NET_SFTP_LOCAL_FILE ) ) :
-				$message = "The file could not be saved on the SFTP server. Please verify your permissions on that server and try again.";
-			endif;
-			unset( $sftp );
-			$sg_url = $short['url'].'/'.$request['feed'].'/'.$path['basename'];
-
-		elseif ( $pods['upload-media'] == 's3' ) :
-			$short = $pods['credentials']['s3'];
-			if ( defined( 'AWS_ACCESS_KEY_ID' ) && defined( 'AWS_SECRET_ACCESS_KEY' ) ) :
-				$aws_key = AWS_ACCESS_KEY_ID;
-				$aws_secret = AWS_SECRET_ACCESS_KEY;
-			elseif ( !empty( $short['key'] ) && !empty( $short['secret'] ) ) :
-				$aws_key = $short['key'];
-				$aws_secret = $short['secret'];
-			else :
-				return array( 'state' => 'error', 'message' => 'No S3 credentials provided. Please check your settings.' );
-			endif;
-
-			if ( class_exists( 'Amazon_Web_Services' ) ) :
-				$client = Aws\S3\S3Client::factory(array(
-					'key' => $aws_key,
-					'secret' => $aws_secret
-				));
-			else :
-				require __DIR__ . $ds . 'vendor' . $ds . 'aws' . $ds . 'aws-autoloader.php';
-				$client = new Aws\S3\S3Client([
-					'version' => 'latest',
-					'region'  => $short['region'],
-					'credentials' => [
-						'key' => $aws_key,
-						'secret' => $aws_secret
-					]
-				]);
-			endif;
-
-			if ( !empty( $short['folder'] ) ) :
-				$folder = $short['folder'].'/';
-			else :
-				$folder = '';
-			endif;
-
-			try {
-				$result = $client->putObject(array(
-					'Bucket' => $short['bucket'],
-					'Key' => $folder.$request['feed'].'/'.$path['basename'],
-					'SourceFile' => $local,
-					'ACL' => 'public-read',
-					'ContentType' => $med->post_mime_type
-				));
-			} catch (S3Exception $e) {
-				$message = $e->getMessage();
-			} catch (AwsException $e) {
-				$message = $e->getAwsRequestId() . "\n" . $e->getAwsErrorType() . "\n" . $e->getAwsErrorCode();
-			}
-			$sg_url = 'https://s3-'.$short['region'].'.amazonaws.com/'.$short['bucket'].'/'.$folder.$request['feed'].'/'.$path['basename'];
-		else :
-			return new WP_Error( 'rest_api_sad', esc_html__( 'No media upload target was selected. Please check your settings.', 'hpm-podcasts' ), array( 'status' => 500 ) );
-		endif;
-		if ( empty( $message ) ) :
-			if ( $download ) :
-				unlink( $local );
-			endif;
-			if ( !empty( $sg_url ) ) :
-				$enclose = array(
-					'url' => $sg_url,
-					'filesize' => $metadata['filesize'],
-					'mime' => $metadata['mime_type'],
-					'length' => $metadata['length_formatted']
-				);
-				update_post_meta( $request['id'], 'hpm_podcast_sg_file', $enclose );
-				return rest_ensure_response( array( 'code' => 'rest_api_success', 'message' => esc_html__( 'Podcast media file uploaded successfully.', 'hpm-podcasts' ), 'data' => array( 'url' => $sg_url, 'status' => 200 ) ) );
-			else :
-				return new WP_Error( 'rest_api_sad', esc_html__( 'Unable to determine the remote URL of your media file. Please check your settings and try again.', 'hpm-podcasts' ), array( 'status' => 500 ) );
-			endif;
-		else :
-			return new WP_Error( 'rest_api_sad', esc_html__( $message, 'hpm-podcasts' ), array( 'status' => 500 ) );
 		endif;
 	}
 

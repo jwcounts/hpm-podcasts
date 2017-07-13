@@ -9,7 +9,9 @@ if ( !empty( $pods['upload-media'] ) ) :
 	$hpm_pod_sg = get_post_meta( $object->ID, 'hpm_podcast_enclosure', true );
 	$sg_url = '';
 	if ( !empty( $hpm_pod_sg ) ) :
-		$sg_url = $hpm_pod_sg['url'];
+		if ( !empty( $hpm_pod_desc['feed'] ) ) :
+			$sg_url = $hpm_pod_sg['url'];
+		endif;
 	endif;
 	$podcasts = new WP_Query(
 		array(
@@ -36,11 +38,37 @@ if ( !empty( $pods['upload-media'] ) ) :
 	<h3><?PHP _e( "External URL", 'hpm-podcasts' ); ?></h3>
 	<p><?PHP _e( "If you want to upload your audio file manually, you can paste the URL here:", 'hpm-podcasts' );
 		?><br />
-		<label for="hpm-podcast-sg-file"><?php _e( "URL:", 'hpm-podcasts' ); ?></label> <input type="text" id="hpm-podcast-sg-file" name="hpm-podcast-sg-file" value="<?PHP echo $sg_url; ?>" placeholder="https://ondemand.example
-		.com/blah/blah.mp3" style="width: 75%;" /></p>
+		<label for="hpm-podcast-sg-file"><?php _e( "URL:", 'hpm-podcasts' ); ?></label> <input type="text" id="hpm-podcast-sg-file" name="hpm-podcast-sg-file" value="<?PHP echo $sg_url; ?>" placeholder="https://ondemand.example.com/blah/blah.mp3" style="width: 75%;" /></p>
 	<?php
 endif; ?>
 <script>
+	function uploadCheck() {
+		var id = jQuery('#post_ID').val();
+		var feed = jQuery('#hpm-podcast-ep-feed').val();
+		jQuery.ajax({
+			type: 'GET',
+			url: '/wp-json/hpm-podcast/v1/upload/'+feed+'/'+id+'/progress',
+			data: '',
+			success: function (response) {
+				if ( response.data.current === 'in-progress' ) {
+					setTimeout( 'uploadCheck()', 5000 );
+				} else if ( response.data.current === 'success' ) {
+					jQuery('#hpm-upload-spinner').remove();
+					jQuery('#hpm-podcast-sg-file').val(response.data.url).addClass('refresh').removeClass('refresh');
+					jQuery( '<div class="notice notice-success is-dismissible"><p>'+response.message+'</p></div>' ).insertBefore( jQuery('#hpm-pods-upload') );
+				}
+			},
+			error: function (response) {
+				jQuery('#hpm-upload-spinner').remove();
+				if (typeof response.responseJSON.message !== 'undefined') {
+					jQuery('<div class="notice notice-error is-dismissible"><p>' + response.responseJSON.message + '</p></div>').insertBefore(jQuery('#hpm-pods-upload'));
+				} else {
+					console.log(response);
+					jQuery('<div class="notice notice-error is-dismissible">There was an error while performing this function. Please consult your javascript console for more information.</div>').insertBefore(('#hpm-pods-upload'));
+				}
+			}
+		});
+	}
 	jQuery(document).ready(function($){
 		var metaClass = $('#hpm-podcast-meta-class');
 		var desc = $("#hpm-podcast-description");
@@ -61,10 +89,8 @@ endif; ?>
 				type: 'GET',
 				url: '/wp-json/hpm-podcast/v1/upload/'+feed+'/'+id,
 				data: '',
-				success: function (response) {
-					$('#hpm-upload-spinner').remove();
-					$('#hpm-podcast-sg-file').val(response.data.url).addClass('refresh').removeClass('refresh');
-					$( '<div class="notice notice-success is-dismissible"><p>'+response.message+'</p></div>' ).insertBefore( $('#hpm-pods-upload') );
+				success: function () {
+					setTimeout( 'uploadCheck()', 5000 );
 				},
 				error: function (response) {
 					$('#hpm-upload-spinner').remove();
@@ -77,5 +103,6 @@ endif; ?>
 				}
 			});
 		});
+
 	});
 </script>
