@@ -51,20 +51,23 @@ endif; ?>
 			data: '',
 			success: function (response) {
 				if ( response.data.current === 'in-progress' ) {
+					jQuery("#hpm-upload-message").text(response.message);
 					setTimeout( 'uploadCheck()', 5000 );
 				} else if ( response.data.current === 'success' ) {
-					jQuery('#hpm-upload-spinner').remove();
+					jQuery('#hpm-upload').remove();
 					jQuery('#hpm-podcast-sg-file').val(response.data.url).addClass('refresh').removeClass('refresh');
-					jQuery( '<div class="notice notice-success is-dismissible"><p>'+response.message+'</p></div>' ).insertBefore( jQuery('#hpm-pods-upload') );
+					jQuery( '<div class="notice notice-success is-dismissible"><p>'+response.message+'</p></div>' )
+						.insertBefore( jQuery('#hpm-podcast-feeds') );
 				}
 			},
 			error: function (response) {
-				jQuery('#hpm-upload-spinner').remove();
+				jQuery('#hpm-upload').remove();
 				if (typeof response.responseJSON.message !== 'undefined') {
-					jQuery('<div class="notice notice-error is-dismissible"><p>' + response.responseJSON.message + '</p></div>').insertBefore(jQuery('#hpm-pods-upload'));
+					jQuery('<div class="notice notice-error is-dismissible"><p>' + response.responseJSON.message +
+						'</p></div>').insertBefore(jQuery('#hpm-podcast-feeds'));
 				} else {
 					console.log(response);
-					jQuery('<div class="notice notice-error is-dismissible">There was an error while performing this function. Please consult your javascript console for more information.</div>').insertBefore(('#hpm-pods-upload'));
+					jQuery('<div class="notice notice-error is-dismissible">There was an error while performing this function. Please consult your javascript console for more information.</div>').insertBefore(jQuery('#hpm-podcast-feeds'));
 				}
 			}
 		});
@@ -84,21 +87,23 @@ endif; ?>
 			e.preventDefault();
 			var id = $('#post_ID').val();
 			var feed = $('#hpm-podcast-ep-feed').val();
-			$(this).after( ' <img id="hpm-upload-spinner" src="/wp-includes/images/spinner.gif">' );
+			$(this).after( '<span id="hpm-upload"><img style="padding: 0 0.5em; vertical-align: middle;" src="/wp-includes/images/spinner.gif"><span style="margin-left: 1em;" id="hpm-upload-message"></span></span>' );
 			$.ajax({
 				type: 'GET',
 				url: '/wp-json/hpm-podcast/v1/upload/'+feed+'/'+id,
 				data: '',
-				success: function () {
+				success: function (response) {
+					$('#hpm-upload-message').text(response.message);
 					setTimeout( 'uploadCheck()', 5000 );
 				},
 				error: function (response) {
-					$('#hpm-upload-spinner').remove();
+					$('#hpm-upload').remove();
 					if (typeof response.responseJSON.message !== 'undefined') {
-						$('<div class="notice notice-error is-dismissible"><p>' + response.responseJSON.message + '</p></div>').insertBefore($('#hpm-pods-upload'));
+						$('<div class="notice notice-error is-dismissible"><p>' + response.responseJSON.message +
+							'</p></div>').insertBefore($('#hpm-podcast-feeds'));
 					} else {
 						console.log(response);
-						$('<div class="notice notice-error is-dismissible">There was an error while performing this function. Please consult your javascript console for more information.</div>').insertBefore($('#hpm-pods-upload'));
+						$('<div class="notice notice-error is-dismissible">There was an error while performing this function. Please consult your javascript console for more information.</div>').insertBefore($('#hpm-podcast-feeds'));
 					}
 				}
 			});
