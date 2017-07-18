@@ -1,13 +1,21 @@
 <?php
 /**
- * Plugin Name: HPM Podcasts
- * Plugin URI: http://www.houstonpublicmedia.org
- * Description: A plugin that allows you to create a podcast feed from any category, either video or audio. It also has the option to periodically cache the feeds as flat XML in Amazon S3 or on a separate FTP to speed up delivery, and to store the media files themselves there as well.
- * Version: 20170714
- * Author: Jared Counts
- * Author URI: http://www.houstonpublicmedia.org/staff/jared-counts/
- * License: GPL2
- * Text Domain: hpm-podcasts
+ * @link 			https://github.com/jwcounts/hpm-podcasts
+ * @since  			20170714
+ * @package  		HPM-Podcasts
+ *
+ * @wordpress-plugin
+ * Plugin Name: 	HPM Podcasts
+ * Plugin URI: 		https://github.com/jwcounts/hpm-podcasts
+ * Description: 	A plugin that allows you to create a podcast feed from any category, as well as 
+ * Version: 		20170714
+ * Author: 			Jared Counts
+ * Author URI: 		http://www.houstonpublicmedia.org/staff/jared-counts/
+ * License: 		GPL-2.0+
+ * License URI: 	http://www.gnu.org/licenses/gpl-2.0.txt
+ * Text Domain: 	hpm-podcasts
+ *
+ * Works best with Wordpress 4.6.0+
  */
 
 class HPM_Podcasts {
