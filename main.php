@@ -39,6 +39,7 @@ class HPM_Podcasts {
 	/**
 	* Init
 	*/
+
 	public function init() {
 		$this->options = get_option( 'hpm_podcast_settings' );
 		$this->last_update = get_option( 'hpm_podcast_last_update' );
@@ -68,6 +69,9 @@ class HPM_Podcasts {
 
 		// Create menu in Admin Dashboard
 		add_action('admin_menu', array( $this, 'create_menu' ) );
+
+		//Adds meta query to always list podcast archive in alphabetical order
+		add_action( 'pre_get_posts', array( $this, 'meta_query' ) );
 
 		// Register WP-REST API endpoints
 		add_action( 'rest_api_init', function(){
@@ -1017,6 +1021,19 @@ class HPM_Podcasts {
 			endif;
 		else :
 			return new WP_Error( 'rest_api_sad', esc_html__( 'No podcast feeds have been defined. Please create one and try again.', 'hpm-podcasts' ), array( 'status' => 500 ) );
+		endif;
+	}
+
+	/*
+	 * Display podcasts and shows alphabetically instead of by creation date
+	 */
+	public function meta_query( $query ) {
+		if ( $query->is_archive() && $query->is_main_query() ) :
+			$pod_check = $query->get( 'post_type' );
+			if ( $pod_check == 'podcasts' ) :
+				$query->set( 'orderby', 'post_title' );
+				$query->set( 'order', 'ASC' );
+			endif;
 		endif;
 	}
 }
