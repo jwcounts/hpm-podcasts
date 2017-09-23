@@ -7,7 +7,7 @@
  * @wordpress-plugin
  * Plugin Name: 	HPM Podcasts
  * Plugin URI: 		https://github.com/jwcounts/hpm-podcasts
- * Description: 	A plugin that allows you to create a podcast feed from any category, as well as 
+ * Description: 	A plugin that allows you to create a podcast feed from any category, as well as
  * Version: 		20170714
  * Author: 			Jared Counts
  * Author URI: 		http://www.houstonpublicmedia.org/staff/jared-counts/
@@ -68,7 +68,7 @@ class HPM_Podcasts {
 		add_filter( 'single_template', array( $this, 'single_template' ) );
 
 		// Create menu in Admin Dashboard
-		add_action('admin_menu', array( $this, 'create_menu' ) );
+		add_action( 'admin_menu', array( $this, 'create_menu' ) );
 
 		//Adds meta query to always list podcast archive in alphabetical order
 		add_action( 'pre_get_posts', array( $this, 'meta_query' ) );
@@ -669,7 +669,7 @@ class HPM_Podcasts {
 	 *
 	 * @return mixed
 	 */
-	public function generate() {
+	public function generate( WP_REST_Request $request = null ) {
 		$pods = $this->options;
 		$ds = DIRECTORY_SEPARATOR;
 		if ( !empty( $pods['https'] ) ) :
@@ -678,7 +678,6 @@ class HPM_Podcasts {
 		else :
 			$protocol = 'http://';
 		endif;
-		global $wpdb;
 		$error = '';
 		$dir = wp_upload_dir();
 		$save = $dir['basedir'];
@@ -772,23 +771,51 @@ class HPM_Podcasts {
 				$pod_id = get_the_ID();
 				$catslug = get_post_meta( $pod_id, 'hpm_pod_cat', true );
 				$podlink = get_post_meta( $pod_id, 'hpm_pod_link', true );
+				$last_id = get_post_meta( $pod_id, 'hpm_pod_last_id', true );
 				$current_post = $post;
-				ob_start();
-				echo "<?xml version=\"1.0\" encoding=\"".get_option('blog_charset')."\"?>\n";
-				do_action( 'rss_tag_pre', 'rss2' ); ?>
-<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:atom="http://www.w3.org/2005/Atom" <?php do_action( 'rss2_ns' ); ?>>
-<?php
+				$podcast_title = $podcasts->post->post_name;
+				$perpage = -1;
+				if ( !empty( $podlink['limit'] ) && $podlink['limit'] != 0 && is_numeric( $podlink['limit'] ) ) :
+					$perpage = $podlink['limit'];
+				endif;
+				$podeps = new WP_Query(
+					array(
+						'post_type' => 'post',
+						'post_status' => 'publish',
+						'cat' => $catslug,
+						'posts_per_page' => $perpage,
+						'meta_query' => array(
+							array(
+								'key' => 'hpm_podcast_enclosure',
+								'compare' => 'EXISTS'
+							)
+						)
+					)
+				);
+				if ( $podeps->have_posts() && $request === null ) :
+					$first_id = $podeps->post->ID;
+					if ( !empty( $last_id ) && $last_id == $first_id ) :
+						if ( $pods['upload-flats'] == 'database' ) :
+							$transient = get_transient( 'hpm_podcast-'.$podcast_title );
+							set_transient( 'hpm_podcast-'.$podcast_title, $transient, DAY_IN_SECONDS );
+						endif;
+						continue;
+					endif;
+				endif;
 				$main_image = wp_get_attachment_image_src( get_post_thumbnail_id(), 'full' );
 				$categories = array();
 				foreach ( $podlink['categories'] as $pos => $cats ) :
 					$categories[$pos] = explode( '||', $cats );
 				endforeach;
-				$podcast_title = $podcasts->post->post_name;
 				$pod_tags = wp_get_post_tags( $pod_id );
 				$pod_tag_array = array();
 				foreach ( $pod_tags as $t ) :
 					$pod_tag_array[] = $t->name;
-				endforeach;?>
+				endforeach;
+				ob_start();
+				echo "<?xml version=\"1.0\" encoding=\"".get_option('blog_charset')."\"?>\n";
+				do_action( 'rss_tag_pre', 'rss2' ); ?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:atom="http://www.w3.org/2005/Atom" <?php do_action( 'rss2_ns' ); ?>>
 	<channel>
 		<title><?php the_title_rss(); ?></title>
 		<atom:link href="<?php echo get_the_permalink(); ?>" rel="self" type="application/rss+xml" />
@@ -840,28 +867,13 @@ class HPM_Podcasts {
 <?php
 			endif;
 			do_action( 'rss2_head');
-			$perpage = -1;
-			if ( !empty( $podlink['limit'] ) && $podlink['limit'] != 0 && is_numeric( $podlink['limit'] ) ) :
-				$perpage = $podlink['limit'];
-			endif;
-			$podeps = new WP_Query(
-				array(
-					'post_type' => 'post',
-					'post_status' => 'publish',
-					'cat' => $catslug,
-					'posts_per_page' => $perpage,
-					'meta_query' => array(
-						array(
-							'key' => 'hpm_podcast_enclosure',
-							'compare' => 'EXISTS'
-						)
-					)
-				)
-			);
 			if ( $podeps->have_posts() ) :
 				while ( $podeps->have_posts() ) :
 					$podeps->the_post();
 					$epid = get_the_ID();
+					if ( $podeps->current_post == 0 ) :
+						update_post_meta( $pod_id, 'hpm_pod_last_id', $epid );
+					endif;
 					$a_meta = get_post_meta( $epid, 'hpm_podcast_enclosure', true );
 					$pod_image = wp_get_attachment_image_src( get_post_thumbnail_id( $epid ), 'full' );
 					$tags = wp_get_post_tags( $epid );
@@ -986,12 +998,7 @@ class HPM_Podcasts {
 						unset( $sftp );
 						unset( $local );
 					elseif ( $pods['upload-flats'] == 'database' ) :
-						$option = get_option( 'hpm_podcast-'.$podcast_title );
-						if ( empty( $option ) ) :
-							add_option( 'hpm_podcast-'.$podcast_title, $getContent );
-						else :
-							update_option( 'hpm_podcast-'.$podcast_title, $getContent );
-						endif;
+						set_transient( 'hpm_podcast-'.$podcast_title, $getContent, DAY_IN_SECONDS );
 					else :
 						$error .= "No flat file upload target defined. Please check your settings and try again.";
 					endif;

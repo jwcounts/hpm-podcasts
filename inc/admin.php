@@ -103,7 +103,7 @@
 													S3</option>
 												<option value="ftp" <?php selected( $pods['upload-flats'], 'ftp', TRUE); ?>>FTP</option>
 												<option value="sftp" <?php selected( $pods['upload-flats'], 'sftp', TRUE); ?>>SFTP</option>
-												<option value="sftp" <?php selected( $pods['upload-flats'], 'database', TRUE); ?>>Database</option>
+												<option value="database" <?php selected( $pods['upload-flats'], 'database',	TRUE); ?>>Database</option>
 											</select>
 										</td>
 									</tr>
@@ -131,7 +131,7 @@
 								<p><?php _e("If you aren't comfortable storing your AWS key and secret in your database, you can define them as Wordpress defaults.  Add the following lines to your wp-config.php file:",	'hpm-podcasts' );
 									?></p>
 								<pre>define('AWS_ACCESS_KEY_ID', 'YOUR_AWS_KEY');
-	define('AWS_SECRET_ACCESS_KEY', 'YOUR_AWS_SECRET');</pre>
+define('AWS_SECRET_ACCESS_KEY', 'YOUR_AWS_SECRET');</pre>
 								<table class="form-table">
 									<tr valign="top">
 										<th scope="row"><label for="hpm_podcast_settings[credentials][s3][key]"><?php

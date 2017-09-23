@@ -16,10 +16,10 @@ Once it is activated, look for Podcasts in the left-hand menu of the Admin Dashb
 
 If you aren't comfortable adding your S3 key/secret or (S)FTP passwords to your database, you can always set them as variables in your Wordpress configuration. Add the following lines (where applicable) to `wp-config.php`:
 ```
-define( 'AWS_ACCESS_KEY_ID',		'YOUR_AWS_KEY' );
-define( 'AWS_SECRET_ACCESS_KEY',	'YOUR_AWS_SECRET' );
-define( 'HPM_FTP_PASSWORD', 		'YOUR_FTP_PASSWORD' );
-define( 'HPM_SFTP_PASSWORD', 	'YOUR_SFTP_PASSWORD' );
+define( 'AWS_ACCESS_KEY_ID',        'YOUR_AWS_KEY' );
+define( 'AWS_SECRET_ACCESS_KEY',    'YOUR_AWS_SECRET' );
+define( 'HPM_FTP_PASSWORD', 	    'YOUR_FTP_PASSWORD' );
+define( 'HPM_SFTP_PASSWORD',        'YOUR_SFTP_PASSWORD' );
 ```
 
 If you want to define these keys as environment variables (for example, if you're running this site on Amazon Elastic Beanstalk or the like), you can include these definitions in your `wp-config.php` file with references to your environment:

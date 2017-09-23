@@ -8,7 +8,7 @@
 	if ( !empty( $pods['upload-flats'] ) ) :
 		if ( $pods['upload-flats'] == 's3' ) :
 			$base_url = 'https://s3-'.$pods['credentials']['s3']['region'].'.amazonaws.com/'.$pods['credentials']['s3']['bucket'].'/'.$pods['credentials']['s3']['folder'].'/';
-		else :
+		elseif ( $pods['upload-flats'] == 'ftp' || $pods['upload-flats'] == 'sftp' ) :
 			if ( !empty( $pods['credentials'][$pods['upload-flats']]['folder'] ) ) :
 				$folder = "/".$pods['credentials'][$pods['upload-flats']]['folder']."/";
 			else :
@@ -23,7 +23,7 @@
 	while ( have_posts() ) : the_post();
 		header('Content-Type: ' . feed_content_type('rss2') . '; charset=' . get_option('blog_charset'), true);
 		if ( $pods['upload-flats'] == 'database' ) :
-			echo get_option( 'hpm_podcasts-'.$post->post_name );
+			echo get_transient( 'hpm_podcast-'.$post->post_name );
 		else :
 			echo file_get_contents( $base_url.$post->post_name.".xml" );
 		endif;
