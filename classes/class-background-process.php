@@ -125,15 +125,37 @@ class HPM_Media_Upload {
 		$save = $dir['basedir'];
 		$media = get_attached_media( 'audio', $id );
 		if ( empty ( $media ) ) :
-			update_post_meta( $id, 'hpm_podcast_status', array( 'status' => 'error', 'message' => esc_html__( 'No audio are attached to this post. Please attach one and try again.', 'hpm-podcasts' ) ) );
-			return false;
+			$enclosure = get_post_meta( $id, 'hpm_podcast_enclosure');
+			if ( empty( $enclosure ) ) :
+				update_post_meta( $id, 'hpm_podcast_status', array( 'status' => 'error', 'message' => esc_html__( 'No audio are attached to this post. Please attach one and try again.', 'hpm-podcasts' ) ) );
+				return false;
+			else :
+				if ( strpos( $enclosure['url'], $pods['credentials'][$pods['upload-media']]['url'] ) === FALSE ) :
+					$url = $enclosure['url'];
+					$metadata = array(
+						'filesize' => $enclosure['filesize'],
+						'mime_type' => $enclosure['mime'],
+						'length_formatted' => $enclosure['length'],
+						'url' => $enclosure['url']
+					);
+				else :
+					update_post_meta( $id, 'hpm_podcast_status', array( 'status' => 'error', 'message' => esc_html__( 'No audio are attached to this post and the enclosure audio already exists on the server. Please attach one and try again.',	'hpm-podcasts' ) ) );
+					return false;
+				endif;
+			endif;
+		else :
+			if ( count( $media ) > 1 ) :
+				update_post_meta( $id, 'hpm_podcast_status', array( 'status' => 'error', 'message' => esc_html__( 'More than one audio file has been attached to this post. Please delete the extra audio files and try again.', 'hpm-podcasts' ) ) );
+				return false;
+			endif;
+			$med = reset( $media );
+			$med_id = $med->ID;
+			$url = wp_get_attachment_url( $med_id );
+			$metadata = get_post_meta( $med_id, '_wp_attachment_metadata', true );
 		endif;
 
-		$med = reset( $media );
-		$url = wp_get_attachment_url( $med->ID );
-		$metadata = get_post_meta( $med->ID, '_wp_attachment_metadata', true );
 		if ( strpos( $url, $dir['baseurl'] ) !== FALSE ) :
-			$meta = get_post_meta( $med->ID, '_wp_attached_file', true );
+			$meta = get_post_meta( $med_id, '_wp_attached_file', true );
 			$local = $save . $ds . $meta;
 			$path = pathinfo( $meta );
 			update_post_meta( $id, 'hpm_podcast_status', array( 'status' => 'in progress', 'message' => esc_html__( 'Podcast file exists on the local server, proceeding.', 'hpm-podcasts' ) ) );
