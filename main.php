@@ -37,8 +37,8 @@ class HPM_Podcasts {
 		register_deactivation_hook( __FILE__, array( $this, 'deactivation' ) );
 	}
 	/**
-	* Init
-	*/
+	 * Init
+	 */
 
 	public function init() {
 		$this->options = get_option( 'hpm_podcast_settings' );
@@ -794,11 +794,8 @@ class HPM_Podcasts {
 				);
 				if ( $podeps->have_posts() && $request === null ) :
 					$first_id = $podeps->post->ID;
-					if ( !empty( $last_id ) && $last_id == $first_id ) :
-						if ( $pods['upload-flats'] == 'database' ) :
-							$transient = get_transient( 'hpm_podcast-'.$podcast_title );
-							set_transient( 'hpm_podcast-'.$podcast_title, $transient, DAY_IN_SECONDS );
-						endif;
+					$modified = get_the_modified_date('u', $first_id );
+					if ( !empty( $last_id['id'] ) && $last_id['id'] == $first_id && $last_id['modified'] == $modified ) :
 						continue;
 					endif;
 				endif;
@@ -815,117 +812,118 @@ class HPM_Podcasts {
 				ob_start();
 				echo "<?xml version=\"1.0\" encoding=\"".get_option('blog_charset')."\"?>\n";
 				do_action( 'rss_tag_pre', 'rss2' ); ?>
-<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:atom="http://www.w3.org/2005/Atom" <?php do_action( 'rss2_ns' ); ?>>
-	<channel>
-		<title><?php the_title_rss(); ?></title>
-		<atom:link href="<?php echo get_the_permalink(); ?>" rel="self" type="application/rss+xml" />
-		<link><?php echo $podlink['page']; ?></link>
-		<description><![CDATA[<?php the_content_feed(); ?>]]></description>
-		<language><?php bloginfo_rss( 'language' ); ?></language>
-		<copyright>All Rights Reserved</copyright>
-		<ttl><?php echo $frequency; ?></ttl>
-		<pubDate><?php echo date('r'); ?></pubDate>
-		<itunes:summary><![CDATA[<?php the_content_feed(); ?>]]></itunes:summary>
-		<itunes:owner>
-			<itunes:name><![CDATA[<?php echo $pods['owner']['name']; ?>]]></itunes:name>
-			<itunes:email><?php echo $pods['owner']['email']; ?></itunes:email>
-		</itunes:owner>
-		<itunes:keywords><![CDATA[<?php echo implode( ', ', $pod_tag_array ); ?>]]></itunes:keywords>
-		<itunes:subtitle><?PHP echo get_the_excerpt();  ?></itunes:subtitle>
-		<itunes:author><?php
-				if ( function_exists( 'coauthors' ) ) :
-					coauthors(', ', ', ', '', '', true);
-				else :
-					echo get_the_author();
-				endif; ?></itunes:author>
-		<itunes:explicit><?php
-				if ( in_array( 'explicit', $pod_tag_array ) ) :
-					echo "yes";
-				else :
-					echo "no";
-				endif; ?></itunes:explicit>
-<?PHP
-				foreach ( $categories as $podcat ) :
-					if ( count( $podcat ) == 2 ) : ?>
-		<itunes:category text="<?PHP echo htmlentities( $podcat[0] ); ?>">
-			<itunes:category text="<?PHP echo htmlentities( $podcat[1] ); ?>" />
-		</itunes:category>
-<?PHP
-					else :
-						if ( !empty( $podcat[0] ) ) : ?>
-		<itunes:category text="<?PHP echo htmlentities( $podcat[0] ); ?>" />
-<?PHP
+			<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:atom="http://www.w3.org/2005/Atom" <?php do_action( 'rss2_ns' ); ?>>
+				<channel>
+					<title><?php the_title_rss(); ?></title>
+					<atom:link href="<?php echo get_the_permalink(); ?>" rel="self" type="application/rss+xml" />
+					<link><?php echo $podlink['page']; ?></link>
+					<description><![CDATA[<?php the_content_feed(); ?>]]></description>
+					<language><?php bloginfo_rss( 'language' ); ?></language>
+					<copyright>All Rights Reserved</copyright>
+					<ttl><?php echo $frequency; ?></ttl>
+					<pubDate><?php echo date('r'); ?></pubDate>
+					<itunes:summary><![CDATA[<?php the_content_feed(); ?>]]></itunes:summary>
+					<itunes:owner>
+						<itunes:name><![CDATA[<?php echo $pods['owner']['name']; ?>]]></itunes:name>
+						<itunes:email><?php echo $pods['owner']['email']; ?></itunes:email>
+					</itunes:owner>
+					<itunes:keywords><![CDATA[<?php echo implode( ', ', $pod_tag_array ); ?>]]></itunes:keywords>
+					<itunes:subtitle><?PHP echo get_the_excerpt();  ?></itunes:subtitle>
+					<itunes:author><?php
+						if ( function_exists( 'coauthors' ) ) :
+							coauthors(', ', ', ', '', '', true);
+						else :
+							echo get_the_author();
+						endif; ?></itunes:author>
+					<itunes:explicit><?php
+						if ( in_array( 'explicit', $pod_tag_array ) ) :
+							echo "yes";
+						else :
+							echo "no";
+						endif; ?></itunes:explicit>
+					<?PHP
+					foreach ( $categories as $podcat ) :
+						if ( count( $podcat ) == 2 ) : ?>
+							<itunes:category text="<?PHP echo htmlentities( $podcat[0] ); ?>">
+								<itunes:category text="<?PHP echo htmlentities( $podcat[1] ); ?>" />
+							</itunes:category>
+							<?PHP
+						else :
+							if ( !empty( $podcat[0] ) ) : ?>
+								<itunes:category text="<?PHP echo htmlentities( $podcat[0] ); ?>" />
+								<?PHP
+							endif;
 						endif;
-					endif;
-				endforeach;
-				if ( !empty( $main_image ) ) : ?>
-		<itunes:image href="<?PHP echo $main_image[0]; ?>" />
-		<image>
-			<url><?php echo $main_image[0]; ?></url>
-			<title><?PHP the_title_rss(); ?></title>
-		</image>
-<?php
-			endif;
-			do_action( 'rss2_head');
-			if ( $podeps->have_posts() ) :
-				while ( $podeps->have_posts() ) :
-					$podeps->the_post();
-					$epid = get_the_ID();
-					if ( $podeps->current_post == 0 ) :
-						update_post_meta( $pod_id, 'hpm_pod_last_id', $epid );
-					endif;
-					$a_meta = get_post_meta( $epid, 'hpm_podcast_enclosure', true );
-					$pod_image = wp_get_attachment_image_src( get_post_thumbnail_id( $epid ), 'full' );
-					$tags = wp_get_post_tags( $epid );
-					$tag_array = array();
-					foreach ( $tags as $t ) :
-						$tag_array[] = $t->name;
 					endforeach;
-					$pod_desc = get_post_meta( $epid, 'hpm_podcast_ep_meta', true );
-					if ( !empty( $podlink['blubrry'] ) ) :
-						$media_url = str_replace( array( 'http://', 'https://' ), array( '', '' ), $a_meta['url'] );
-						$media_file = $protocol."media.blubrry.com/".$podlink['blubrry']."/".$media_url;
-					else :
-						$media_file = str_replace( array( 'http://', 'https://' ), array( $protocol, $protocol ), $a_meta['url'] );
+					if ( !empty( $main_image ) ) : ?>
+						<itunes:image href="<?PHP echo $main_image[0]; ?>" />
+						<image>
+							<url><?php echo $main_image[0]; ?></url>
+							<title><?PHP the_title_rss(); ?></title>
+						</image>
+						<?php
 					endif;
-					$content = "<p>".wp_trim_words( strip_shortcodes( get_the_content() ), 75, '... <a href="'.get_the_permalink().'">Read More</a>' )."</p>"; ?>
-		<item>
-			<title><?php the_title_rss(); ?></title>
-			<link><?php the_permalink(); ?></link>
-			<pubDate><?php echo mysql2date( 'D, d M Y H:i:s +0000', get_post_time( 'Y-m-d H:i:s', true, $epid ), false); ?></pubDate>
-			<guid isPermaLink="true"><?php the_permalink(); ?></guid>
-			<description><![CDATA[<?php echo ( !empty( $pod_desc['description'] ) ? $pod_desc['description'] : $content ); ?>]]></description>
-			<author><?php
-					if ( function_exists( 'coauthors' ) ) :
-						coauthors(', ', ', ', '', '', true);
-					else :
-						echo get_the_author();
-					endif; ?></author>
-			<itunes:keywords><![CDATA[<?php echo implode( ',', $tag_array ); ?>]]></itunes:keywords>
-			<itunes:summary><![CDATA[<?php echo ( !empty( $pod_desc['description'] ) ? $pod_desc['description'] : $content ); ?>]]></itunes:summary>
-<?php
-					if ( !empty( $pod_image ) ) : ?>
-			<itunes:image href="<?PHP echo $pod_image[0]; ?>"/>
-<?php
-					endif; ?>
+					do_action( 'rss2_head');
+					if ( $podeps->have_posts() ) :
+						while ( $podeps->have_posts() ) :
+							$podeps->the_post();
+							$epid = get_the_ID();
+							if ( $podeps->current_post == 0 ) :
+								$last = array( 'id' => $epid, 'modified' => get_the_modified_time( 'u' ) );
+								update_post_meta( $pod_id, 'hpm_pod_last_id', $last );
+							endif;
+							$a_meta = get_post_meta( $epid, 'hpm_podcast_enclosure', true );
+							$pod_image = wp_get_attachment_image_src( get_post_thumbnail_id( $epid ), 'full' );
+							$tags = wp_get_post_tags( $epid );
+							$tag_array = array();
+							foreach ( $tags as $t ) :
+								$tag_array[] = $t->name;
+							endforeach;
+							$pod_desc = get_post_meta( $epid, 'hpm_podcast_ep_meta', true );
+							if ( !empty( $podlink['blubrry'] ) ) :
+								$media_url = str_replace( array( 'http://', 'https://' ), array( '', '' ), $a_meta['url'] );
+								$media_file = $protocol."media.blubrry.com/".$podlink['blubrry']."/".$media_url;
+							else :
+								$media_file = str_replace( array( 'http://', 'https://' ), array( $protocol, $protocol ), $a_meta['url'] );
+							endif;
+							$content = "<p>".wp_trim_words( strip_shortcodes( get_the_content() ), 75, '... <a href="'.get_the_permalink().'">Read More</a>' )."</p>"; ?>
+							<item>
+								<title><?php the_title_rss(); ?></title>
+								<link><?php the_permalink(); ?></link>
+								<pubDate><?php echo mysql2date( 'D, d M Y H:i:s +0000', get_post_time( 'Y-m-d H:i:s', true, $epid ), false); ?></pubDate>
+								<guid isPermaLink="true"><?php the_permalink(); ?></guid>
+								<description><![CDATA[<?php echo ( !empty( $pod_desc['description'] ) ? $pod_desc['description'] : $content ); ?>]]></description>
+								<author><?php
+									if ( function_exists( 'coauthors' ) ) :
+										coauthors(', ', ', ', '', '', true);
+									else :
+										echo get_the_author();
+									endif; ?></author>
+								<itunes:keywords><![CDATA[<?php echo implode( ',', $tag_array ); ?>]]></itunes:keywords>
+								<itunes:summary><![CDATA[<?php echo ( !empty( $pod_desc['description'] ) ? $pod_desc['description'] : $content ); ?>]]></itunes:summary>
+								<?php
+								if ( !empty( $pod_image ) ) : ?>
+									<itunes:image href="<?PHP echo $pod_image[0]; ?>"/>
+									<?php
+								endif; ?>
 
-			<itunes:explicit><?php
-					if ( in_array( 'explicit', $tag_array ) ) :
-						echo "yes";
-					else :
-						echo "no";
-					endif; ?></itunes:explicit>
-			<enclosure url="<?PHP echo $media_file; ?>" length="<?PHP echo $a_meta['filesize']; ?>" type="<?php echo $a_meta['mime']; ?>" />
-			<itunes:duration><?PHP echo $a_meta['length']; ?></itunes:duration>
-<?php do_action( 'rss2_item' ); ?>
-		</item>
-<?php
-				endwhile;
-			endif;
-			wp_reset_query();
-			$post = $current_post; ?>
-	</channel>
-</rss><?php
+								<itunes:explicit><?php
+									if ( in_array( 'explicit', $tag_array ) ) :
+										echo "yes";
+									else :
+										echo "no";
+									endif; ?></itunes:explicit>
+								<enclosure url="<?PHP echo $media_file; ?>" length="<?PHP echo $a_meta['filesize']; ?>" type="<?php echo $a_meta['mime']; ?>" />
+								<itunes:duration><?PHP echo $a_meta['length']; ?></itunes:duration>
+								<?php do_action( 'rss2_item' ); ?>
+							</item>
+							<?php
+						endwhile;
+					endif;
+					wp_reset_query();
+					$post = $current_post; ?>
+				</channel>
+				</rss><?php
 				$getContent = ob_get_contents();
 				ob_end_clean();
 				if ( !empty( $pods['upload-flats'] ) ) :
@@ -998,7 +996,7 @@ class HPM_Podcasts {
 						unset( $sftp );
 						unset( $local );
 					elseif ( $pods['upload-flats'] == 'database' ) :
-						set_transient( 'hpm_podcast-'.$podcast_title, $getContent, DAY_IN_SECONDS );
+						update_option( 'hpm_podcast-'.$podcast_title, $getContent );
 					else :
 						$error .= "No flat file upload target defined. Please check your settings and try again.";
 					endif;

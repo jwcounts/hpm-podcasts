@@ -322,6 +322,9 @@ define('AWS_SECRET_ACCESS_KEY', 'YOUR_AWS_SECRET');</pre>
 					type: 'GET',
 					url: '/wp-json/hpm-podcast/v1/refresh',
 					data: '',
+					beforeSend: function ( xhr ) {
+						xhr.setRequestHeader( 'X-WP-Nonce', '<?php echo wp_create_nonce( 'wp_rest' ); ?>' );
+					},
 					success: function (response) {
 						$('#hpm-refresh-spinner').remove();
 						$('.hpm-last-refresh-time').html(response.data.date);

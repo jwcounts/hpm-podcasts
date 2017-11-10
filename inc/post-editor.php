@@ -49,6 +49,9 @@ endif; ?>
 			type: 'GET',
 			url: '/wp-json/hpm-podcast/v1/upload/'+feed+'/'+id+'/progress',
 			data: '',
+			beforeSend: function ( xhr ) {
+				xhr.setRequestHeader( 'X-WP-Nonce', '<?php echo wp_create_nonce( 'wp_rest' ); ?>' );
+			},
 			success: function (response) {
 				if ( response.data.current === 'in-progress' ) {
 					jQuery("#hpm-upload-message").text(response.message);
