@@ -95,9 +95,18 @@
 <p><strong><?PHP _e( "Enter the page URL for this podcast (show page or otherwise)", 'hpm-podcasts' );
 ?></strong><br />
 <label for="hpm-podcast-link"><?php _e( "URL:", 'hpm-podcasts' ); ?></label> <input type="text" id="hpm-podcast-link" name="hpm-podcast-link" value="<?PHP echo $hpm_podcast_link['page']; ?>" placeholder="http://example.com/law-blog-with-bob-loblaw/" style="width: 60%;" /></p>
+
 <p><strong><?PHP _e( "How many episodes do you want to show in the feed? (Enter a 0 to display all)", 'hpm-podcasts' ); ?></strong><br />
 <label for="hpm-podcast-limit"><?php _e( "Number of Eps:", 'hpm-podcasts' ); ?></label> <input type="number" id="hpm-podcast-limit" name="hpm-podcast-limit" value="<?PHP echo $hpm_podcast_link['limit']; ?>" placeholder="0" style="width: 30%;" /></p>
+
+<p><strong><?PHP _e( "Is it an episodic podcast or a serialized one?", 'hpm-podcasts' ); ?></strong><br />
+	<label for="hpm-podcast-type"><?php _e( "Podcast Type:", 'hpm-podcasts' ); ?></label> <select name="hpm-podcast-type" id="hpm-podcast-type">
+		<option value="episodic"<?PHP selected( $hpm_podcast_link['type'], 'episodic', TRUE ); ?>><?PHP _e( "Episodic", 'hpm-podcasts' ); ?></option>
+		<option value="serial"<?PHP selected( $hpm_podcast_link['type'], 'serial', TRUE ); ?>><?PHP _e( "Serialized", 'hpm-podcasts' ); ?></option>
+	</select>
+</p>
 <p>&nbsp;</p>
+
 <h3><?PHP _e( "iTunes Categories", 'hpm-podcasts' ); ?></h3>
 <p><?PHP _e( "iTunes allows you to select up to 3 category/subcategory combinations.  **The primary category is required, and is what will display in iTunes.**", 'hpm-podcasts' ); ?></p>
 <ul>

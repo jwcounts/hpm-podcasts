@@ -23,9 +23,11 @@
 	while ( have_posts() ) : the_post();
 		header('Content-Type: ' . feed_content_type('rss2') . '; charset=' . get_option('blog_charset'), true);
 		if ( $pods['upload-flats'] == 'database' ) :
-			echo get_transient( 'hpm_podcast-'.$post->post_name );
+			echo get_option( 'hpm_podcast-'.$post->post_name );
 		else :
-			echo file_get_contents( $base_url.$post->post_name.".xml" );
+			$remote = wp_remote_get( esc_url_raw( $base_url.$post->post_name.".xml" ) );
+			if ( !is_wp_error( $remote ) ) :
+				echo wp_remote_retrieve_body( $remote );
+			endif;
 		endif;
-	endwhile;
-?>
+	endwhile; ?>

@@ -4,6 +4,20 @@
 	<label for="hpm-podcast-description"><?php _e( "Feed-Specific Description:", 'hpm-podcasts' ); ?></label><br />
 	<textarea style="width: 100%; height: 200px;" name="hpm-podcast-description" id="hpm-podcast-description"><?php echo $hpm_pod_desc['description']; ?></textarea>
 </p>
+<h3><?php _e( "Episode Information", 'hpm-podcasts' ); ?></h3>
+
+<p><label for="hpm-podcast-episodetype"><?php _e( "Episode Type:", 'hpm-podcasts' ); ?></label>
+<select name="hpm-podcast-episodetype" id="hpm-podcast-episodetype">
+	<option value="full" <?PHP selected( 'full', $hpm_pod_desc['episodeType'], TRUE ); ?>><?PHP _e( "Full", 'hpm-podcasts' ); ?></option>
+	<option value="trailer" <?PHP selected( 'trailer', $hpm_pod_desc['episodeType'], TRUE ); ?>><?PHP _e( "Trailer", 'hpm-podcasts' ); ?></option>
+	<option value="bonus" <?PHP selected( 'bonus', $hpm_pod_desc['episodeType'], TRUE ); ?>><?PHP _e( "Bonus", 'hpm-podcasts' ); ?></option>
+</select></p>
+
+<p style="float: left; width: 50%;"><label for="hpm-podcast-episode"><?php _e( "Episode Number:", 'hpm-podcasts' );
+?></label>
+	<input type="number" id="hpm-podcast-episode" name="hpm-podcast-episode" value="<?PHP echo $hpm_pod_desc['episode']; ?>" placeholder="" style="width: 25%;" /></p>
+<p style="float: left; width: 50%;"><label for="hpm-podcast-season"><?php _e( "Season Number:", 'hpm-podcasts' ); ?></label>
+	<input type="number" id="hpm-podcast-season" name="hpm-podcast-season" value="<?PHP echo $hpm_pod_desc['season']; ?>" placeholder="" style="width: 25%;" /></p>
 <?php
 if ( !empty( $pods['upload-media'] ) ) :
 	$hpm_pod_sg = get_post_meta( $object->ID, 'hpm_podcast_enclosure', true );

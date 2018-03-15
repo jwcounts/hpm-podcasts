@@ -165,7 +165,14 @@ class HPM_Media_Upload {
 			$path = pathinfo( $parse['path'] );
 			$local = $save . $ds . $path['basename'];
 			update_post_meta( $id, 'hpm_podcast_status', array( 'status' => 'in progress', 'message' => esc_html__( 'Podcast file is being downloaded to the local server.', 'hpm-podcasts' ) ) );
-			if ( !file_put_contents( $local, file_get_contents( $url ) ) ) :
+			$remote = wp_remote_get( esc_url_raw( $url ) );
+			if ( is_wp_error( $remote ) ) :
+				update_post_meta( $id, 'hpm_podcast_status', array( 'status' => 'error', 'message' => esc_html__( 'Unable to download your media file to the local server. Please try again.', 'hpm-podcasts' ) ) );
+				return false;
+			else :
+				$remote_body = wp_remote_retrieve_body( $remote );
+			endif;
+			if ( !file_put_contents( $local, $remote_body ) ) :
 				update_post_meta( $id, 'hpm_podcast_status', array( 'status' => 'error', 'message' => esc_html__( 'Unable to download your media file to the local server. Please try again.', 'hpm-podcasts' ) ) );
 				return false;
 			endif;

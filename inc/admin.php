@@ -69,7 +69,6 @@
 												?>>Hourly</option>
 												<option value="hpm_30min" <?php selected( $pods['recurrence'], 'hpm_30min', TRUE ); ?>>Every 30 Minutes</option>
 												<option value="hpm_15min" <?php selected( $pods['recurrence'], 'hpm_15min', TRUE ); ?>>Every 15 Minutes</option>
-												<option value="hpm_5min" <?php selected( $pods['recurrence'], 'hpm_5min', TRUE ); ?>>Every 5 Minutes</option>
 											</select>
 										</td>
 									</tr>
