@@ -530,17 +530,6 @@ class HPM_Podcasts {
 					'categories' => array( 'first' => '', 'second' => '', 'third' => '' ),
 					'type'       => 'episodic'
 				);
-			else :
-				if ( empty( $hpm_podcast_link['categories'] ) ) :
-					$hpm_podcast_link['categories'] = array(
-						'first'  => $hpm_podcast_link['cat-prime'],
-						'second' => $hpm_podcast_link['cat-second'],
-						'third'  => $hpm_podcast_link['cat-third']
-					);
-					unset( $hpm_podcast_link['cat-prime'] );
-					unset( $hpm_podcast_link['cat-second'] );
-					unset( $hpm_podcast_link['cat-third'] );
-				endif;
 			endif;
 		else :
 			$hpm_podcast_link = array(
@@ -692,6 +681,7 @@ class HPM_Podcasts {
 	public function generate( WP_REST_Request $request = null ) {
 		$pods = $this->options;
 		$ds = DIRECTORY_SEPARATOR;
+		require __DIR__ . $ds . 'vendor' . $ds . 'autoload.php';
 		if ( !empty( $pods['https'] ) ) :
 			$protocol = 'https://';
 			$_SERVER['HTTPS'] = 'on';
@@ -735,22 +725,14 @@ class HPM_Podcasts {
 					return new WP_Error( 'rest_api_sad', esc_html__( 'No S3 credentials provided. Please check your settings.', 'hpm-podcasts' ), array( 'status' => 500 ) );
 				endif;
 
-				if ( class_exists( 'Amazon_Web_Services' ) ) :
-					$client = Aws\S3\S3Client::factory(array(
+				$client = new \Aws\S3\S3Client([
+					'version' => 'latest',
+					'region'  => $short['region'],
+					'credentials' => [
 						'key' => $aws_key,
 						'secret' => $aws_secret
-					));
-				else :
-					require __DIR__ . $ds . 'vendor' . $ds . 'aws' . $ds . 'aws-autoloader.php';
-					$client = new Aws\S3\S3Client([
-						'version' => 'latest',
-						'region'  => $short['region'],
-						'credentials' => [
-							'key' => $aws_key,
-							'secret' => $aws_secret
-						]
-					]);
-				endif;
+					]
+				]);
 			elseif ( $pods['upload-flats'] == 'ftp' ) :
 				$short = $pods['credentials']['ftp'];
 				if ( defined( 'HPM_FTP_PASSWORD' ) ) :
@@ -762,9 +744,6 @@ class HPM_Podcasts {
 				endif;
 			elseif ( $pods['upload-flats'] == 'sftp' ) :
 				$short = $pods['credentials']['sftp'];
-				$ipath = __DIR__ . $ds . 'vendor' . $ds . 'phpseclib';
-				set_include_path(get_include_path() . PATH_SEPARATOR . $ipath);
-				include( 'Net/SFTP.php' );
 				if ( defined( 'HPM_SFTP_PASSWORD' ) ) :
 					$sftp_password = HPM_SFTP_PASSWORD;
 				elseif ( !empty( $short['password'] ) ) :
@@ -773,7 +752,7 @@ class HPM_Podcasts {
 					return new WP_Error( 'rest_api_sad', esc_html__( 'No FTP password provided. Please check your settings.', 'hpm-podcasts' ), array( 'status' => 500 ) );
 				endif;
 			elseif ( $pods['upload-flats'] == 'database' ) :
-
+				// Nothing to see here
 			else :
 				$error .= "No flat file upload target defined. Please check your settings and try again.";
 			endif;
@@ -1111,7 +1090,7 @@ class HPM_Podcasts {
 						endif;
 
 						try {
-							$sftp = new Net_SFTP( $short['host'] );
+							$sftp = new \phpseclib\Net\SFTP( $short['host'] );
 							if ( ! $sftp->login( $short['username'], $sftp_password ) ) :
 								throw new Exception( $podcast_title . ": SFTP Login Failed. Please check your credentials and try again.<br /><br />" );
 							endif;
@@ -1129,7 +1108,7 @@ class HPM_Podcasts {
 									throw new Exception( $podcast_title . ": Unable to upload your json feed file to the SFTP server. Please check your permissions on that server and try again.<br /><br />" );
 								endif;
 							endif;
-						} catch (Exception $e) {
+						} catch ( Exception $e ) {
 							$error .= $e->getMessage();
 						}
 						unset( $sftp );

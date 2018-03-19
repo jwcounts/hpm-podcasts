@@ -8,3 +8,6 @@
 out
 gen
 .idea/
+
+/vendor/
+composer.lock

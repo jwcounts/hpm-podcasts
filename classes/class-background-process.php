@@ -227,10 +227,8 @@ class HPM_Media_Upload {
 			}
 		elseif ( $pods['upload-media'] == 'sftp' ) :
 			$short = $pods['credentials']['sftp'];
-			$ipath = HPM_PODCAST_PLUGIN_DIR . $ds . 'vendor' . $ds . 'phpseclib';
-			set_include_path(get_include_path() . PATH_SEPARATOR . $ipath);
-			include( 'Net/SFTP.php' );
-			$sftp = new Net_SFTP( $short['host'] );
+			require HPM_PODCAST_PLUGIN_DIR . $ds . 'vendor' . $ds . 'autoload.php';
+			$sftp = new \phpseclib\Net\SFTP( $short['host'] );
 			if ( defined( 'HPM_SFTP_PASSWORD' ) ) :
 				$sftp_password = HPM_SFTP_PASSWORD;
 			elseif ( !empty( $short['password'] ) ) :
@@ -274,23 +272,15 @@ class HPM_Media_Upload {
 				update_post_meta( $id, 'hpm_podcast_status', array( 'status' => 'error', 'message' => esc_html__( 'No S3 credentials provided. Please check your settings.', 'hpm-podcasts' ) ) );
 				return false;
 			endif;
-
-			if ( class_exists( 'Amazon_Web_Services' ) ) :
-				$client = Aws\S3\S3Client::factory(array(
+			require HPM_PODCAST_PLUGIN_DIR . $ds . 'vendor' . $ds . 'autoload.php';
+			$client = new Aws\S3\S3Client([
+				'version' => 'latest',
+				'region'  => $short['region'],
+				'credentials' => [
 					'key' => $aws_key,
 					'secret' => $aws_secret
-				));
-			else :
-				require HPM_PODCAST_PLUGIN_DIR . $ds . 'vendor' . $ds . 'aws' . $ds . 'aws-autoloader.php';
-				$client = new Aws\S3\S3Client([
-					'version' => 'latest',
-					'region'  => $short['region'],
-					'credentials' => [
-						'key' => $aws_key,
-						'secret' => $aws_secret
-					]
-				]);
-			endif;
+				]
+			]);
 
 			if ( !empty( $short['folder'] ) ) :
 				$folder = $short['folder'].'/';
@@ -308,9 +298,9 @@ class HPM_Media_Upload {
 					'ACL' => 'public-read',
 					'ContentType' => $med->post_mime_type
 				));
-			} catch (S3Exception $e) {
+			} catch ( S3Exception $e ) {
 				$message = $e->getMessage();
-			} catch (AwsException $e) {
+			} catch ( AwsException $e ) {
 				$message = $e->getAwsRequestId() . "\n" . $e->getAwsErrorType() . "\n" . $e->getAwsErrorCode();
 			}
 			$sg_url = 'https://s3-'.$short['region'].'.amazonaws.com/'.$short['bucket'].'/'.$folder.$feed.'/'.$path['basename'];
