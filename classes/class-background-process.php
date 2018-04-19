@@ -255,12 +255,15 @@ class HPM_Media_Upload {
 
 			update_post_meta( $id, 'hpm_podcast_status', array( 'status' => 'in progress', 'message' => esc_html__( 'Remote host connected. Starting upload.', 'hpm-podcasts' ) ) );
 
-			if ( !$sftp->put( $path['basename'], $local, NET_SFTP_LOCAL_FILE ) ) :
+			if ( !$sftp->put( $path['basename'], $local, \phpseclib\Net\SFTP::SOURCE_LOCAL_FILE ) ) :
 				$message = "The file could not be saved on the SFTP server. Please verify your permissions on that server and try again.";
 			endif;
 			unset( $sftp );
 			$sg_url = $short['url'].'/'.$feed.'/'.$path['basename'];
 		elseif ( $pods['upload-media'] == 's3' ) :
+			if ( !class_exists('Aws\S3') ) :
+				require __DIR__ . $ds . 'vendor' . $ds . 'aws.phar';
+			endif;
 			$short = $pods['credentials']['s3'];
 			if ( defined( 'AWS_ACCESS_KEY_ID' ) && defined( 'AWS_SECRET_ACCESS_KEY' ) ) :
 				$aws_key = AWS_ACCESS_KEY_ID;

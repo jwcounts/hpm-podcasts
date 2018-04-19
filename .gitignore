@@ -9,5 +9,7 @@ out
 gen
 .idea/
 
-/vendor/
+!vendor/
+vendor/*
+!vendor/aws.phar
 composer.lock

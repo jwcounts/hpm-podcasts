@@ -682,6 +682,9 @@ class HPM_Podcasts {
 		$pods = $this->options;
 		$ds = DIRECTORY_SEPARATOR;
 		require __DIR__ . $ds . 'vendor' . $ds . 'autoload.php';
+		if ( !class_exists('Aws\S3') ) :
+			require __DIR__ . $ds . 'vendor' . $ds . 'aws.phar';
+		endif;
 		if ( !empty( $pods['https'] ) ) :
 			$protocol = 'https://';
 			$_SERVER['HTTPS'] = 'on';
@@ -1100,11 +1103,11 @@ class HPM_Podcasts {
 									$sftp->chdir( $short['folder'] );
 								endif;
 							endif;
-							if ( ! $sftp->put( $podcast_title . '.xml', $local, NET_SFTP_LOCAL_FILE ) ) :
+							if ( ! $sftp->put( $podcast_title . '.xml', $local, \phpseclib\Net\SFTP::SOURCE_LOCAL_FILE ) ) :
 								throw new Exception( $podcast_title . ": Unable to upload your feed file to the SFTP server. Please check your permissions on that server and try again.<br /><br />" );
 							endif;
 							if ( $feed_json ) :
-								if ( ! $sftp->put( $podcast_title . '.json', $local_json, NET_SFTP_LOCAL_FILE ) ) :
+								if ( ! $sftp->put( $podcast_title . '.json', $local_json, \phpseclib\Net\SFTP::SOURCE_LOCAL_FILE ) ) :
 									throw new Exception( $podcast_title . ": Unable to upload your json feed file to the SFTP server. Please check your permissions on that server and try again.<br /><br />" );
 								endif;
 							endif;
