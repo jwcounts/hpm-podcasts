@@ -682,7 +682,7 @@ class HPM_Podcasts {
 		$pods = $this->options;
 		$ds = DIRECTORY_SEPARATOR;
 		require __DIR__ . $ds . 'vendor' . $ds . 'autoload.php';
-		if ( !class_exists('Aws\S3') ) :
+		if ( !class_exists('\Aws\S3\S3Client') ) :
 			require __DIR__ . $ds . 'vendor' . $ds . 'aws.phar';
 		endif;
 		if ( !empty( $pods['https'] ) ) :
