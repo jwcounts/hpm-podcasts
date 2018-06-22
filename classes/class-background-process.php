@@ -112,7 +112,7 @@ class HPM_Media_Upload {
 		$feed = $_REQUEST['feed'];
 		$pods = get_option( 'hpm_podcast_settings' );
 		$ds = DIRECTORY_SEPARATOR;
-
+		
 		if ( empty( $pods['upload-media'] ) ) :
 			update_post_meta( $id, 'hpm_podcast_status', array( 'status' => 'error', 'message' => esc_html__( 'No media upload target was selected. Please check your settings.', 'hpm-podcasts' ) ) );
 			return false;
@@ -261,7 +261,7 @@ class HPM_Media_Upload {
 			unset( $sftp );
 			$sg_url = $short['url'].'/'.$feed.'/'.$path['basename'];
 		elseif ( $pods['upload-media'] == 's3' ) :
-			if ( !class_exists('Aws\S3') ) :
+			if ( !class_exists('\Aws\S3\S3Client') ) :
 				require __DIR__ . $ds . 'vendor' . $ds . 'aws.phar';
 			endif;
 			$short = $pods['credentials']['s3'];

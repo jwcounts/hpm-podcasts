@@ -638,7 +638,8 @@ class HPM_Podcasts {
 		endif;
 
 		$this->process_upload->data( array( 'id' => $request['id'], 'feed' => $request['feed'] ) )->dispatch();
-
+		update_post_meta( $request['id'], 'hpm_podcast_status', array( 'status' => 'in-progress', 'message' => esc_html__( 'Upload process initializing.', 'hpm-podcasts' ) ) );
+		
 		return rest_ensure_response( array( 'code' => 'rest_api_success', 'message' => esc_html__( 'Podcast upload started successfully.', 'hpm-podcasts' ), 'data' => array( 'status' => 200 ) ) );
 	}
 
