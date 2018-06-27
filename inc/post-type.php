@@ -1,51 +1,51 @@
 <?php
-	$itunes_cats = array(
-		'Arts'                       => array(
+	$itunes_cats = [
+		'Arts' => [
 			'Design',
 			'Fashion & Beauty',
 			'Food',
 			'Literature',
 			'Performing Arts',
 			'Visual Arts'
-		),
-		'Business'                   => array(
+		],
+		'Business' => [
 			'Business News',
 			'Careers',
 			'Investing',
 			'Management & Marketing',
 			'Shopping'
-		),
-		'Comedy'                     => array(),
-		'Education'                  => array(
+		],
+		'Comedy' => [],
+		'Education' => [
 			'Educational Technology',
 			'Higher Education',
 			'K-12',
 			'Language Courses',
 			'Training'
-		),
-		'Games & Hobbies'            => array(
+		],
+		'Games & Hobbies' => [
 			'Automotive',
 			'Aviation',
 			'Hobbies',
 			'Other Games',
 			'Video Games'
-		),
-		'Government & Organizations' => array(
+		],
+		'Government & Organizations' => [
 			'Local',
 			'National',
 			'Non-Profit',
 			'Regional'
-		),
-		'Health'                     => array(
+		],
+		'Health' => [
 			'Alternative Health',
 			'Fitness & Nutrition',
 			'Self-Help',
 			'Sexuality'
-		),
-		'Kids & Family'              => array(),
-		'Music'                      => array(),
-		'News & Politics'            => array(),
-		'Religion & Spirituality'    => array(
+		],
+		'Kids & Family' => [],
+		'Music' => [],
+		'News & Politics' => [],
+		'Religion & Spirituality' => [
 			'Buddhism',
 			'Christianity',
 			'Hinduism',
@@ -53,35 +53,35 @@
 			'Judaism',
 			'Other',
 			'Spirituality'
-		),
-		'Science & Medicine'         => array(
+		],
+		'Science & Medicine' => [
 			'Medicine',
 			'Natural Sciences',
 			'Social Sciences'
-		),
-		'Society & Culture'          => array(
+		],
+		'Society & Culture' => [
 			'History',
 			'Personal Journals',
 			'Philosophy',
 			'Places & Travel'
-		),
-		'Sports & Recreation'        => array(
+		],
+		'Sports & Recreation' => [
 			'Amateur',
 			'College & High School',
 			'Outdoor',
 			'Professional'
-		),
-		'Technology'                 => array(
+		],
+		'Technology' => [
 			'Gadgets',
 			'Tech News',
 			'Podcasting',
 			'Software How-To'
-		),
-		'TV & Film'                  => array()
-	); ?>
+		],
+		'TV & Film' => []
+	]; ?>
 <h3><?PHP _e( "Category and Page", 'hpm-podcasts' ); ?></h3>
 <p><?PHP _e( "Select the post category for this podcast:", 'hpm-podcasts' );
-	wp_dropdown_categories(array(
+	wp_dropdown_categories([
 		'show_option_all' => __("Select One"),
 		'taxonomy'		=> 'category',
 		'name'			=> 'hpm-podcast-cat',
@@ -91,7 +91,7 @@
 		'depth'		   => 3,
 		'show_count'	  => false,
 		'hide_empty'	  => false,
-	)); ?></p>
+	]); ?></p>
 <p><strong><?PHP _e( "Enter the page URL for this podcast (show page or otherwise)", 'hpm-podcasts' );
 ?></strong><br />
 <label for="hpm-podcast-link"><?php _e( "URL:", 'hpm-podcasts' ); ?></label> <input type="text" id="hpm-podcast-link" name="hpm-podcast-link" value="<?PHP echo $hpm_podcast_link['page']; ?>" placeholder="http://example.com/law-blog-with-bob-loblaw/" style="width: 60%;" /></p>

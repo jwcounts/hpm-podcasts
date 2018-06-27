@@ -31,10 +31,10 @@ class HPM_Podcasts {
 
 	public function __construct() {
 		define( 'HPM_PODCAST_PLUGIN_DIR', plugin_dir_path(__FILE__) );
-		add_action( 'plugins_loaded', array( $this, 'init' ) );
-		add_action( 'init', array( $this, 'create_type' ) );
-		register_activation_hook( __FILE__, array( $this, 'activation' ) );
-		register_deactivation_hook( __FILE__, array( $this, 'deactivation' ) );
+		add_action( 'plugins_loaded', [ $this, 'init' ] );
+		add_action( 'init', [ $this, 'create_type' ] );
+		register_activation_hook( __FILE__, [ $this, 'activation' ] );
+		register_deactivation_hook( __FILE__, [ $this, 'deactivation' ] );
 	}
 	/**
 	 * Init
@@ -48,65 +48,65 @@ class HPM_Podcasts {
 
 		$this->process_upload = new HPM_Media_Upload();
 
-		add_filter( 'cron_schedules', array( $this, 'cron' ), 10, 2 );
-		add_action( 'hpm_podcast_update_refresh', array( $this, 'generate' ) );
-		add_filter( 'pre_update_option_hpm_podcast_settings', array( $this, 'options_clean' ), 10, 2 );
+		add_filter( 'cron_schedules', [ $this, 'cron' ], 10, 2 );
+		add_action( 'hpm_podcast_update_refresh', [ $this, 'generate' ] );
+		add_filter( 'pre_update_option_hpm_podcast_settings', [ $this, 'options_clean' ], 10, 2 );
 
 		// Setup meta box in article editor
-		add_action( 'load-post.php', array( $this, 'description_setup' ) );
-		add_action( 'load-post-new.php', array( $this, 'description_setup' ) );
+		add_action( 'load-post.php', [ $this, 'description_setup' ] );
+		add_action( 'load-post-new.php', [ $this, 'description_setup' ] );
 
 		// Add edit capabilities to selected roles
-		add_action( 'admin_init', array( $this, 'add_role_caps' ), 999 );
+		add_action( 'admin_init', [ $this, 'add_role_caps' ], 999 );
 
 		// Setup metadata for podcast feeds
-		add_action( 'load-post.php', array( $this, 'meta_setup' ) );
-		add_action( 'load-post-new.php', array( $this, 'meta_setup' ) );
+		add_action( 'load-post.php', [ $this, 'meta_setup' ] );
+		add_action( 'load-post-new.php', [ $this, 'meta_setup' ] );
 
 		// Register page templates
-		add_filter( 'archive_template', array( $this, 'archive_template' ) );
-		add_filter( 'single_template', array( $this, 'single_template' ) );
+		add_filter( 'archive_template', [ $this, 'archive_template' ] );
+		add_filter( 'single_template', [ $this, 'single_template' ] );
 		remove_all_actions( 'do_feed_rss2' );
-		add_action( 'do_feed_rss2', array( $this, 'feed_template' ), 10, 1 );
+		add_action( 'do_feed_rss2', [ $this, 'feed_template' ], 10, 1 );
 
 		// Create menu in Admin Dashboard
-		add_action( 'admin_menu', array( $this, 'create_menu' ) );
+		add_action( 'admin_menu', [ $this, 'create_menu' ] );
 
 		//Adds meta query to always list podcast archive in alphabetical order
-		add_action( 'pre_get_posts', array( $this, 'meta_query' ) );
+		add_action( 'pre_get_posts', [ $this, 'meta_query' ] );
 
 		// Register WP-REST API endpoints
-		add_action( 'rest_api_init', function(){
-			register_rest_route( 'hpm-podcast/v1', '/refresh', array(
+		add_action( 'rest_api_init', function() {
+			register_rest_route( 'hpm-podcast/v1', '/refresh', [
 				'methods'  => 'GET',
-				'callback' => array( $this, 'generate' )
-			) );
+				'callback' => [ $this, 'generate' ]
+			] );
 
-			register_rest_route( 'hpm-podcast/v1', '/upload/(?P<feed>[a-zA-Z0-9\-_]+)/(?P<id>[\d]+)', array(
+			register_rest_route( 'hpm-podcast/v1', '/upload/(?P<feed>[a-zA-Z0-9\-_]+)/(?P<id>[\d]+)', [
 				'methods'  => 'GET',
-				'callback' => array( $this, 'upload'),
-				'args' => array(
-					'id' => array(
+				'callback' => [ $this, 'upload'],
+				'args' => [
+					'id' => [
 						'required' => true
-					),
-					'feed' => array(
+					],
+					'feed' => [
 						'required' => true
-					)
-				)
-			) );
+					]
+				]
+			 ] );
 
-			register_rest_route( 'hpm-podcast/v1', '/upload/(?P<feed>[a-zA-Z0-9\-_]+)/(?P<id>[\d]+)/progress', array(
+			register_rest_route( 'hpm-podcast/v1', '/upload/(?P<feed>[a-zA-Z0-9\-_]+)/(?P<id>[\d]+)/progress', [
 				'methods'  => 'GET',
-				'callback' => array( $this, 'upload_progress'),
-				'args' => array(
-					'id' => array(
+				'callback' => [ $this, 'upload_progress'],
+				'args' => [
+					'id' => [
 						'required' => true
-					),
-					'feed' => array(
+					],
+					'feed' => [
 						'required' => true
-					)
-				)
-			) );
+					]
+				]
+			] );
 		} );
 
 		// Make sure that the proper cron job is scheduled
@@ -123,20 +123,20 @@ class HPM_Podcasts {
 	 * @return mixed
 	 */
 	public function cron( $schedules ) {
-		$schedules['hpm_15min'] = array(
+		$schedules['hpm_15min'] = [
 			'interval' => 900,
 			'display' => __( 'Every 15 Minutes' )
-		);
-		$schedules['hpm_30min'] = array(
+		];
+		$schedules['hpm_30min'] = [
 			'interval' => 1800,
 			'display' => __( 'Every 30 Minutes' )
-		);
+		];
 		return $schedules;
 	}
 
 	public function options_clean( $new_value, $old_value ) {
-		$find = array( '{/$}', '{^/}' );
-		$replace = array( '', '' );
+		$find = [ '{/$}', '{^/}' ];
+		$replace = [ '', '' ];
 		foreach ( $new_value['credentials'] as $credk => $credv ) :
 			foreach ( $credv as $k => $v ) :
 				if ( !empty( $v ) && ( $k != 'key' || $k != 'secret' || $k != 'password' ) ) :
@@ -160,40 +160,40 @@ class HPM_Podcasts {
 	}
 
 	public function activation() {
-		$pods = array(
-			'owner' => array(
+		$pods = [
+			'owner' => [
 				'name' => '',
 				'email' => ''
-			),
+			],
 			'recurrence' => 'hourly',
-			'roles' => array('editor','administrator'),
+			'roles' => ['editor','administrator'],
 			'upload-flats' => '',
 			'upload-media' => '',
-			'credentials' => array(
-				'ftp' => array(
+			'credentials' => [
+				'ftp' => [
 					'host' => '',
 					'url' => '',
 					'username' => '',
 					'password' => '',
 					'folder' => ''
-				),
-				'sftp' => array(
+				],
+				'sftp' => [
 					'host' => '',
 					'url' => '',
 					'username' => '',
 					'password' => '',
 					'folder' => ''
-				),
-				's3' => array(
+				],
+				's3' => [
 					'folder' => '',
 					'bucket' => '',
 					'region' => '',
 					'key' => '',
 					'secret' => ''
-				)
-			),
+				]
+			],
 			'https' => ''
-		);
+		];
 		update_option( 'hpm_podcast_settings', $pods, false );
 		update_option( 'hpm_podcast_last_update', 'none', false );
 		$this->options = $pods;
@@ -259,15 +259,15 @@ class HPM_Podcasts {
 	 */
 
 	public function description_setup() {
-		add_action( 'add_meta_boxes', array( $this, 'add_description' ) );
-		add_action( 'save_post', array( $this, 'save_description' ), 10, 2 );
+		add_action( 'add_meta_boxes', [ $this, 'add_description' ] );
+		add_action( 'save_post', [ $this, 'save_description' ], 10, 2 );
 	}
 
 	public function add_description() {
 		add_meta_box(
 			'hpm-podcast-meta-class',
 			esc_html__( 'Podcast Feed Information', 'hpm-podcasts' ),
-			array( $this, 'description_box' ),
+			[ $this, 'description_box' ],
 			'post',
 			'advanced',
 			'default'
@@ -287,8 +287,8 @@ class HPM_Podcasts {
 		wp_nonce_field( basename( __FILE__ ), 'hpm_podcast_class_nonce' );
 		$hpm_pod_desc = get_post_meta( $object->ID, 'hpm_podcast_ep_meta', true );
 		if ( empty( $hpm_pod_desc ) ) :
-			$hpm_pod_desc = array( 'feed' => '', 'description' => '', 'episode' => '', 'season' => '', 'episodeType'
-			=> 'full' );
+			$hpm_pod_desc = [ 'feed' => '', 'description' => '', 'episode' => '', 'season' => '', 'episodeType'
+			=> 'full' ];
 		endif;
 		include __DIR__ . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR .'post-editor.php';
 		wp_reset_query();
@@ -319,13 +319,13 @@ class HPM_Podcasts {
 			return $post_id;
 		endif;
 
-		$hpm_podcast = array(
+		$hpm_podcast = [
 			'feed' => ( !empty( $_POST['hpm-podcast-ep-feed'] ) ? $_POST['hpm-podcast-ep-feed'] : '' ),
 			'description' => balanceTags( $_POST['hpm-podcast-description'], true ),
 			'episode' => ( isset( $_POST['hpm-podcast-episode'] ) ? sanitize_text_field( $_POST['hpm-podcast-episode'] ) :	'' ),
 			'episodeType' => $_POST['hpm-podcast-episodetype'],
 			'season' => ( isset( $_POST['hpm-podcast-season'] ) ? sanitize_text_field( $_POST['hpm-podcast-season'] ) : '' ),
-		);
+		];
 
 		update_post_meta( $post_id, 'hpm_podcast_ep_meta', $hpm_podcast );
 
@@ -354,12 +354,12 @@ class HPM_Podcasts {
 							OBJECT );
 						if ( !empty( $attach ) ) :
 							$meta = get_post_meta( $attach[0]->ID, '_wp_attachment_metadata', true );
-							$new_enclose = array(
+							$new_enclose = [
 								'url' => $sg_url,
 								'filesize' => $enc_exp[1],
 								'mime' => $enc_exp[2],
 								'length' => $meta['length_formatted']
-							);
+							];
 							update_post_meta( $post_id, 'hpm_podcast_enclosure', $new_enclose );
 						endif;
 					endif;
@@ -370,12 +370,12 @@ class HPM_Podcasts {
 					$med = reset( $media );
 					$url = wp_get_attachment_url( $med->ID );
 					$meta = get_post_meta( $med->ID, '_wp_attachment_metadata', true );
-					$new_enclose = array(
+					$new_enclose = [
 						'url' => $url,
 						'filesize' => $meta['filesize'],
 						'mime' => $meta['mime_type'],
 						'length' => $meta['length_formatted']
-					);
+					];
 					update_post_meta( $post_id, 'hpm_podcast_enclosure', $new_enclose );
 				endif;
 			endif;
@@ -392,12 +392,12 @@ class HPM_Podcasts {
 					OBJECT );
 				if ( !empty( $attach ) ) :
 					$meta = get_post_meta( $attach[0]->ID, '_wp_attachment_metadata', true );
-					$new_enclose = array(
+					$new_enclose = [
 						'url' => $enc_exp[0],
 						'filesize' => $enc_exp[1],
 						'mime' => $enc_exp[2],
 						'length' => $meta['length_formatted']
-					);
+					];
 					update_post_meta( $post_id, 'hpm_podcast_enclosure', $new_enclose );
 				endif;
 			else :
@@ -406,12 +406,12 @@ class HPM_Podcasts {
 					$med = reset( $media );
 					$url = wp_get_attachment_url( $med->ID );
 					$meta = get_post_meta( $med->ID, '_wp_attachment_metadata', true );
-					$new_enclose = array(
+					$new_enclose = [
 						'url' => $url,
 						'filesize' => $meta['filesize'],
 						'mime' => $meta['mime_type'],
 						'length' => $meta['length_formatted']
-					);
+					];
 					update_post_meta( $post_id, 'hpm_podcast_enclosure', $new_enclose );
 				endif;
 			endif;
@@ -422,37 +422,35 @@ class HPM_Podcasts {
 	 * Create custom post type to house our podcast feeds
 	 */
 	public function create_type() {
-		register_post_type( 'podcasts',
-			array(
-				'labels' => array(
-					'name' => __( 'Podcasts' ),
-					'singular_name' => __( 'Podcast' ),
-					'menu_name' => __( 'Podcasts' ),
-					'add_new_item' => __( 'Add New Podcast' ),
-					'edit_item' => __( 'Edit Podcast' ),
-					'new_item' => __( 'New Podcast' ),
-					'view_item' => __( 'View Podcast' ),
-					'search_items' => __( 'Search Podcasts' ),
-					'not_found' => __( 'Podcast Not Found' ),
-					'not_found_in_trash' => __( 'Podcast not found in trash' )
-				),
-				'description' => 'Feed information for locally-produced podcasts',
-				'public' => true,
-				'menu_position' => 20,
-				'menu_icon' => 'dashicons-playlist-audio',
-				'has_archive' => true,
-				'rewrite' => array(
-					'slug' => __( 'podcasts' ),
-					'with_front' => false,
-					'feeds' => true,
-					'pages' => true
-				),
-				'supports' => array( 'title', 'editor', 'thumbnail', 'author', 'excerpt' ),
-				'taxonomies' => array( 'post_tag' ),
-				'capability_type' => array( 'hpm_podcast', 'hpm_podcasts' ),
-				'map_meta_cap' => true
-			)
-		);
+		register_post_type( 'podcasts', [
+			'labels' => [
+				'name' => __( 'Podcasts' ),
+				'singular_name' => __( 'Podcast' ),
+				'menu_name' => __( 'Podcasts' ),
+				'add_new_item' => __( 'Add New Podcast' ),
+				'edit_item' => __( 'Edit Podcast' ),
+				'new_item' => __( 'New Podcast' ),
+				'view_item' => __( 'View Podcast' ),
+				'search_items' => __( 'Search Podcasts' ),
+				'not_found' => __( 'Podcast Not Found' ),
+				'not_found_in_trash' => __( 'Podcast not found in trash' )
+			],
+			'description' => 'Feed information for locally-produced podcasts',
+			'public' => true,
+			'menu_position' => 20,
+			'menu_icon' => 'dashicons-playlist-audio',
+			'has_archive' => true,
+			'rewrite' => [
+				'slug' => __( 'podcasts' ),
+				'with_front' => false,
+				'feeds' => true,
+				'pages' => true
+			],
+			'supports' => [ 'title', 'editor', 'thumbnail', 'author', 'excerpt' ],
+			'taxonomies' => [ 'post_tag' ],
+			'capability_type' => [ 'hpm_podcast', 'hpm_podcasts' ],
+			'map_meta_cap' => true
+		]);
 	}
 
 	/**
@@ -480,15 +478,15 @@ class HPM_Podcasts {
 	 * Add meta boxes to the post editor for the podcast feeds
 	 */
 	public function meta_setup() {
-		add_action( 'add_meta_boxes', array( $this, 'add_meta' ) );
-		add_action( 'save_post', array( $this, 'save_meta' ), 10, 2 );
+		add_action( 'add_meta_boxes', [ $this, 'add_meta' ] );
+		add_action( 'save_post', [ $this, 'save_meta' ], 10, 2 );
 	}
 
 	public function add_meta() {
 		add_meta_box(
 			'hpm-podcast-meta-class',
 			esc_html__( 'Podcast Metadata', 'hpm-podcasts' ),
-			array( $this, 'meta_box' ),
+			[ $this, 'meta_box' ],
 			'podcasts',
 			'normal',
 			'core'
@@ -520,28 +518,28 @@ class HPM_Podcasts {
 		if ( $exists_link ) :
 			$hpm_podcast_link = get_post_meta( $object->ID, 'hpm_pod_link', true );
 			if ( empty( $hpm_podcast_link ) ) :
-				$hpm_podcast_link = array(
+				$hpm_podcast_link = [
 					'page'       => '',
 					'limit'      => 0,
 					'itunes'     => '',
 					'gplay'      => '',
 					'stitcher'   => '',
 					'analytics'  => '',
-					'categories' => array( 'first' => '', 'second' => '', 'third' => '' ),
+					'categories' => [ 'first' => '', 'second' => '', 'third' => '' ],
 					'type'       => 'episodic'
-				);
+				];
 			endif;
 		else :
-			$hpm_podcast_link = array(
+			$hpm_podcast_link = [
 				'page'       => '',
 				'limit'      => 0,
 				'itunes'     => '',
 				'gplay'      => '',
 				'stitcher'   => '',
 				'analytics'  => '',
-				'categories' => array( 'first' => '', 'second' => '', 'third' => '' ),
+				'categories' => [ 'first' => '', 'second' => '', 'third' => '' ],
 				'type'       => 'episodic'
-			);
+			];
 		endif;
 		include __DIR__ . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR . 'post-type.php';
 	}
@@ -565,20 +563,20 @@ class HPM_Podcasts {
 				return $post_id;
 
 			$hpm_podcast_cat = $_POST['hpm-podcast-cat'];
-			$hpm_podcast_link = array(
+			$hpm_podcast_link = [
 				'page' => ( isset( $_POST['hpm-podcast-link'] ) ? sanitize_text_field( $_POST['hpm-podcast-link'] ) : '' ),
 				'itunes' => ( isset( $_POST['hpm-podcast-link-itunes'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-itunes'] ) : '' ),
 				'gplay' => ( isset( $_POST['hpm-podcast-link-gplay'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-gplay'] ) : '' ),
 				'stitcher' => ( isset( $_POST['hpm-podcast-link-stitcher'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-stitcher'] ) : '' ),
 				'analytics' => ( isset( $_POST['hpm-podcast-analytics'] ) ? sanitize_text_field( $_POST['hpm-podcast-analytics'] ) : '' ),
 				'limit' => ( isset( $_POST['hpm-podcast-limit'] ) ? sanitize_text_field( $_POST['hpm-podcast-limit'] ) : 0 ),
-				'categories' => array(
+				'categories' => [
 					'first' => $_POST['hpm-podcast-icat-first'],
 					'second' => $_POST['hpm-podcast-icat-second'],
 					'third' => $_POST['hpm-podcast-icat-third']
-				),
+				],
 				'type' => $_POST['hpm-podcast-type']
-			);
+			];
 
 			update_post_meta( $post_id, 'hpm_pod_cat', $hpm_podcast_cat );
 			update_post_meta( $post_id, 'hpm_pod_link', $hpm_podcast_link );
@@ -589,8 +587,8 @@ class HPM_Podcasts {
 	 * Creates the Settings menu in the Admin Dashboard
 	 */
 	public function create_menu() {
-		add_submenu_page( 'edit.php?post_type=podcasts', 'HPM Podcast Settings', 'Settings', 'manage_options', 'hpm-podcast-settings', array( $this, 'settings_page' ) );
-		add_action( 'admin_init', array( $this, 'register_settings' ) );
+		add_submenu_page( 'edit.php?post_type=podcasts', 'HPM Podcast Settings', 'Settings', 'manage_options', 'hpm-podcast-settings', [ $this, 'settings_page' ] );
+		add_action( 'admin_init', [ $this, 'register_settings' ] );
 	}
 
 	/**
@@ -632,15 +630,15 @@ class HPM_Podcasts {
 	 */
 	public function upload( WP_REST_Request $request ) {
 		if ( empty( $request['feed'] ) ) :
-			return new WP_Error( 'rest_api_sad', esc_html__( 'Unable to upload media. Please choose a podcast feed.', 'hpm-podcasts' ), array( 'status' => 500 ) );
+			return new WP_Error( 'rest_api_sad', esc_html__( 'Unable to upload media. Please choose a podcast feed.', 'hpm-podcasts' ), [ 'status' => 500 ] );
 		elseif ( empty( $request['id'] ) ) :
-			return new WP_Error( 'rest_api_sad', esc_html__( 'No post ID provided, cannot upload media. Please save your post and try again.', 'hpm-podcasts' ), array( 'status' => 500 ) );
+			return new WP_Error( 'rest_api_sad', esc_html__( 'No post ID provided, cannot upload media. Please save your post and try again.', 'hpm-podcasts' ), [ 'status' => 500 ] );
 		endif;
 
-		$this->process_upload->data( array( 'id' => $request['id'], 'feed' => $request['feed'] ) )->dispatch();
-		update_post_meta( $request['id'], 'hpm_podcast_status', array( 'status' => 'in-progress', 'message' => esc_html__( 'Upload process initializing.', 'hpm-podcasts' ) ) );
+		$this->process_upload->data( [ 'id' => $request['id'], 'feed' => $request['feed'] ] )->dispatch();
+		update_post_meta( $request['id'], 'hpm_podcast_status', [ 'status' => 'in-progress', 'message' => esc_html__( 'Upload process initializing.', 'hpm-podcasts' ) ] );
 		
-		return rest_ensure_response( array( 'code' => 'rest_api_success', 'message' => esc_html__( 'Podcast upload started successfully.', 'hpm-podcasts' ), 'data' => array( 'status' => 200 ) ) );
+		return rest_ensure_response( [ 'code' => 'rest_api_success', 'message' => esc_html__( 'Podcast upload started successfully.', 'hpm-podcasts' ), 'data' => [ 'status' => 200 ] ] );
 	}
 
 	/**
@@ -652,23 +650,22 @@ class HPM_Podcasts {
 	 */
 	public function upload_progress( WP_REST_Request $request ) {
 		if ( empty( $request['id'] ) ) :
-			return new WP_Error( 'rest_api_sad', esc_html__( 'No post ID provided, cannot find upload status. Please save your post and try again.', 'hpm-podcasts' ), array( 'status' => 500 ) );
+			return new WP_Error( 'rest_api_sad', esc_html__( 'No post ID provided, cannot find upload status. Please save your post and try again.', 'hpm-podcasts' ), [ 'status' => 500 ] );
 		endif;
 
 		$status = get_post_meta( $request['id'], 'hpm_podcast_status', true );
 
 		if ( empty( $status ) ) :
-			return new WP_Error( 'rest_api_sad', esc_html__( 'No upload status found, please try your upload again.', 'hpm-podcasts' ), array( 'status' => 500 ) );
+			return new WP_Error( 'rest_api_sad', esc_html__( 'No upload status found, please try your upload again.', 'hpm-podcasts' ), [ 'status' => 500 ] );
 		else :
 			if ( $status['status'] == 'error' ) :
-				return new WP_Error( 'rest_api_sad', esc_html__( $status['message'], 'hpm-podcasts' ), array( 'status' => 500
-				) );
+				return new WP_Error( 'rest_api_sad', esc_html__( $status['message'], 'hpm-podcasts' ), [ 'status' => 500 ] );
 			elseif ( $status['status'] == 'in progress' ) :
-				return rest_ensure_response( array( 'code' => 'rest_api_success', 'message' => esc_html__( $status['message'], 'hpm-podcasts' ), 'data' => array( 'current' => 'in-progress', 'status' => 200 ) ) );
+				return rest_ensure_response( [ 'code' => 'rest_api_success', 'message' => esc_html__( $status['message'], 'hpm-podcasts' ), 'data' => [ 'current' => 'in-progress', 'status' => 200 ] ] );
 			elseif ( $status['status'] == 'success' ) :
 				delete_post_meta( $request['id'], 'hpm_podcast_status', '' );
 				$data = get_post_meta( $request['id'], 'hpm_podcast_enclosure', true );
-				return rest_ensure_response( array( 'code' => 'rest_api_success', 'message' => esc_html__( $status['message'], 'hpm-podcasts' ), 'data' => array( 'url' => $data['url'], 'current' => 'success', 'status' => 200 ) ) );
+				return rest_ensure_response( [ 'code' => 'rest_api_success', 'message' => esc_html__( $status['message'], 'hpm-podcasts' ), 'data' => [ 'url' => $data['url'], 'current' => 'success', 'status' => 200 ] ] );
 			endif;
 		endif;
 	}
@@ -697,7 +694,7 @@ class HPM_Podcasts {
 		$save = $dir['basedir'];
 		if ( class_exists( 'feed_json' ) ) :
 			$feed_json = true;
-			$json = array(
+			$json = [
 				'version' => 'https://jsonfeed.org/version/1',
 				'title' => '',
 				'home_page_url' => '',
@@ -705,14 +702,14 @@ class HPM_Podcasts {
 				'description' => '',
 				'icon' => '',
 				'favicon' => '',
-				'categories' => array(),
-				'keywords' => array(),
-				'author' => array(
+				'categories' => [],
+				'keywords' => [],
+				'author' => [
 					'name' => '',
 					'email' => ''
-				),
-				'items' => array()
-			);
+				],
+				'items' => []
+			];
 		else :
 			$feed_json = false;
 		endif;
@@ -726,7 +723,7 @@ class HPM_Podcasts {
 					$aws_key = $short['key'];
 					$aws_secret = $short['secret'];
 				else :
-					return new WP_Error( 'rest_api_sad', esc_html__( 'No S3 credentials provided. Please check your settings.', 'hpm-podcasts' ), array( 'status' => 500 ) );
+					return new WP_Error( 'rest_api_sad', esc_html__( 'No S3 credentials provided. Please check your settings.', 'hpm-podcasts' ), [ 'status' => 500 ] );
 				endif;
 
 				$client = new \Aws\S3\S3Client([
@@ -744,7 +741,7 @@ class HPM_Podcasts {
 				elseif ( !empty( $short['password'] ) ) :
 					$ftp_password = $short['password'];
 				else :
-					return new WP_Error( 'rest_api_sad', esc_html__( 'No FTP password provided. Please check your settings.', 'hpm-podcasts' ), array( 'status' => 500 ) );
+					return new WP_Error( 'rest_api_sad', esc_html__( 'No FTP password provided. Please check your settings.', 'hpm-podcasts' ), [ 'status' => 500 ] );
 				endif;
 			elseif ( $pods['upload-flats'] == 'sftp' ) :
 				$short = $pods['credentials']['sftp'];
@@ -753,7 +750,7 @@ class HPM_Podcasts {
 				elseif ( !empty( $short['password'] ) ) :
 					$sftp_password = $short['password'];
 				else :
-					return new WP_Error( 'rest_api_sad', esc_html__( 'No FTP password provided. Please check your settings.', 'hpm-podcasts' ), array( 'status' => 500 ) );
+					return new WP_Error( 'rest_api_sad', esc_html__( 'No FTP password provided. Please check your settings.', 'hpm-podcasts' ), [ 'status' => 500 ] );
 				endif;
 			elseif ( $pods['upload-flats'] == 'database' ) :
 				// Nothing to see here
@@ -766,13 +763,11 @@ class HPM_Podcasts {
 			endif;
 		endif;
 
-		$podcasts = new WP_Query(
-			array(
-				'post_type' => 'podcasts',
-				'post_status' => 'publish',
-				'posts_per_page' => -1
-			)
-		);
+		$podcasts = new WP_Query([	
+			'post_type' => 'podcasts',
+			'post_status' => 'publish',
+			'posts_per_page' => -1
+		]);
 		if ( !empty( $pods['recurrence'] ) ) :
 			if ( $pods['recurrence'] == 'hpm_5min' ) :
 				$frequency = '5';
@@ -802,20 +797,16 @@ class HPM_Podcasts {
 				if ( !empty( $podlink['limit'] ) && $podlink['limit'] != 0 && is_numeric( $podlink['limit'] ) ) :
 					$perpage = $podlink['limit'];
 				endif;
-				$podeps = new WP_Query(
-					array(
-						'post_type' => 'post',
-						'post_status' => 'publish',
-						'cat' => $catslug,
-						'posts_per_page' => $perpage,
-						'meta_query' => array(
-							array(
-								'key' => 'hpm_podcast_enclosure',
-								'compare' => 'EXISTS'
-							)
-						)
-					)
-				);
+				$podeps = new WP_Query([
+					'post_type' => 'post',
+					'post_status' => 'publish',
+					'cat' => $catslug,
+					'posts_per_page' => $perpage,
+					'meta_query' => [[
+						'key' => 'hpm_podcast_enclosure',
+						'compare' => 'EXISTS'
+					]]
+				]);
 				if ( $podeps->have_posts() && $request === null ) :
 					$first_id = $podeps->post->ID;
 					$modified = get_the_modified_date('u', $first_id );
@@ -825,12 +816,12 @@ class HPM_Podcasts {
 				endif;
 				$main_image = wp_get_attachment_image_src( get_post_thumbnail_id(), 'full' );
 				$favicon = wp_get_attachment_image_src( get_post_thumbnail_id(), 'thumb' );
-				$categories = array();
+				$categories = [];
 				foreach ( $podlink['categories'] as $pos => $cats ) :
 					$categories[$pos] = explode( '||', $cats );
 				endforeach;
 				$pod_tags = wp_get_post_tags( $pod_id );
-				$pod_tag_array = array();
+				$pod_tag_array = [];
 				foreach ( $pod_tags as $t ) :
 					$pod_tag_array[] = $t->name;
 				endforeach;
@@ -850,7 +841,7 @@ class HPM_Podcasts {
 							$json['categories'][] = $ca;
 						endforeach;
 					endforeach;
-					$json['items'] = array();
+					$json['items'] = [];
 				endif;
 
 				ob_start();
@@ -914,26 +905,26 @@ class HPM_Podcasts {
 							$podeps->the_post();
 							$epid = get_the_ID();
 							if ( $podeps->current_post == 0 ) :
-								$last = array( 'id' => $epid, 'modified' => get_the_modified_time( 'u' ) );
+								$last = [ 'id' => $epid, 'modified' => get_the_modified_time( 'u' ) ];
 								update_post_meta( $pod_id, 'hpm_pod_last_id', $last );
 							endif;
 							$a_meta = get_post_meta( $epid, 'hpm_podcast_enclosure', true );
 							$pod_image = wp_get_attachment_image_src( get_post_thumbnail_id( $epid ), 'full' );
 							$tags = wp_get_post_tags( $epid );
-							$tag_array = array();
+							$tag_array = [];
 							foreach ( $tags as $t ) :
 								$tag_array[] = $t->name;
 							endforeach;
 							$pod_desc = get_post_meta( $epid, 'hpm_podcast_ep_meta', true );
 							if ( !empty( $podlink['blubrry'] ) ) :
-								$media_url = str_replace( array( 'http://', 'https://' ), array( '', '' ), $a_meta['url'] );
+								$media_url = str_replace( [ 'http://', 'https://' ], [ '', '' ], $a_meta['url'] );
 								$media_file = $protocol."media.blubrry.com/".$podlink['blubrry']."/".$media_url;
 							else :
-								$media_file = str_replace( array( 'http://', 'https://' ), array( $protocol, $protocol ), $a_meta['url'] );
+								$media_file = str_replace( [ 'http://', 'https://' ], [ $protocol, $protocol ], $a_meta['url'] );
 							endif;
 							$content = "<p>".wp_trim_words( strip_shortcodes( get_the_content() ), 75, '... <a href="'.get_the_permalink().'">Read More</a>' )."</p>";
 							if ( $feed_json ) :
-								$json['items'][] = array(
+								$json['items'][] = [
 									'id' => $epid,
 									'title' => get_the_title() ,
 									'permalink' => get_permalink(),
@@ -944,16 +935,16 @@ class HPM_Podcasts {
 									'date_modified' => get_the_modified_date( 'c', '', '', false),
 									'author' => coauthors( '; ', '; ', '', '', false ),
 									'thumbnail' => $pod_image,
-									'attachments' => array(
+									'attachments' => [
 										'url' => $media_file,
 										'mime_type' => $a_meta['mime'],
 										'filesize' => $a_meta['filesize'],
 										'duration_in_seconds' => $a_meta['length']
-									),
+									],
 									'season' => $pod_desc['season'],
 									'episode' => $pod_desc['episode'],
 									'episodeType' => $pod_desc['episodeType']
-								);
+								];
 							endif; ?>
 							<item>
 								<title><?php the_title_rss(); ?></title>
@@ -1009,13 +1000,13 @@ class HPM_Podcasts {
 				if ( !empty( $pods['upload-flats'] ) ) :
 					if ( $pods['upload-flats'] == 's3' ) :
 						try {
-							$result = $client->putObject(array(
+							$result = $client->putObject([
 								'Bucket' => $short['bucket'],
 								'Key' => ( !empty( $short['folder'] ) ? $short['folder'].'/' : '' ) .$podcast_title.'.xml',
 								'Body' => $getContent,
 								'ACL' => 'public-read',
 								'ContentType' => 'application/rss+xml'
-							));
+							]);
 						} catch ( S3Exception $e ) {
 							$error .= $podcast_title.": ".$e->getMessage()."<br /><br />";
 						} catch ( AwsException $e ) {
@@ -1023,13 +1014,13 @@ class HPM_Podcasts {
 						}
 						if ( $feed_json ) :
 							try {
-								$result = $client->putObject(array(
+								$result = $client->putObject([
 									'Bucket' => $short['bucket'],
 									'Key' => ( !empty( $short['folder'] ) ? $short['folder'].'/' : '' ) .$podcast_title.'.json',
 									'Body' => json_encode( $json ),
 									'ACL' => 'public-read',
 									'ContentType' => 'application/json'
-								));
+								]);
 							} catch ( S3Exception $e ) {
 								$error .= $podcast_title.": ".$e->getMessage()."<br /><br />";
 							} catch ( AwsException $e ) {
@@ -1039,12 +1030,12 @@ class HPM_Podcasts {
 					elseif ( $pods['upload-flats'] == 'ftp' ) :
 						$local = $save . $ds . $podcast_title . '.xml';
 						if ( !file_put_contents( $local, $getContent ) ) :
-							return new WP_Error( 'rest_api_sad', esc_html__( 'Could not generate flat file.', 'hpm-podcasts' ), array( 'status' => 500 ) );
+							return new WP_Error( 'rest_api_sad', esc_html__( 'Could not generate flat file.', 'hpm-podcasts' ), [ 'status' => 500 ] );
 						endif;
 						if ( $feed_json ) :
 							$local_json = $save . $ds . $podcast_title . '.json';
 							if ( !file_put_contents( $local_json, json_encode( $json ) ) ) :
-								return new WP_Error( 'rest_api_sad', esc_html__( 'Could not generate flat json file.', 'hpm-podcasts' ), array( 'status' => 500 ) );
+								return new WP_Error( 'rest_api_sad', esc_html__( 'Could not generate flat json file.', 'hpm-podcasts' ), [ 'status' => 500 ] );
 							endif;
 						endif;
 						try {
@@ -1083,13 +1074,13 @@ class HPM_Podcasts {
 					elseif ( $pods['upload-flats'] == 'sftp' ) :
 						$local = $save . $ds . $podcast_title . '.xml';
 						if ( !file_put_contents( $local, $getContent ) ) :
-							return new WP_Error( 'rest_api_sad', esc_html__( 'Could not generate flat file.', 'hpm-podcasts' ), array( 'status' => 500 ) );
+							return new WP_Error( 'rest_api_sad', esc_html__( 'Could not generate flat file.', 'hpm-podcasts' ), [ 'status' => 500 ] );
 						endif;
 
 						if ( $feed_json ) :
 							$local_json = $save . $ds . $podcast_title . '.json';
 							if ( !file_put_contents( $local_json, json_encode( $json ) ) ) :
-								return new WP_Error( 'rest_api_sad', esc_html__( 'Could not generate flat json file.', 'hpm-podcasts' ), array( 'status' => 500 ) );
+								return new WP_Error( 'rest_api_sad', esc_html__( 'Could not generate flat json file.', 'hpm-podcasts' ), [ 'status' => 500 ] );
 							endif;
 						endif;
 
@@ -1143,7 +1134,7 @@ class HPM_Podcasts {
 				sleep(5);
 			endwhile;
 			if ( !empty( $error ) ) :
-				return new WP_Error( 'rest_api_sad', esc_html__( $error, 'hpm-podcasts' ), array( 'status' => 500 ) );
+				return new WP_Error( 'rest_api_sad', esc_html__( $error, 'hpm-podcasts' ), [ 'status' => 500 ] );
 			else :
 				$t = time();
 				$update_last = $this->last_update;
@@ -1155,11 +1146,11 @@ class HPM_Podcasts {
 				else :
 					update_option( 'hpm_podcast_last_update', $time, false );
 				endif;
-				return rest_ensure_response( array( 'code' => 'rest_api_success', 'message' => esc_html__('Podcast feeds successfully updated!', 'hpm-podcasts' ), 'data' => array( 'date' => $date, 'timestamp' => $time, 'status' =>
-					200 ) ) );
+				return rest_ensure_response( [ 'code' => 'rest_api_success', 'message' => esc_html__( 'Podcast feeds successfully updated!', 'hpm-podcasts' ), 'data' => [ 'date' => $date, 'timestamp' => $time, 'status' =>
+					200 ] ] );
 			endif;
 		else :
-			return new WP_Error( 'rest_api_sad', esc_html__( 'No podcast feeds have been defined. Please create one and try again.', 'hpm-podcasts' ), array( 'status' => 500 ) );
+			return new WP_Error( 'rest_api_sad', esc_html__( 'No podcast feeds have been defined. Please create one and try again.', 'hpm-podcasts' ), [ 'status' => 500 ] );
 		endif;
 	}
 

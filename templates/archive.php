@@ -105,11 +105,11 @@ get_header(); ?>
 			endwhile;
 
 			// Previous/next page navigation.
-			the_posts_pagination( array(
+			the_posts_pagination( [
 				'prev_text' => __( '&lt;', 'hpm-podcasts' ),
 				'next_text' => __( '&gt;', 'hpm-podcasts' ),
 				'before_page_number' => '<span class="meta-nav screen-reader-text">' . __( 'Page', 'hpm-podcasts' ) . ' </span>',
-			) );
+			 ] );
 
 		// If no content, include the "No posts found" template.
 		else :

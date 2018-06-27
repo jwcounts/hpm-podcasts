@@ -27,14 +27,12 @@ if ( !empty( $pods['upload-media'] ) ) :
 			$sg_url = $hpm_pod_sg['url'];
 		endif;
 	endif;
-	$podcasts = new WP_Query(
-		array(
-			'post_type' => 'podcasts',
-			'post_status' => 'publish',
-			'orderby' => 'name',
-			'order' => 'ASC'
-		)
-	); ?>
+	$podcasts = new WP_Query([
+		'post_type' => 'podcasts',
+		'post_status' => 'publish',
+		'orderby' => 'name',
+		'order' => 'ASC'
+	]); ?>
 	<p>&nbsp;</p>
 	<h3><?PHP _e( "Podcast Feed", 'hpm-podcasts' ); ?></h3>
 	<p id="hpm-podcast-feeds">
@@ -104,7 +102,7 @@ endif; ?>
 			e.preventDefault();
 			var id = $('#post_ID').val();
 			var feed = $('#hpm-podcast-ep-feed').val();
-			$(this).after( '<span id="hpm-upload"><img style="padding: 0 0.5em; vertical-align: middle;" src="/wp-includes/images/spinner.gif"><span style="margin-left: 1em;" id="hpm-upload-message"></span></span>' );
+			$(this).after( '<span id="hpm-upload"><img style="padding: 0 0.5em; vertical-align: middle;" src="<?php echo WP_SITEURL; ?>/wp-includes/images/spinner.gif"><span style="margin-left: 1em;" id="hpm-upload-message"></span></span>' );
 			$.ajax({
 				type: 'GET',
 				url: '/wp-json/hpm-podcast/v1/upload/'+feed+'/'+id,
