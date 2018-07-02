@@ -7,7 +7,7 @@
 		"phpseclib/phpseclib": "*"
 	},
 	"dist": {
-		"url": "https://github.com/jwcounts/hpm-podcasts/archive/v1.1.zip",
+		"url": "https://github.com/jwcounts/hpm-podcasts/archive/v1.1.1.zip",
 		"type": "zip"
 	},
 	"license": "GPL",
