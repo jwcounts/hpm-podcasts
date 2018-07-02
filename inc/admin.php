@@ -316,7 +316,7 @@ define('AWS_SECRET_ACCESS_KEY', 'YOUR_AWS_SECRET');</pre>
 			});
 			$('#hpm-pods-refresh').click(function(e){
 				e.preventDefault();
-				$(this).after( ' <img id="hpm-refresh-spinner" src="/wp/wp-includes/images/spinner.gif">' );
+				$(this).after( ' <img id="hpm-refresh-spinner" src="<?PHP echo WP_SITEURL; ?>/wp-includes/images/spinner.gif">' );
 				$.ajax({
 					type: 'GET',
 					url: '/wp-json/hpm-podcast/v1/refresh',
