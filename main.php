@@ -679,7 +679,7 @@ class HPM_Podcasts {
 	public function generate( WP_REST_Request $request = null ) {
 		$pods = $this->options;
 		$ds = DIRECTORY_SEPARATOR;
-		require __DIR__ . $ds . 'vendor' . $ds . 'autoload.php';
+		require SITE_ROOT . $ds . 'vendor' . $ds . 'autoload.php';
 		if ( !class_exists('\Aws\S3\S3Client') ) :
 			require __DIR__ . $ds . 'vendor' . $ds . 'aws.phar';
 		endif;
