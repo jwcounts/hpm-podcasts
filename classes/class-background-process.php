@@ -179,52 +179,7 @@ class HPM_Media_Upload {
 
 		update_post_meta( $id, 'hpm_podcast_status', [ 'status' => 'in progress', 'message' => esc_html__( 'Podcast file downloaded to local server. Connecting to remote host.', 'hpm-podcasts' ) ] );
 
-		if ( $pods['upload-media'] == 'ftp' ) :
-			$short = $pods['credentials']['ftp'];
-			if ( defined( 'HPM_FTP_PASSWORD' ) ) :
-				$ftp_password = HPM_FTP_PASSWORD;
-			elseif ( !empty( $short['password'] ) ) :
-				$ftp_password = $short['password'];
-			else :
-				update_post_meta( $id, 'hpm_podcast_status', [ 'status' => 'error', 'message' => esc_html__( 'No FTP password provided. Please check your settings.', 'hpm-podcasts' ) ] );
-				return false;
-			endif;
-			try {
-				$con = ftp_connect($short['host']);
-				if ( false === $con ) :
-					throw new Exception( "Unable to connect to the FTP server. Please check your FTP Host URL or IP and try again." );
-				endif;
-
-				$loggedIn = ftp_login( $con, $short['username'], $ftp_password );
-				if ( false === $loggedIn ) :
-					throw new Exception( "Unable to log in to the FTP server. Please check your credentials and try again." );
-				endif;
-
-				if ( !empty( $short['folder'] ) ) :
-					if ( !ftp_chdir( $con, $short['folder'] ) ) :
-						ftp_mkdir( $con, $short['folder'] );
-						ftp_chdir( $con, $short['folder'] );
-					endif;
-				endif;
-
-				if ( !ftp_chdir( $con, $feed ) ) :
-					ftp_mkdir( $con, $feed );
-					ftp_chdir( $con, $feed );
-				endif;
-
-				update_post_meta( $id, 'hpm_podcast_status', [ 'status' => 'in progress', 'message' => esc_html__( 'Remote host connected. Starting upload.', 'hpm-podcasts' ) ] );
-
-				if ( ! ftp_put( $con, $path['basename'], $local, FTP_BINARY ) ) :
-					throw new Exception( "The file could not be saved on the FTP server. Please verify your permissions on that server and try again." );
-				endif;
-				ftp_close( $con );
-
-				$sg_url = $short['url'].'/'.$feed.'/'.$path['basename'];
-
-			} catch ( Exception $e ) {
-				$message = $e->getMessage();
-			}
-		elseif ( $pods['upload-media'] == 'sftp' ) :
+		if ( $pods['upload-media'] == 'sftp' ) :
 			$short = $pods['credentials']['sftp'];
 			$autoload = $ds . 'vendor' . $ds . 'autoload.php';
 			if ( file_exists( HPM_PODCAST_PLUGIN_DIR . $autoload ) ) :
@@ -264,53 +219,6 @@ class HPM_Media_Upload {
 			endif;
 			unset( $sftp );
 			$sg_url = $short['url'].'/'.$feed.'/'.$path['basename'];
-		elseif ( $pods['upload-media'] == 's3' ) :
-			if ( !class_exists('\Aws\S3\S3Client') ) :
-				require __DIR__ . $ds . 'vendor' . $ds . 'aws.phar';
-			endif;
-			$short = $pods['credentials']['s3'];
-			if ( defined( 'AWS_ACCESS_KEY_ID' ) && defined( 'AWS_SECRET_ACCESS_KEY' ) ) :
-				$aws_key = AWS_ACCESS_KEY_ID;
-				$aws_secret = AWS_SECRET_ACCESS_KEY;
-			elseif ( !empty( $short['key'] ) && !empty( $short['secret'] ) ) :
-				$aws_key = $short['key'];
-				$aws_secret = $short['secret'];
-			else :
-				update_post_meta( $id, 'hpm_podcast_status', [ 'status' => 'error', 'message' => esc_html__( 'No S3 credentials provided. Please check your settings.', 'hpm-podcasts' ) ] );
-				return false;
-			endif;
-			require HPM_PODCAST_PLUGIN_DIR . $ds . 'vendor' . $ds . 'autoload.php';
-			$client = new Aws\S3\S3Client([
-				'version' => 'latest',
-				'region'  => $short['region'],
-				'credentials' => [
-					'key' => $aws_key,
-					'secret' => $aws_secret
-				]
-			]);
-
-			if ( !empty( $short['folder'] ) ) :
-				$folder = $short['folder'].'/';
-			else :
-				$folder = '';
-			endif;
-
-			update_post_meta( $id, 'hpm_podcast_status', [ 'status' => 'in progress', 'message' => esc_html__( 'Remote host connected. Starting upload.', 'hpm-podcasts' ) ] );
-
-			try {
-				$result = $client->putObject([
-					'Bucket' => $short['bucket'],
-					'Key' => $folder.$feed.'/'.$path['basename'],
-					'SourceFile' => $local,
-					'ACL' => 'public-read',
-					'ContentType' => $med->post_mime_type
-				]);
-			} catch ( S3Exception $e ) {
-				$message = $e->getMessage();
-			} catch ( AwsException $e ) {
-				$message = $e->getAwsRequestId() . "\n" . $e->getAwsErrorType() . "\n" . $e->getAwsErrorCode();
-			}
-			$sg_url = 'https://s3-'.$short['region'].'.amazonaws.com/'.$short['bucket'].'/'.$folder.$feed.'/'.$path['basename'];
 		else :
 			update_post_meta( $id, 'hpm_podcast_status', [ 'status' => 'error', 'message' => esc_html__( 'No media upload target was selected. Please check your settings.', 'hpm-podcasts' ) ] );
 			return false;

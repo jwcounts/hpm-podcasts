@@ -1,6 +1,6 @@
 # Podcasts by Category
 
-A Wordpress plugin that allows you to create a podcast feed from any category. It has the option to periodically cache the feeds as flat XML files (on a separate server via FTP or SFTP, on Amazon S3, or locally) to speed up delivery, and upload your media files to those other servers.
+A Wordpress plugin that allows you to create a podcast feed from any category. It periodically generates the feeds and saves them as site options. It can also upload your media files to an SFTP server.
 
 ## Why does this exist?
 
@@ -14,18 +14,15 @@ Download this repo, unzip it, and drop the `hpm-podcasts` folder into your wp-co
 
 Once it is activated, look for Podcasts in the left-hand menu of the Admin Dashboard. If you are logged in as an admin, you will see `Settings` listed in that section. From there, you can set up the owner of the podcast, how frequently the feeds are updated, and all of your upload options.
 
-If you aren't comfortable adding your S3 key/secret or (S)FTP passwords to your database, you can always set them as variables in your Wordpress configuration. Add the following lines (where applicable) to `wp-config.php`:
+If you aren't comfortable adding your SFTP password to your database, you can always set them as variables in your Wordpress configuration. Add the following lines (where applicable) to `wp-config.php`:
 ```
-define( 'AWS_ACCESS_KEY_ID',        'YOUR_AWS_KEY' );
-define( 'AWS_SECRET_ACCESS_KEY',    'YOUR_AWS_SECRET' );
-define( 'HPM_FTP_PASSWORD', 	    'YOUR_FTP_PASSWORD' );
-define( 'HPM_SFTP_PASSWORD',        'YOUR_SFTP_PASSWORD' );
+define( 'HPM_SFTP_PASSWORD', 'YOUR_SFTP_PASSWORD' );
 ```
 
 If you want to define these keys as environment variables (for example, if you're running this site on Amazon Elastic Beanstalk or the like), you can include these definitions in your `wp-config.php` file with references to your environment:
 
 ```
-define( 'AWS_ACCESS_KEY_ID', $_SERVER['AWS_KEY'] );
+define( 'HPM_SFTP_PASSWORD', $_SERVER['HPM_SFTP_PASSWORD'] );
 ```
 
 ## Your Podcast Feeds
@@ -83,7 +80,7 @@ Contact me at jcounts@houstonpublicmedia.org.
 
 ## License
 
-Copyright (c) 2017 Houston Public Media
+Copyright (c) 2018 Houston Public Media
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

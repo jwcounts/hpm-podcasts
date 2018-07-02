@@ -167,29 +167,15 @@ class HPM_Podcasts {
 			],
 			'recurrence' => 'hourly',
 			'roles' => ['editor','administrator'],
-			'upload-flats' => '',
-			'upload-media' => '',
+			'upload-media' => 'sftp',
+			'upload-flats' => 'database',
 			'credentials' => [
-				'ftp' => [
-					'host' => '',
-					'url' => '',
-					'username' => '',
-					'password' => '',
-					'folder' => ''
-				],
 				'sftp' => [
 					'host' => '',
 					'url' => '',
 					'username' => '',
 					'password' => '',
 					'folder' => ''
-				],
-				's3' => [
-					'folder' => '',
-					'bucket' => '',
-					'region' => '',
-					'key' => '',
-					'secret' => ''
 				]
 			],
 			'https' => ''
@@ -604,15 +590,7 @@ class HPM_Podcasts {
 	public function settings_page() {
 		$pods = $this->options;
 		$pods_last = $this->last_update;
-		$upload_s3 = $upload_ftp = $upload_sftp = ' hidden';
-		if ( !empty( $pods['upload-flats'] ) ) :
-			$uflats = $pods['upload-flats'];
-			${"upload_$uflats"} = '';
-		endif;
-		if ( !empty( $pods['upload-media'] ) ) :
-			$umedia = $pods['upload-media'];
-			${"upload_$umedia"} = '';
-		endif;
+		$upload_sftp = ' hidden';
 		if ( !empty( $pods_last ) ) :
 			$last_refresh = date( 'F j, Y @ g:i A', $pods_last );
 		else :
@@ -679,10 +657,6 @@ class HPM_Podcasts {
 	public function generate( WP_REST_Request $request = null ) {
 		$pods = $this->options;
 		$ds = DIRECTORY_SEPARATOR;
-		require SITE_ROOT . $ds . 'vendor' . $ds . 'autoload.php';
-		if ( !class_exists('\Aws\S3\S3Client') ) :
-			require __DIR__ . $ds . 'vendor' . $ds . 'aws.phar';
-		endif;
 		if ( !empty( $pods['https'] ) ) :
 			$protocol = 'https://';
 			$_SERVER['HTTPS'] = 'on';
@@ -712,55 +686,6 @@ class HPM_Podcasts {
 			];
 		else :
 			$feed_json = false;
-		endif;
-		if ( !empty( $pods['upload-flats'] ) ) :
-			if ( $pods['upload-flats'] == 's3' ) :
-				$short = $pods['credentials']['s3'];
-				if ( defined( 'AWS_ACCESS_KEY_ID' ) && defined( 'AWS_SECRET_ACCESS_KEY' ) ) :
-					$aws_key = AWS_ACCESS_KEY_ID;
-					$aws_secret = AWS_SECRET_ACCESS_KEY;
-				elseif ( !empty( $short['key'] ) && !empty( $short['secret'] ) ) :
-					$aws_key = $short['key'];
-					$aws_secret = $short['secret'];
-				else :
-					return new WP_Error( 'rest_api_sad', esc_html__( 'No S3 credentials provided. Please check your settings.', 'hpm-podcasts' ), [ 'status' => 500 ] );
-				endif;
-
-				$client = new \Aws\S3\S3Client([
-					'version' => 'latest',
-					'region'  => $short['region'],
-					'credentials' => [
-						'key' => $aws_key,
-						'secret' => $aws_secret
-					]
-				]);
-			elseif ( $pods['upload-flats'] == 'ftp' ) :
-				$short = $pods['credentials']['ftp'];
-				if ( defined( 'HPM_FTP_PASSWORD' ) ) :
-					$ftp_password = HPM_FTP_PASSWORD;
-				elseif ( !empty( $short['password'] ) ) :
-					$ftp_password = $short['password'];
-				else :
-					return new WP_Error( 'rest_api_sad', esc_html__( 'No FTP password provided. Please check your settings.', 'hpm-podcasts' ), [ 'status' => 500 ] );
-				endif;
-			elseif ( $pods['upload-flats'] == 'sftp' ) :
-				$short = $pods['credentials']['sftp'];
-				if ( defined( 'HPM_SFTP_PASSWORD' ) ) :
-					$sftp_password = HPM_SFTP_PASSWORD;
-				elseif ( !empty( $short['password'] ) ) :
-					$sftp_password = $short['password'];
-				else :
-					return new WP_Error( 'rest_api_sad', esc_html__( 'No FTP password provided. Please check your settings.', 'hpm-podcasts' ), [ 'status' => 500 ] );
-				endif;
-			elseif ( $pods['upload-flats'] == 'database' ) :
-				// Nothing to see here
-			else :
-				$error .= "No flat file upload target defined. Please check your settings and try again.";
-			endif;
-		else :
-			if ( !file_exists( $save . $ds . 'hpm-podcasts' ) ) :
-				mkdir( $save . $ds . 'hpm-podcasts' );
-			endif;
 		endif;
 
 		$podcasts = new WP_Query([	
@@ -997,139 +922,9 @@ class HPM_Podcasts {
 				</rss><?php
 				$getContent = ob_get_contents();
 				ob_end_clean();
-				if ( !empty( $pods['upload-flats'] ) ) :
-					if ( $pods['upload-flats'] == 's3' ) :
-						try {
-							$result = $client->putObject([
-								'Bucket' => $short['bucket'],
-								'Key' => ( !empty( $short['folder'] ) ? $short['folder'].'/' : '' ) .$podcast_title.'.xml',
-								'Body' => $getContent,
-								'ACL' => 'public-read',
-								'ContentType' => 'application/rss+xml'
-							]);
-						} catch ( S3Exception $e ) {
-							$error .= $podcast_title.": ".$e->getMessage()."<br /><br />";
-						} catch ( AwsException $e ) {
-							$error .= $podcast_title . ": " . $e->getAwsRequestId() . "<br />" . $e->getAwsErrorType() . "<br />" . $e->getAwsErrorCode() . "<br /><br />";
-						}
-						if ( $feed_json ) :
-							try {
-								$result = $client->putObject([
-									'Bucket' => $short['bucket'],
-									'Key' => ( !empty( $short['folder'] ) ? $short['folder'].'/' : '' ) .$podcast_title.'.json',
-									'Body' => json_encode( $json ),
-									'ACL' => 'public-read',
-									'ContentType' => 'application/json'
-								]);
-							} catch ( S3Exception $e ) {
-								$error .= $podcast_title.": ".$e->getMessage()."<br /><br />";
-							} catch ( AwsException $e ) {
-								$error .= $podcast_title . ": " . $e->getAwsRequestId() . "<br />" . $e->getAwsErrorType() . "<br />" . $e->getAwsErrorCode() . "<br /><br />";
-							}
-						endif;
-					elseif ( $pods['upload-flats'] == 'ftp' ) :
-						$local = $save . $ds . $podcast_title . '.xml';
-						if ( !file_put_contents( $local, $getContent ) ) :
-							return new WP_Error( 'rest_api_sad', esc_html__( 'Could not generate flat file.', 'hpm-podcasts' ), [ 'status' => 500 ] );
-						endif;
-						if ( $feed_json ) :
-							$local_json = $save . $ds . $podcast_title . '.json';
-							if ( !file_put_contents( $local_json, json_encode( $json ) ) ) :
-								return new WP_Error( 'rest_api_sad', esc_html__( 'Could not generate flat json file.', 'hpm-podcasts' ), [ 'status' => 500 ] );
-							endif;
-						endif;
-						try {
-							$con = ftp_connect( $short['host'] );
-							if ( false === $con ) :
-								throw new Exception($podcast_title.": Unable to connect to the FTP server. Please check your FTP Host URL or IP and try again.<br /><br />");
-							endif;
-
-							$loggedIn = ftp_login( $con,  $short['username'], $ftp_password );
-							if ( false === $loggedIn ) :
-								throw new Exception($podcast_title.": Unable to log in to the FTP server. Please check your credentials and try again.<br /><br />");
-							endif;
-							if ( !empty( $short['folder'] ) ) :
-								if ( !ftp_chdir( $con, $short['folder'] ) ) :
-									ftp_mkdir( $con, $short['folder'] );
-									ftp_chdir( $con, $short['folder'] );
-								endif;
-							endif;
-							if ( ! ftp_put( $con, $podcast_title.'.xml', $local, FTP_BINARY ) ) :
-								throw new Exception($podcast_title.": Unable to upload your feed file to the FTP server. Please check your permissions on that server and try again.<br /><br />" );
-							endif;
-							if ( $feed_json ) :
-								if ( ! ftp_put( $con, $podcast_title.'.json', $local_json, FTP_BINARY ) ) :
-									throw new Exception($podcast_title.": Unable to upload your json feed file to the FTP server. Please check your permissions on that server and try again.<br /><br />" );
-								endif;
-							endif;
-							ftp_close( $con );
-						} catch (Exception $e) {
-							$error .= $e->getMessage();
-						}
-						unset( $con );
-						unset( $local );
-						if ( $feed_json ) :
-							unset( $local_json );
-						endif;
-					elseif ( $pods['upload-flats'] == 'sftp' ) :
-						$local = $save . $ds . $podcast_title . '.xml';
-						if ( !file_put_contents( $local, $getContent ) ) :
-							return new WP_Error( 'rest_api_sad', esc_html__( 'Could not generate flat file.', 'hpm-podcasts' ), [ 'status' => 500 ] );
-						endif;
-
-						if ( $feed_json ) :
-							$local_json = $save . $ds . $podcast_title . '.json';
-							if ( !file_put_contents( $local_json, json_encode( $json ) ) ) :
-								return new WP_Error( 'rest_api_sad', esc_html__( 'Could not generate flat json file.', 'hpm-podcasts' ), [ 'status' => 500 ] );
-							endif;
-						endif;
-
-						try {
-							$sftp = new \phpseclib\Net\SFTP( $short['host'] );
-							if ( ! $sftp->login( $short['username'], $sftp_password ) ) :
-								throw new Exception( $podcast_title . ": SFTP Login Failed. Please check your credentials and try again.<br /><br />" );
-							endif;
-							if ( !empty( $short['folder'] ) ) :
-								if ( !$sftp->chdir( $short['folder'] ) ) :
-									$sftp->mkdir( $short['folder'] );
-									$sftp->chdir( $short['folder'] );
-								endif;
-							endif;
-							if ( ! $sftp->put( $podcast_title . '.xml', $local, \phpseclib\Net\SFTP::SOURCE_LOCAL_FILE ) ) :
-								throw new Exception( $podcast_title . ": Unable to upload your feed file to the SFTP server. Please check your permissions on that server and try again.<br /><br />" );
-							endif;
-							if ( $feed_json ) :
-								if ( ! $sftp->put( $podcast_title . '.json', $local_json, \phpseclib\Net\SFTP::SOURCE_LOCAL_FILE ) ) :
-									throw new Exception( $podcast_title . ": Unable to upload your json feed file to the SFTP server. Please check your permissions on that server and try again.<br /><br />" );
-								endif;
-							endif;
-						} catch ( Exception $e ) {
-							$error .= $e->getMessage();
-						}
-						unset( $sftp );
-						unset( $local );
-						if ( $feed_json ) :
-							unset( $local_json );
-						endif;
-					elseif ( $pods['upload-flats'] == 'database' ) :
-						update_option( 'hpm_podcast-'.$podcast_title, $getContent, false );
-						if ( $feed_json ) :
-							update_option( 'hpm_podcast-json-'.$podcast_title, json_encode( $json ), false );
-						endif;
-					else :
-						$error .= "No flat file upload target defined. Please check your settings and try again.";
-					endif;
-				else :
-					$file_write = file_put_contents( $save.$ds.'hpm-podcasts'.$ds.$podcast_title.'.xml', $getContent );
-					if ( $file_write === FALSE ) :
-						$error .= $podcast_title.": There was an error writing your cache file into the Uploads directory. Please check the error log.<br /><br />";
-					endif;
-					if ( $feed_json ) :
-						$file_write_json = file_put_contents( $save.$ds.'hpm-podcasts'.$ds.$podcast_title.'.json', json_encode( $json ) );
-						if ( $file_write_json === FALSE ) :
-							$error .= $podcast_title.": There was an error writing your json cache file into the Uploads directory. Please check the error log.<br /><br />";
-						endif;
-					endif;
+				update_option( 'hpm_podcast-'.$podcast_title, $getContent, false );
+				if ( $feed_json ) :
+					update_option( 'hpm_podcast-json-'.$podcast_title, json_encode( $json ), false );
 				endif;
 				sleep(5);
 			endwhile;
