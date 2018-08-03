@@ -273,7 +273,7 @@ class HPM_Podcasts {
 		wp_nonce_field( basename( __FILE__ ), 'hpm_podcast_class_nonce' );
 		$hpm_pod_desc = get_post_meta( $object->ID, 'hpm_podcast_ep_meta', true );
 		if ( empty( $hpm_pod_desc ) ) :
-			$hpm_pod_desc = [ 'feed' => '', 'description' => '', 'episode' => '', 'season' => '', 'episodeType'
+			$hpm_pod_desc = [ 'title' => '', 'feed' => '', 'description' => '', 'episode' => '', 'season' => '', 'episodeType'
 			=> 'full' ];
 		endif;
 		include __DIR__ . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR .'post-editor.php';
@@ -307,6 +307,7 @@ class HPM_Podcasts {
 
 		$hpm_podcast = [
 			'feed' => ( !empty( $_POST['hpm-podcast-ep-feed'] ) ? $_POST['hpm-podcast-ep-feed'] : '' ),
+			'title' => ( !empty( $_POST['hpm-podcast-title'] ) ? sanitize_text_field( $_POST['hpm-podcast-title'] ) : '' ),
 			'description' => balanceTags( $_POST['hpm-podcast-description'], true ),
 			'episode' => ( isset( $_POST['hpm-podcast-episode'] ) ? sanitize_text_field( $_POST['hpm-podcast-episode'] ) :	'' ),
 			'episodeType' => $_POST['hpm-podcast-episodetype'],
@@ -847,11 +848,17 @@ class HPM_Podcasts {
 							else :
 								$media_file = str_replace( [ 'http://', 'https://' ], [ $protocol, $protocol ], $a_meta['url'] );
 							endif;
+							if ( !empty( $pod_desc['title'] ) ) :
+								$item_title = $pod_desc['title'];
+							else :
+								$item_title = get_the_title();
+							endif;
+
 							$content = "<p>".wp_trim_words( strip_shortcodes( get_the_content() ), 75, '... <a href="'.get_the_permalink().'">Read More</a>' )."</p>";
 							if ( $feed_json ) :
 								$json['items'][] = [
 									'id' => $epid,
-									'title' => get_the_title() ,
+									'title' => $item_title,
 									'permalink' => get_permalink(),
 									'content_html' => apply_filters( 'hpm_filter_text', get_the_content() ),
 									'content_text' => strip_shortcodes( wp_strip_all_tags( get_the_content() ) ),
@@ -872,7 +879,7 @@ class HPM_Podcasts {
 								];
 							endif; ?>
 							<item>
-								<title><?php the_title_rss(); ?></title>
+								<title><?php echo $item_title; ?></title>
 								<link><?php the_permalink(); ?></link>
 								<pubDate><?php echo mysql2date( 'D, d M Y H:i:s +0000', get_post_time( 'Y-m-d H:i:s', true, $epid ), false); ?></pubDate>
 								<guid isPermaLink="true"><?php the_permalink(); ?></guid>

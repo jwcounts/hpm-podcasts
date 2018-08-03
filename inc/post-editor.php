@@ -1,3 +1,8 @@
+<h3><?PHP _e( "Feed-Specific Title", 'hpm-podcasts' ); ?></h3>
+<p><?PHP _e( "If you want a different title in the podcast feed than the article, enter it here:", 'hpm-podcasts' );
+	?><br />
+	<label for="hpm-podcast-title"><?php _e( "Title:", 'hpm-podcasts' ); ?></label> <input type="text" id="hpm-podcast-title" name="hpm-podcast-title" value="<?PHP echo $hpm_pod_desc['title']; ?>" placeholder="The Gang Finds a Pizza" style="width: 75%;" />
+</p>
 <h3><?PHP _e( "Feed-Specific Excerpt", 'hpm-podcasts' ); ?></h3>
 <p><?PHP _e( "If this post is part of a podcast, and you would like something other than the content of this post to appear in iTunes, put your content here. <br /><br /><i><b>**NOTE**</b>: Any HTML formatting will have to be entered manually, so be careful.</i>", 'hpm-podcasts' ); ?></p>
 <p>
