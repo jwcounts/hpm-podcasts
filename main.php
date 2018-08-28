@@ -890,6 +890,12 @@ class HPM_Podcasts {
 									else :
 										echo get_the_author();
 									endif; ?></author>
+								<itunes:author><?php
+									if ( function_exists( 'coauthors' ) ) :
+										coauthors(', ', ', ', '', '', true);
+									else :
+										echo get_the_author();
+									endif; ?></itunes:author>
 								<itunes:keywords><![CDATA[<?php echo implode( ',', $tag_array ); ?>]]></itunes:keywords>
 								<itunes:summary><![CDATA[<?php echo ( !empty( $pod_desc['description'] ) ? $pod_desc['description'] : $content ); ?>]]></itunes:summary>
 <?php
