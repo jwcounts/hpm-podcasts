@@ -140,11 +140,8 @@
 <p><label for="hpm-podcast-link-itunes"><?php _e( "iTunes:", 'hpm-podcasts' ); ?></label> <input type="text" id="hpm-podcast-link-itunes" name="hpm-podcast-link-itunes" value="<?PHP echo $hpm_podcast_link['itunes']; ?>" placeholder="https://itunes.apple.com/us/podcast/law-blog-with-bob-loblaw/id123456789?mt=2" style="width: 60%;" /></p>
 <p><label for="hpm-podcast-link-gplay"><?php _e( "Google Play:", 'hpm-podcasts' ); ?></label> <input type="text" id="hpm-podcast-link-gplay" name="hpm-podcast-link-gplay" value="<?PHP echo $hpm_podcast_link['gplay']; ?>" placeholder="http://play.google.com/blahblahblah" style="width: 60%;" /></p>
 <p><label for="hpm-podcast-link-stitcher"><?php _e( "Stitcher:", 'hpm-podcasts' ); ?></label> <input type="text" id="hpm-podcast-link-stitcher" name="hpm-podcast-link-stitcher" value="<?PHP echo $hpm_podcast_link['stitcher']; ?>" placeholder="http://stitcher.com/blah" style="width: 60%;" /></p>
-<p>&nbsp;</p>
-<h3><?PHP _e( "Analytics Tracking", 'hpm-podcasts' ); ?></h3>
-<p><strong><?PHP _e( "If you're using an analytics tracking service like Blubrry that appends a tracking link at the beginning of your media URLs, you can enter it here.", 'hpm-podcasts' );
-?></strong><br />
-	<label for="hpm-podcast-analytics"><?php _e( "URL:", 'hpm-podcasts' ); ?></label> <input type="text" id="hpm-podcast-link-itunes" name="hpm-podcast-analytics" value="<?PHP echo $hpm_podcast_link['analytics']; ?>" placeholder="https://blubrry.com/law-blog/blahblah/" style="width: 60%;" /></p>
+<p><label for="hpm-podcast-link-radiopublic"><?php _e( "RadioPublic:", 'hpm-podcasts' ); ?></label> <input type="text" id="hpm-podcast-link-radiopublic" name="hpm-podcast-link-radiopublic" value="<?PHP echo $hpm_podcast_link['radiopublic']; ?>" placeholder="http://radiopublic.com/blah" style="width: 60%;" /></p>
+<p><label for="hpm-podcast-link-pcast"><?php _e( "Pocket Casts:", 'hpm-podcasts' ); ?></label> <input type="text" id="hpm-podcast-link-pcast" name="hpm-podcast-link-pcast" value="<?PHP echo $hpm_podcast_link['pcast']; ?>" placeholder="https://pca.st/blah" style="width: 60%;" /></p>
 <script>
 	jQuery(document).ready(function($){
 		var excerpt = $('#postexcerpt');
