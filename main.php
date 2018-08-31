@@ -555,7 +555,8 @@ class HPM_Podcasts {
 				'itunes' => ( isset( $_POST['hpm-podcast-link-itunes'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-itunes'] ) : '' ),
 				'gplay' => ( isset( $_POST['hpm-podcast-link-gplay'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-gplay'] ) : '' ),
 				'stitcher' => ( isset( $_POST['hpm-podcast-link-stitcher'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-stitcher'] ) : '' ),
-				'analytics' => ( isset( $_POST['hpm-podcast-analytics'] ) ? sanitize_text_field( $_POST['hpm-podcast-analytics'] ) : '' ),
+				'radiopublic' => ( isset( $_POST['hpm-podcast-link-radiopublic'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-radiopublic'] ) : '' ),
+				'pcast' => ( isset( $_POST['hpm-podcast-link-pcast'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-pcast'] ) : '' ),
 				'limit' => ( isset( $_POST['hpm-podcast-limit'] ) ? sanitize_text_field( $_POST['hpm-podcast-limit'] ) : 0 ),
 				'categories' => [
 					'first' => $_POST['hpm-podcast-icat-first'],
@@ -842,12 +843,9 @@ class HPM_Podcasts {
 								$tag_array[] = $t->name;
 							endforeach;
 							$pod_desc = get_post_meta( $epid, 'hpm_podcast_ep_meta', true );
-							if ( !empty( $podlink['blubrry'] ) ) :
-								$media_url = str_replace( [ 'http://', 'https://' ], [ '', '' ], $a_meta['url'] );
-								$media_file = $protocol."media.blubrry.com/".$podlink['blubrry']."/".$media_url;
-							else :
-								$media_file = str_replace( [ 'http://', 'https://' ], [ $protocol, $protocol ], $a_meta['url'] );
-							endif;
+							
+							$media_file = str_replace( [ 'http://', 'https://' ], [ $protocol, $protocol ], $a_meta['url'] );
+							
 							if ( !empty( $pod_desc['title'] ) ) :
 								$item_title = $pod_desc['title'];
 							else :
@@ -890,6 +888,12 @@ class HPM_Podcasts {
 									else :
 										echo get_the_author();
 									endif; ?></author>
+								<itunes:author><?php
+									if ( function_exists( 'coauthors' ) ) :
+										coauthors(', ', ', ', '', '', true);
+									else :
+										echo get_the_author();
+									endif; ?></itunes:author>
 								<itunes:keywords><![CDATA[<?php echo implode( ',', $tag_array ); ?>]]></itunes:keywords>
 								<itunes:summary><![CDATA[<?php echo ( !empty( $pod_desc['description'] ) ? $pod_desc['description'] : $content ); ?>]]></itunes:summary>
 <?php
