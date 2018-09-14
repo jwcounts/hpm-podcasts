@@ -1,16 +1,16 @@
 <?php
 /**
  * @link 			https://github.com/jwcounts/hpm-podcasts
- * @since  			1.1.1
+ * @since  			1.5
  * @package  		HPM-Podcasts
  *
  * @wordpress-plugin
  * Plugin Name: 	HPM Podcasts
  * Plugin URI: 		https://github.com/jwcounts/hpm-podcasts
  * Description: 	A plugin that allows you to create a podcast feed from any category, as well as
- * Version: 		1.1.1
+ * Version: 		1.5
  * Author: 			Jared Counts
- * Author URI: 		http://www.houstonpublicmedia.org/staff/jared-counts/
+ * Author URI: 		https://www.houstonpublicmedia.org/staff/jared-counts/
  * License: 		GPL-2.0+
  * License URI: 	http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain: 	hpm-podcasts
@@ -82,7 +82,7 @@ class HPM_Podcasts {
 				'callback' => [ $this, 'generate' ]
 			] );
 
-			register_rest_route( 'hpm-podcast/v1', '/upload/(?P<feed>[a-zA-Z0-9\-_]+)/(?P<id>[\d]+)', [
+			register_rest_route( 'hpm-podcast/v1', '/upload/(?P<feed>[a-zA-Z0-9\-_]+)/(?P<id>[\d]+)/(?P<attach>[\d]+)', [
 				'methods'  => 'GET',
 				'callback' => [ $this, 'upload'],
 				'args' => [
@@ -95,14 +95,11 @@ class HPM_Podcasts {
 				]
 			 ] );
 
-			register_rest_route( 'hpm-podcast/v1', '/upload/(?P<feed>[a-zA-Z0-9\-_]+)/(?P<id>[\d]+)/progress', [
+			register_rest_route( 'hpm-podcast/v1', '/upload/(?P<id>[\d]+)/progress', [
 				'methods'  => 'GET',
 				'callback' => [ $this, 'upload_progress'],
 				'args' => [
 					'id' => [
-						'required' => true
-					],
-					'feed' => [
 						'required' => true
 					]
 				]
@@ -318,7 +315,6 @@ class HPM_Podcasts {
 
 		$sg_url = ( isset( $_POST['hpm-podcast-sg-file'] ) ? sanitize_text_field( $_POST['hpm-podcast-sg-file'] ) : '' );
 
-		$enclose = get_post_meta( $post_id, 'enclosure', true );
 		$hpm_enclose = get_post_meta( $post_id, 'hpm_podcast_enclosure', true );
 
 		if ( !empty( $pods['upload-media'] ) ) :
@@ -328,78 +324,6 @@ class HPM_Podcasts {
 						$hpm_enclose['url'] = $sg_url;
 						update_post_meta( $post_id, 'hpm_podcast_enclosure', $hpm_enclose );
 					endif;
-				elseif ( !empty( $enclose ) ) :
-					$enc_exp = explode( "\n", $enclose );
-					foreach ( $enc_exp as $k => $v ) :
-						$enc_exp[$k] = trim( $v );
-					endforeach;
-					if ( $enc_exp[0] !== $sg_url ) :
-						$url = parse_url( $enc_exp[0] );
-						$path = pathinfo( $url['path'] );
-						$base = $path['basename'];
-						$attach = $wpdb->get_results( "SELECT ID FROM $wpdb->posts WHERE guid LIKE '%$base' AND post_type = 'attachment' LIMIT 1",
-							OBJECT );
-						if ( !empty( $attach ) ) :
-							$meta = get_post_meta( $attach[0]->ID, '_wp_attachment_metadata', true );
-							$new_enclose = [
-								'url' => $sg_url,
-								'filesize' => $enc_exp[1],
-								'mime' => $enc_exp[2],
-								'length' => $meta['length_formatted']
-							];
-							update_post_meta( $post_id, 'hpm_podcast_enclosure', $new_enclose );
-						endif;
-					endif;
-				endif;
-			else :
-				$media = get_attached_media( 'audio', $post_id );
-				if ( !empty( $media ) ) :
-					$med = reset( $media );
-					$url = wp_get_attachment_url( $med->ID );
-					$meta = get_post_meta( $med->ID, '_wp_attachment_metadata', true );
-					$new_enclose = [
-						'url' => $url,
-						'filesize' => $meta['filesize'],
-						'mime' => $meta['mime_type'],
-						'length' => $meta['length_formatted']
-					];
-					update_post_meta( $post_id, 'hpm_podcast_enclosure', $new_enclose );
-				endif;
-			endif;
-		else :
-			if ( !empty( $enclose ) ) :
-				$enc_exp = explode( "\n", $enclose );
-				foreach ( $enc_exp as $k => $v ) :
-					$enc_exp[$k] = trim( $v );
-				endforeach;
-				$url = parse_url( $enc_exp[0] );
-				$path = pathinfo( $url['path'] );
-				$base = $path['basename'];
-				$attach = $wpdb->get_results( "SELECT ID FROM $wpdb->posts WHERE guid LIKE '%$base' AND post_type = 'attachment' LIMIT 1",
-					OBJECT );
-				if ( !empty( $attach ) ) :
-					$meta = get_post_meta( $attach[0]->ID, '_wp_attachment_metadata', true );
-					$new_enclose = [
-						'url' => $enc_exp[0],
-						'filesize' => $enc_exp[1],
-						'mime' => $enc_exp[2],
-						'length' => $meta['length_formatted']
-					];
-					update_post_meta( $post_id, 'hpm_podcast_enclosure', $new_enclose );
-				endif;
-			else :
-				$media = get_attached_media( 'audio', $post_id );
-				if ( !empty( $media ) ) :
-					$med = reset( $media );
-					$url = wp_get_attachment_url( $med->ID );
-					$meta = get_post_meta( $med->ID, '_wp_attachment_metadata', true );
-					$new_enclose = [
-						'url' => $url,
-						'filesize' => $meta['filesize'],
-						'mime' => $meta['mime_type'],
-						'length' => $meta['length_formatted']
-					];
-					update_post_meta( $post_id, 'hpm_podcast_enclosure', $new_enclose );
 				endif;
 			endif;
 		endif;
@@ -615,7 +539,7 @@ class HPM_Podcasts {
 			return new WP_Error( 'rest_api_sad', esc_html__( 'No post ID provided, cannot upload media. Please save your post and try again.', 'hpm-podcasts' ), [ 'status' => 500 ] );
 		endif;
 
-		$this->process_upload->data( [ 'id' => $request['id'], 'feed' => $request['feed'] ] )->dispatch();
+		$this->process_upload->data( [ 'id' => $request['id'], 'feed' => $request['feed'], 'attach' => $request['attach'] ] )->dispatch();
 		update_post_meta( $request['id'], 'hpm_podcast_status', [ 'status' => 'in-progress', 'message' => esc_html__( 'Upload process initializing.', 'hpm-podcasts' ) ] );
 		
 		return rest_ensure_response( [ 'code' => 'rest_api_success', 'message' => esc_html__( 'Podcast upload started successfully.', 'hpm-podcasts' ), 'data' => [ 'status' => 200 ] ] );

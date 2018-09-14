@@ -4,10 +4,17 @@
 	<label for="hpm-podcast-title"><?php _e( "Title:", 'hpm-podcasts' ); ?></label> <input type="text" id="hpm-podcast-title" name="hpm-podcast-title" value="<?PHP echo $hpm_pod_desc['title']; ?>" placeholder="The Gang Finds a Pizza" style="width: 75%;" />
 </p>
 <h3><?PHP _e( "Feed-Specific Excerpt", 'hpm-podcasts' ); ?></h3>
-<p><?PHP _e( "If this post is part of a podcast, and you would like something other than the content of this post to appear in iTunes, put your content here. <br /><br /><i><b>**NOTE**</b>: Any HTML formatting will have to be entered manually, so be careful.</i>", 'hpm-podcasts' ); ?></p>
+<p><?PHP _e( "If this post is part of a podcast, and you would like something other than the content of this post to appear in iTunes, put your content here.", 'hpm-podcasts' ); ?></p>
 <p>
 	<label for="hpm-podcast-description"><?php _e( "Feed-Specific Description:", 'hpm-podcasts' ); ?></label><br />
-	<textarea style="width: 100%; height: 200px;" name="hpm-podcast-description" id="hpm-podcast-description"><?php echo $hpm_pod_desc['description']; ?></textarea>
+	<?php
+		$editor_opts = [
+			'editor_height' => 150,
+			'media_buttons' => false,
+			'teeny' => true
+		];
+		wp_editor( $hpm_pod_desc['description'], 'hpm-podcast-description', $editor_opts );
+	?>
 </p>
 <h3><?php _e( "Episode Information", 'hpm-podcasts' ); ?></h3>
 
@@ -51,7 +58,7 @@ if ( !empty( $pods['upload-media'] ) ) :
 					<?php
 				endwhile;
 			endif; ?>
-		</select>&nbsp;&nbsp;&nbsp;<a href="#" class="button button-secondary" id="hpm-pods-upload">Upload Media File</a></p>
+		</select>&nbsp;&nbsp;&nbsp;<a href="#" class="button button-secondary" id="hpm-pods-upload">Choose Audio for Podcast</a></p>
 	<h3><?PHP _e( "External URL", 'hpm-podcasts' ); ?></h3>
 	<p><?PHP _e( "If you want to upload your audio file manually, you can paste the URL here:", 'hpm-podcasts' );
 		?><br />
@@ -61,10 +68,9 @@ endif; ?>
 <script>
 	function uploadCheck() {
 		var id = jQuery('#post_ID').val();
-		var feed = jQuery('#hpm-podcast-ep-feed').val();
 		jQuery.ajax({
 			type: 'GET',
-			url: '/wp-json/hpm-podcast/v1/upload/'+feed+'/'+id+'/progress',
+			url: '/wp-json/hpm-podcast/v1/upload/'+id+'/progress',
 			data: '',
 			beforeSend: function ( xhr ) {
 				xhr.setRequestHeader( 'X-WP-Nonce', '<?php echo wp_create_nonce( 'wp_rest' ); ?>' );
@@ -92,6 +98,7 @@ endif; ?>
 			}
 		});
 	}
+
 	jQuery(document).ready(function($){
 		var metaClass = $('#hpm-podcast-meta-class');
 		var desc = $("#hpm-podcast-description");
@@ -105,29 +112,39 @@ endif; ?>
 		});
 		$('#hpm-pods-upload').click(function(e){
 			e.preventDefault();
-			var id = $('#post_ID').val();
-			var feed = $('#hpm-podcast-ep-feed').val();
-			$(this).after( '<span id="hpm-upload"><img style="padding: 0 0.5em; vertical-align: middle;" src="<?php echo WP_SITEURL; ?>/wp-includes/images/spinner.gif"><span style="margin-left: 1em;" id="hpm-upload-message"></span></span>' );
-			$.ajax({
-				type: 'GET',
-				url: '/wp-json/hpm-podcast/v1/upload/'+feed+'/'+id,
-				data: '',
-				success: function (response) {
-					$('#hpm-upload-message').text(response.message);
-					setTimeout( 'uploadCheck()', 5000 );
-				},
-				error: function (response) {
-					$('#hpm-upload').remove();
-					if (typeof response.responseJSON.message !== 'undefined') {
-						$('<div class="notice notice-error is-dismissible"><p>' + response.responseJSON.message +
-							'</p></div>').insertBefore($('#hpm-podcast-feeds'));
-					} else {
-						console.log(response);
-						$('<div class="notice notice-error is-dismissible">There was an error while performing this function. Please consult your javascript console for more information.</div>').insertBefore($('#hpm-podcast-feeds'));
-					}
-				}
+			var frame = wp.media({
+				title: 'Choose Your Audio File',
+				library: {type: 'audio/mpeg'},
+				multiple: false,
+				button: {text: 'Upload to StreamGuys'}
 			});
+			frame.on('select', function(){
+				var attachId = frame.state().get('selection').first().id;
+				var id = $('#post_ID').val();
+				var feed = $('#hpm-podcast-ep-feed').val();
+				console.log('Attach ID: '+attachId);
+				$('#hpm-pods-upload').after( '<span id="hpm-upload"><img style="padding: 0 0.5em; vertical-align: middle;" src="<?php echo WP_SITEURL; ?>/wp-includes/images/spinner.gif"><span style="margin-left: 1em;" id="hpm-upload-message"></span></span>' );
+				$.ajax({
+					type: 'GET',
+					url: '/wp-json/hpm-podcast/v1/upload/'+feed+'/'+id+'/'+attachId,
+					data: '',
+					success: function (response) {
+						$('#hpm-upload-message').text(response.message);
+						setTimeout( 'uploadCheck()', 3000 );
+					},
+					error: function (response) {
+						$('#hpm-upload').remove();
+						if (typeof response.responseJSON.message !== 'undefined') {
+							$('<div class="notice notice-error is-dismissible"><p>' + response.responseJSON.message +
+								'</p></div>').insertBefore($('#hpm-podcast-feeds'));
+						} else {
+							console.log(response);
+							$('<div class="notice notice-error is-dismissible">There was an error while performing this function. Please consult your javascript console for more information.</div>').insertBefore($('#hpm-podcast-feeds'));
+						}
+					}
+				});
+			});
+			frame.open();
 		});
-
 	});
 </script>

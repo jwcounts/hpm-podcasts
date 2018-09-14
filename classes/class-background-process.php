@@ -17,7 +17,7 @@ class HPM_Media_Upload {
 	 */
 	public function __construct() {
 		add_action( 'rest_api_init', function() {
-			register_rest_route( 'hpm-podcast/v1', '/upload/(?P<feed>[a-zA-Z0-9\-_]+)/(?P<id>[\d]+)/process',
+			register_rest_route( 'hpm-podcast/v1', '/upload/(?P<feed>[a-zA-Z0-9\-_]+)/(?P<id>[\d]+)/(?P<attach>[\d]+)/process',
 				[
 					'methods'  => 'POST',
 					'callback' => [ $this, 'maybe_handle' ],
@@ -26,6 +26,9 @@ class HPM_Media_Upload {
 							'required' => true
 						],
 						'feed' => [
+							'required' => true
+						],
+						'attach' => [
 							'required' => true
 						]
 					]
@@ -65,7 +68,7 @@ class HPM_Media_Upload {
 	 * @return string
 	 */
 	protected function get_query_url() {
-		return WP_HOME . '/wp-json/hpm-podcast/v1/upload/'.$this->data['feed'].'/'.$this->data['id'].'/process';
+		return WP_HOME . '/wp-json/hpm-podcast/v1/upload/'.$this->data['feed'].'/'.$this->data['id'].'/'.$this->data['attach'].'/process';
 	}
 
 	/**
@@ -109,6 +112,7 @@ class HPM_Media_Upload {
 	protected function handle() {
 		$id = $_REQUEST['id'];
 		$feed = $_REQUEST['feed'];
+		$attach = $_REQUEST['attach'];
 		$pods = get_option( 'hpm_podcast_settings' );
 		$ds = DIRECTORY_SEPARATOR;
 		
@@ -122,39 +126,13 @@ class HPM_Media_Upload {
 
 		$dir = wp_upload_dir();
 		$save = $dir['basedir'];
-		$media = get_attached_media( 'audio', $id );
-		if ( empty ( $media ) ) :
-			$enclosure = get_post_meta( $id, 'hpm_podcast_enclosure');
-			if ( empty( $enclosure ) ) :
-				update_post_meta( $id, 'hpm_podcast_status', [ 'status' => 'error', 'message' => esc_html__( 'No audio are attached to this post. Please attach one and try again.', 'hpm-podcasts' ) ] );
-				return false;
-			else :
-				if ( strpos( $enclosure['url'], $pods['credentials'][$pods['upload-media']]['url'] ) === FALSE ) :
-					$url = $enclosure['url'];
-					$metadata = [
-						'filesize' => $enclosure['filesize'],
-						'mime_type' => $enclosure['mime'],
-						'length_formatted' => $enclosure['length'],
-						'url' => $enclosure['url']
-					];
-				else :
-					update_post_meta( $id, 'hpm_podcast_status', [ 'status' => 'error', 'message' => esc_html__( 'No audio are attached to this post and the enclosure audio already exists on the server. Please attach one and try again.',	'hpm-podcasts' ) ] );
-					return false;
-				endif;
-			endif;
-		else :
-			if ( count( $media ) > 1 ) :
-				update_post_meta( $id, 'hpm_podcast_status', [ 'status' => 'error', 'message' => esc_html__( 'More than one audio file has been attached to this post. Please delete the extra audio files and try again.', 'hpm-podcasts' ) ] );
-				return false;
-			endif;
-			$med = reset( $media );
-			$med_id = $med->ID;
-			$url = wp_get_attachment_url( $med_id );
-			$metadata = get_post_meta( $med_id, '_wp_attachment_metadata', true );
-		endif;
+
+		$url = wp_get_attachment_url( $attach );
+		log_it( $url );
+		$metadata = get_post_meta( $attach, '_wp_attachment_metadata', true );
 
 		if ( strpos( $url, $dir['baseurl'] ) !== FALSE ) :
-			$meta = get_post_meta( $med_id, '_wp_attached_file', true );
+			$meta = get_post_meta( $attach, '_wp_attached_file', true );
 			$local = $save . $ds . $meta;
 			$path = pathinfo( $meta );
 			update_post_meta( $id, 'hpm_podcast_status', [ 'status' => 'in progress', 'message' => esc_html__( 'Podcast file exists on the local server, proceeding.', 'hpm-podcasts' ) ] );
