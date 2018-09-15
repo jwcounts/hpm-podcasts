@@ -722,15 +722,18 @@ class HPM_Podcasts {
 			else :
 				echo "no";
 			endif; ?></itunes:explicit>
-		<itunes:type><?php echo $podlink['type']; ?></itunes:type><?PHP
+		<itunes:type><?php echo $podlink['type']; ?></itunes:type>
+<?PHP
 		foreach ( $categories as $podcat ) :
 			if ( count( $podcat ) == 2 ) : ?>
 		<itunes:category text="<?PHP echo htmlentities( $podcat[0] ); ?>">
 			<itunes:category text="<?PHP echo htmlentities( $podcat[1] ); ?>" />
-		</itunes:category><?PHP
+		</itunes:category>
+<?PHP
 			else :
 				if ( !empty( $podcat[0] ) ) : ?>
-		<itunes:category text="<?PHP echo htmlentities( $podcat[0] ); ?>" /><?PHP
+		<itunes:category text="<?PHP echo htmlentities( $podcat[0] ); ?>" />
+<?PHP
 				endif;
 			endif;
 		endforeach;
@@ -810,9 +813,11 @@ class HPM_Podcasts {
 					echo get_the_author();
 				endif; ?></itunes:author>
 			<itunes:keywords><![CDATA[<?php echo implode( ',', $tag_array ); ?>]]></itunes:keywords>
-			<itunes:summary><![CDATA[<?php echo ( !empty( $pod_desc['description'] ) ? $pod_desc['description'] : $content ); ?>]]></itunes:summary><?php
+			<itunes:summary><![CDATA[<?php echo ( !empty( $pod_desc['description'] ) ? $pod_desc['description'] : $content ); ?>]]></itunes:summary>
+<?php
 				if ( !empty( $pod_image ) ) : ?>
-			<itunes:image href="<?PHP echo $pod_image[0]; ?>"/><?php
+			<itunes:image href="<?PHP echo $pod_image[0]; ?>"/>
+<?php
 				endif; ?>
 			<itunes:explicit><?php
 				if ( in_array( 'explicit', $tag_array ) ) :
@@ -829,10 +834,12 @@ class HPM_Podcasts {
 			<itunes:episodeType><?php echo $pod_desc['episodeType']; ?></itunes:episodeType><?php
 				endif;
 				if ( !empty( $pod_desc['season'] ) ) : ?>
-			<itunes:season><?php echo $pod_desc['season']; ?></itunes:season><?php
+			<itunes:season><?php echo $pod_desc['season']; ?></itunes:season>
+<?php
 				endif;
 				do_action( 'rss2_item' ); ?>
-		</item><?php
+		</item>
+<?php
 			endwhile;
 		endif;
 		wp_reset_query();
