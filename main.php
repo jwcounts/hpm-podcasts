@@ -826,12 +826,15 @@ class HPM_Podcasts {
 					echo "no";
 				endif; ?></itunes:explicit>
 			<enclosure url="<?PHP echo $media_file; ?>" length="<?PHP echo $a_meta['filesize']; ?>" type="<?php echo $a_meta['mime']; ?>" />
-			<itunes:duration><?PHP echo $a_meta['length']; ?></itunes:duration><?php
+			<itunes:duration><?PHP echo $a_meta['length']; ?></itunes:duration>
+<?php
 				if ( !empty( $pod_desc['episode'] ) ) : ?>
-			<itunes:episode><?php echo $pod_desc['episode']; ?></itunes:episode><?php
+			<itunes:episode><?php echo $pod_desc['episode']; ?></itunes:episode>
+<?php
 				endif;
 				if ( !empty( $pod_desc['episodeType'] ) ) : ?>
-			<itunes:episodeType><?php echo $pod_desc['episodeType']; ?></itunes:episodeType><?php
+			<itunes:episodeType><?php echo $pod_desc['episodeType']; ?></itunes:episodeType>
+<?php
 				endif;
 				if ( !empty( $pod_desc['season'] ) ) : ?>
 			<itunes:season><?php echo $pod_desc['season']; ?></itunes:season>
