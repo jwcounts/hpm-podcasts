@@ -715,12 +715,7 @@ class HPM_Podcasts {
 					</itunes:owner>
 					<itunes:keywords><![CDATA[<?php echo implode( ', ', $pod_tag_array ); ?>]]></itunes:keywords>
 					<itunes:subtitle><?PHP echo get_the_excerpt();  ?></itunes:subtitle>
-					<itunes:author><?php
-						if ( function_exists( 'coauthors' ) ) :
-							coauthors(', ', ', ', '', '', true);
-						else :
-							echo get_the_author();
-						endif; ?></itunes:author>
+					<itunes:author><?php echo $pods['owner']['name']; ?></itunes:author>
 					<itunes:explicit><?php
 						if ( in_array( 'explicit', $pod_tag_array ) ) :
 							echo "yes";
