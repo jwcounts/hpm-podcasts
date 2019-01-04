@@ -104,6 +104,16 @@ class HPM_Podcasts {
 					]
 				]
 			] );
+
+			register_rest_route( 'hpm-podcast/v1', '/newscast/(?P<hash>[a-zA-Z\$\/\.0-9]+)', [
+				'methods'  => 'GET',
+				'callback' => [ $this, 'newscast'],
+				'args' => [
+					'hash' => [
+						'required' => true
+					]
+				]
+			] );
 		} );
 
 		// Make sure that the proper cron job is scheduled
@@ -889,6 +899,234 @@ class HPM_Podcasts {
 				$query->set( 'order', 'ASC' );
 			endif;
 		endif;
+	}
+
+	/**
+	 * Retrieve metadata from a audio file's ID3 tags
+	 * 
+	 * (Including from WP Media API since it isn't available during JSON API calls)
+	 *
+	 * @param string $file Path to file.
+	 * @return array|bool Returns array of metadata, if found.
+	 */
+	private function audio_meta( $file ) {
+		if ( ! file_exists( $file ) ) {
+			return false;
+		}
+		$metadata = [];
+
+		if ( ! defined( 'GETID3_TEMP_DIR' ) ) {
+			define( 'GETID3_TEMP_DIR', get_temp_dir() );
+		}
+
+		if ( ! class_exists( 'getID3', false ) ) {
+			require( ABSPATH . WPINC . '/ID3/getid3.php' );
+		}
+		$id3 = new getID3();
+		$data = $id3->analyze( $file );
+
+		if ( ! empty( $data['audio'] ) ) {
+			unset( $data['audio']['streams'] );
+			$metadata = $data['audio'];
+		}
+
+		if ( ! empty( $data['fileformat'] ) )
+			$metadata['fileformat'] = $data['fileformat'];
+		if ( ! empty( $data['filesize'] ) )
+			$metadata['filesize'] = (int) $data['filesize'];
+		if ( ! empty( $data['mime_type'] ) )
+			$metadata['mime_type'] = $data['mime_type'];
+		if ( ! empty( $data['playtime_seconds'] ) )
+			$metadata['length'] = (int) round( $data['playtime_seconds'] );
+		if ( ! empty( $data['playtime_string'] ) )
+			$metadata['length_formatted'] = $data['playtime_string'];
+
+		$this->add_id3_data( $metadata, $data );
+
+		return $metadata;
+	}
+
+	/**
+	 * Parse ID3v2, ID3v1, and getID3 comments to extract usable data
+	 * 
+	 * (Including from WP Media API since it isn't available during JSON API calls)
+	 *
+	 * @param array $metadata An existing array with data
+	 * @param array $data Data supplied by ID3 tags
+	 */
+	private function add_id3_data( &$metadata, $data ) {
+		foreach ( array( 'id3v2', 'id3v1' ) as $version ) {
+			if ( ! empty( $data[$version]['comments'] ) ) {
+				foreach ( $data[$version]['comments'] as $key => $list ) {
+					if ( 'length' !== $key && ! empty( $list ) ) {
+						$metadata[$key] = wp_kses_post( reset( $list ) );
+						// Fix bug in byte stream analysis.
+						if ( 'terms_of_use' === $key && 0 === strpos( $metadata[$key], 'yright notice.' ) )
+							$metadata[$key] = 'Cop' . $metadata[$key];
+					}
+				}
+				break;
+			}
+		}
+
+		if ( ! empty( $data['id3v2']['APIC'] ) ) {
+			$image = reset( $data['id3v2']['APIC']);
+			if ( ! empty( $image['data'] ) ) {
+				$metadata['image'] = array(
+					'data' => $image['data'],
+					'mime' => $image['image_mime'],
+					'width' => $image['image_width'],
+					'height' => $image['image_height']
+				);
+			}
+		} elseif ( ! empty( $data['comments']['picture'] ) ) {
+			$image = reset( $data['comments']['picture'] );
+			if ( ! empty( $image['data'] ) ) {
+				$metadata['image'] = array(
+					'data' => $image['data'],
+					'mime' => $image['image_mime']
+				);
+			}
+		}
+	}
+
+	/**
+	 * Generate salt for newscast update request
+	 *
+	 * @return string
+	 */
+	public function newscast_salt() {
+		$now = getdate();
+		$salt = $now['year'].$now['month'].$now['weekday'].$now['mday'].$now['hours'].'bobafett';
+		return '$2y$07$'.$salt.'$';
+	}
+
+	/**
+	 * Grab recorded newscasts to use in podcast feed
+	 *
+	 * @param WP_REST_Request $request This function accepts a rest request to process data.
+	 *
+	 * @return mixed
+	 */
+	public function newscast( WP_REST_Request $request ) {
+		$pass = $this->options['newscast']['password'];
+		$hash = crypt( $pass, $this->newscast_salt() );
+		if ( !hash_equals( $hash, $request['hash'] ) ) :
+			return new WP_Error( 'rest_api_sad', esc_html__( 'Access is denied', 'hpm-podcasts' ), [ 'status' => 401 ] );
+		endif;
+
+		// Set up time and file location variables
+		$t = time();
+		$offset = get_option('gmt_offset')*3600;
+		$t = $t + $offset;
+		$now = getdate($t);
+		$ds = DIRECTORY_SEPARATOR;
+		$dir = wp_upload_dir();
+		$save = $dir['basedir'];
+
+		// Pull newscast file url, download the file, and save it locally
+		$url = $this->options['newscast']['url'];
+		$parse = parse_url( $url );
+		$path = pathinfo( $parse['path'] );
+		$filename = date( 'YmdH', $now[0] ) . $path['basename'];
+		$local = $save . $ds . $filename;
+		$remote = wp_remote_get( esc_url_raw( $url ) );
+		if ( is_wp_error( $remote ) ) :
+			return new WP_Error( 'rest_api_sad', esc_html__( 'Error downloading newscast file', 'hpm-podcasts' ), [ 'status' => 500 ] );
+		else :
+			$remote_body = wp_remote_retrieve_body( $remote );
+		endif;
+		if ( !file_put_contents( $local, $remote_body ) ) :
+			return new WP_Error( 'rest_api_sad', esc_html__( 'Error saving newscast file on local server', 'hpm-podcasts' ), [ 'status' => 500 ] );
+		endif;
+
+		$metadata = $this->audio_meta( $local );
+
+		$catslug = get_post_meta( $this->options['newscast']['feed'], 'hpm_pod_cat', true );
+		$feed = get_post_field( 'post_name', get_post( $this->options['newscast']['feed'] ) );
+
+		if ( $this->options['upload-media'] !== 'sftp' ) :
+			return new WP_Error( 'rest_api_sad', esc_html__( 'SFTP is the only supported upload method at this time. Please contact your administrator.', 'hpm-podcasts' ), [ 'status' => 500 ] );
+		endif;
+
+		$short = $this->options['credentials']['sftp'];
+		$autoload = $ds . 'vendor' . $ds . 'autoload.php';
+		if ( file_exists( HPM_PODCAST_PLUGIN_DIR . $autoload ) ) :
+			require HPM_PODCAST_PLUGIN_DIR . $autoload;
+		else :
+			require SITE_ROOT . $autoload;
+		endif;
+		$sftp = new \phpseclib\Net\SFTP( $short['host'] );
+		if ( defined( 'HPM_SFTP_PASSWORD' ) ) :
+			$sftp_password = HPM_SFTP_PASSWORD;
+		elseif ( !empty( $short['password'] ) ) :
+			$sftp_password = $short['password'];
+		else :
+			return new WP_Error( 'rest_api_sad', esc_html__( 'Cannot upload file to SFTP, no password provided.', 'hpm-podcasts' ), [ 'status' => 500 ] );
+		endif;
+		if ( !$sftp->login( $short['username'], $sftp_password ) ) :
+			return new WP_Error( 'rest_api_sad', esc_html__( "Unable to connect to the SFTP server. Please check your SFTP Host URL or IP and try again.", 'hpm-podcasts' ), [ 'status' => 500 ] );
+		endif;
+
+		if ( !empty( $short['folder'] ) ) :
+			if ( !$sftp->chdir( $short['folder'] ) ) :
+				$sftp->mkdir( $short['folder'] );
+				$sftp->chdir( $short['folder'] );
+			endif;
+		endif;
+
+		if ( !$sftp->chdir( $feed ) ) :
+			$sftp->mkdir( $feed );
+			$sftp->chdir( $feed );
+		endif;
+
+		if ( !$sftp->put( $filename, $local, \phpseclib\Net\SFTP::SOURCE_LOCAL_FILE ) ) :
+			return new WP_Error( 'rest_api_sad', esc_html__( "The file could not be saved on the SFTP server. Please verify your permissions on that server and try again.", 'hpm-podcasts' ), [ 'status' => 500 ] );
+		endif;
+		unset( $sftp );
+		$sg_url = $short['url'].'/'.$feed.'/'.$filename;
+		unlink( $local );
+
+		$podeps = new WP_Query([
+			'post_type' => 'post',
+			'post_status' => 'publish',
+			'cat' => $catslug,
+			'posts_per_page' => 1,
+			'meta_query' => [[
+				'key' => 'hpm_podcast_enclosure',
+				'compare' => 'EXISTS'
+			]]
+		]);
+		log_it( $podeps );
+		$args = [
+			'post_title' => 'HPM Local Newscast for '.date( 'g a, l, F j, Y', $now[0] ),
+			'post_content' => 'Local news updates from the Houston Public Media Newsroom. Last updated at ' . date( 'g a, l, F j, Y', $now[0] ),
+			'post_category' => [ $catslug ],
+			'post_date' => date( 'Y-m-d H:i:s', $now[0] ),
+			'post_type' => 'post',
+			'post_status' => 'publish',
+			'comment_status' => 'closed'
+		];
+		if ( $podeps->have_posts() ) :
+			$args['ID'] = $podeps->post->ID;
+		endif;
+		$post_id = wp_insert_post( $args );
+		
+		if ( is_wp_error( $post_id ) ) :
+			return new WP_Error( 'rest_api_sad', esc_html__( 'Error updating newscast post.', 'hpm-podcasts' ), [ 'status' => 500 ] );
+		endif;
+
+		if ( !empty( $sg_url ) ) :
+			$enclose = [
+				'url' => $sg_url,
+				'filesize' => $metadata['filesize'],
+				'mime' => $metadata['mime_type'],
+				'length' => $metadata['length_formatted']
+			];
+			update_post_meta( $post_id, 'hpm_podcast_enclosure', $enclose );
+		endif;
+
+		return rest_ensure_response( [ 'code' => 'rest_api_success', 'message' => esc_html__( 'Newscast uploaded successfully.', 'hpm-podcasts' ), 'data' => [ 'status' => 200 ] ] );
 	}
 }
 

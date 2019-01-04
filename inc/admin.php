@@ -1,3 +1,10 @@
+<?php
+	$podcasts = new WP_Query([
+		'post_type' => 'podcasts',
+		'post_status' => 'publish',
+		'orderby' => 'name',
+		'order' => 'ASC'
+	]); ?>
 <div class="wrap">
 	<h1><?php _e('Podcast Administration', 'hpm-podcasts' ); ?></h1>
 	<?php settings_errors(); ?>
@@ -181,6 +188,41 @@
 										<th scope="row"><label><?php _e('Force Feed Refresh?', 'hpm-podcasts' );
 												?></label></th>
 										<td><a href="#" class="button button-secondary" id="hpm-pods-refresh">Refresh Feeds</a></td>
+									</tr>
+								</table>
+							</div>
+						</div>
+					</div>
+					<div class="meta-box-sortables ui-sortable">
+						<div class="postbox">
+							<div class="handlediv" title="Click to toggle"><br></div>
+							<h2 class="hndle"><span><?php _e('Newscast Feed Information', 'hpm-podcasts' ); ?></span></h2>
+							<div class="inside">
+								<p><?php _e('These options allow you to create a single-entry podcast feed for hosting newscasts. For example, you can have your streaming encoder record the newscast and send a GET request to an endpoint created by this plugin in the WP-JSON API. That way, the update only runs when the newscast is updated and does not require a cron job. The password provided below allows for some level of authentication between the encoder and the API.', 'hpm-podcasts' ); ?></p>
+								<table class="form-table">
+									<tr valign="top">
+										<th scope="row"><label for="hpm_podcast_settings[newscast][password]"><?php _e('Newscast Password', 'hpm-podcasts' ); ?></label></th>
+										<td><input type="password" name="hpm_podcast_settings[newscast][password]" value="<?php echo $pods['newscast']['password']; ?>" class="regular-text" /></td>
+									</tr>
+									<tr valign="top">
+										<th scope="row"><label for="hpm_podcast_settings[newscast][feed]"><?php _e('Select Your Newscast Feed', 'hpm-podcasts' );
+												?></label></th>
+										<td>
+											<select name="hpm_podcast_settings[newscast][feed]" class="regular-text">
+												<option value="" <?php selected( '', $pods['newscast']['feed'], TRUE );?>></option>
+												<?php
+												if ( $podcasts->have_posts() ) :
+													while ( $podcasts->have_posts() ) : $podcasts->the_post(); ?>
+														<option value="<?PHP echo get_the_ID(); ?>"<?PHP selected( $pods['newscast']['feed'], get_the_ID(), TRUE );?>><?PHP the_title(); ?></option>
+														<?php
+													endwhile;
+												endif; ?>
+											</select>
+										</td>
+									</tr>
+									<tr valign="top">
+										<th scope="row"><label for="hpm_podcast_settings[newscast][url]"><?php _e('Newscast File URL', 'hpm-podcasts' ); ?></label></th>
+										<td><input type="text" name="hpm_podcast_settings[newscast][url]" value="<?php echo $pods['newscast']['url']; ?>" class="regular-text" /></td>
 									</tr>
 								</table>
 							</div>
