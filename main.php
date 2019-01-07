@@ -1105,10 +1105,12 @@ class HPM_Podcasts {
 			'post_date' => date( 'Y-m-d H:i:s', $now[0] ),
 			'post_type' => 'post',
 			'post_status' => 'publish',
-			'comment_status' => 'closed'
+			'comment_status' => 'closed',
+			'tags_input' => [ 'houston', 'houston public media', 'local news', 'newscasts',  'texas' ],
+			'post_author' => 76
 		];
 		if ( $podeps->have_posts() ) :
-			$args['ID'] = $podeps->post->ID;
+			wp_delete_post( $podeps->post->ID, true );
 		endif;
 		$post_id = wp_insert_post( $args );
 		
