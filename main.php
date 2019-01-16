@@ -1097,7 +1097,7 @@ class HPM_Podcasts {
 				'compare' => 'EXISTS'
 			]]
 		]);
-		log_it( $podeps );
+
 		$args = [
 			'post_title' => 'HPM Local Newscast for '.date( 'g a, l, F j, Y', $now[0] ),
 			'post_content' => 'Local news updates from the Houston Public Media Newsroom. Last updated at ' . date( 'g a, l, F j, Y', $now[0] ),
@@ -1107,7 +1107,7 @@ class HPM_Podcasts {
 			'post_status' => 'publish',
 			'comment_status' => 'closed',
 			'tags_input' => [ 'houston', 'houston public media', 'local news', 'newscasts',  'texas' ],
-			'post_author' => 76
+			'post_author' => 89
 		];
 		if ( $podeps->have_posts() ) :
 			wp_delete_post( $podeps->post->ID, true );
