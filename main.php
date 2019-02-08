@@ -8,7 +8,7 @@
  * Plugin Name: 	HPM Podcasts
  * Plugin URI: 		https://github.com/jwcounts/hpm-podcasts
  * Description: 	A plugin that allows you to create a podcast feed from any category, as well as
- * Version: 		1.6
+ * Version: 		1.6.1
  * Author: 			Jared Counts
  * Author URI: 		https://www.houstonpublicmedia.org/staff/jared-counts/
  * License: 		GPL-2.0+
@@ -1171,7 +1171,7 @@ class HPM_Podcasts {
 				if ( $poids->have_posts() ) :
 					$badges = HPM_PODCAST_PLUGIN_URL.'badges/';
 					$pod_link = get_post_meta( $poids->post->ID, 'hpm_pod_link', true );
-					$content .= '<div class="podcast-episode-info"><h2>This article is part of the <em><a href="'.$pod_link['page'].'">'.$poids->post->post_title.'</a></em> podcast</h2><ul>';
+					$content .= '<p>&nbsp;</p><div class="podcast-episode-info"><h3>This article is part of the <em><a href="'.$pod_link['page'].'">'.$poids->post->post_title.'</a></em> podcast</h3><ul>';
 					if ( !empty( $pod_link['itunes'] ) ) :
 						$content .= '<li><a href="'.$pod_link['itunes'].' target="_blank" title="Subscribe on Apple Podcasts"><img src="'.$badges.'apple_pod.png" alt="Subscribe on Apple Podcasts"></a></li>';
 					endif;
