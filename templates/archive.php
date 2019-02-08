@@ -63,26 +63,38 @@ get_header(); ?>
 								endif;?></p>
 							<ul>
 								<li><a href="<?php echo $pod_link['page']; ?>">Episode Archive</a></li>
+						<?php
+							if ( !empty( $pod_link['rss-override'] ) ) : ?>
+								<li><a href="<?php echo $pod_link['rss-override']; ?>">RSS Feed</a></li>
+						<?php
+							else : ?>
 								<li><a href="<?php the_permalink(); ?>">RSS Feed</a></li>
 						<?php
+							endif; ?>
+							</ul>
+							<div class="podcast-episode-info">
+								<h2>Available on:</h2>
+								<ul>
+						<?php
+							$badges = HPM_PODCAST_PLUGIN_URL.'badges/';
 							if ( !empty( $pod_link['itunes'] ) ) : ?>
-								<li><a href="<?php echo $pod_link['itunes']; ?>">iTunes</a></li>
+								<li><a href="<?php echo $pod_link['itunes']; ?>" target="_blank" title="Subscribe on Apple Podcasts"><img src="<?php echo $badges; ?>apple_pod.png" alt="Subscribe on Apple Podcasts"></a></li>
 						<?php
 							endif;
 							if ( !empty( $pod_link['gplay'] ) ) : ?>
-								<li><a href="<?php echo $pod_link['gplay']; ?>">Google Play</a></li>							
+								<li><a href="<?php echo $pod_link['gplay']; ?>" target="_blank" title="Subscribe on Google Podcasts"><img src="<?php echo $badges; ?>google_pod.png" alt="Subscribe on Google Podcasts"></a></li>							
 						<?php
 							endif;
 							if ( !empty( $pod_link['stitcher'] ) ) : ?>
-								<li><a href="<?php echo $pod_link['stitcher']; ?>">Stitcher</a></li>
+								<li><a href="<?php echo $pod_link['stitcher']; ?>" target="_blank" title="Subscribe on Stitcher"><img src="<?php echo $badges; ?>stitcher_pod.png" alt="Subscribe on Stitcher"></a></li>
 						<?php
 							endif;
 							if ( !empty( $pod_link['radiopublic'] ) ) : ?>
-								<li><a href="<?php echo $pod_link['radiopublic']; ?>">RadioPublic</a></li>
+								<li><a href="<?php echo $pod_link['radiopublic']; ?>" target="_blank" title="Subscribe on RadioPublic"><img src="<?php echo $badges; ?>radiopublic_pod.png" alt="Subscribe on RadioPublic"></a></li>
 						<?php
 							endif;
 							if ( !empty( $pod_link['pcast'] ) ) : ?>
-								<li><a href="<?php echo $pod_link['pcast']; ?>">Pocket Casts</a></li>
+								<li><a href="<?php echo $pod_link['pcast']; ?>" target="_blank" title="Subscribe on Pocket Casts"><img src="<?php echo $badges; ?>pocketcasts_pod.png" alt="Subscribe on Pocket Casts"></a></li>
 						<?php
 							endif; ?>
 							</ul>

@@ -1,14 +1,14 @@
 <?php
 /**
  * @link 			https://github.com/jwcounts/hpm-podcasts
- * @since  			1.5.2
+ * @since  			1.6
  * @package  		HPM-Podcasts
  *
  * @wordpress-plugin
  * Plugin Name: 	HPM Podcasts
  * Plugin URI: 		https://github.com/jwcounts/hpm-podcasts
  * Description: 	A plugin that allows you to create a podcast feed from any category, as well as
- * Version: 		1.5.2
+ * Version: 		1.6
  * Author: 			Jared Counts
  * Author URI: 		https://www.houstonpublicmedia.org/staff/jared-counts/
  * License: 		GPL-2.0+
@@ -31,6 +31,7 @@ class HPM_Podcasts {
 
 	public function __construct() {
 		define( 'HPM_PODCAST_PLUGIN_DIR', plugin_dir_path(__FILE__) );
+		define( 'HPM_PODCAST_PLUGIN_URL', plugin_dir_url(__FILE__) );
 		add_action( 'plugins_loaded', [ $this, 'init' ] );
 		add_action( 'init', [ $this, 'create_type' ] );
 		register_activation_hook( __FILE__, [ $this, 'activation' ] );
@@ -74,6 +75,9 @@ class HPM_Podcasts {
 
 		//Adds meta query to always list podcast archive in alphabetical order
 		add_action( 'pre_get_posts', [ $this, 'meta_query' ] );
+
+		// Add filter for the_content to display podcast tune-in/promo
+		add_filter( 'the_content', [ $this, 'article_footer' ] );
 
 		// Register WP-REST API endpoints
 		add_action( 'rest_api_init', function() {
@@ -427,6 +431,7 @@ class HPM_Podcasts {
 		wp_nonce_field( basename( __FILE__ ), 'hpm_podcast_class_nonce' );
 		$exists_cat  = metadata_exists( 'post', $object->ID, 'hpm_pod_cat' );
 		$exists_link = metadata_exists( 'post', $object->ID, 'hpm_pod_link' );
+		$exists_prod = metadata_exists( 'post', $object->ID, 'hpm_pod_prod' );
 
 		if ( $exists_cat ) :
 			$hpm_podcast_cat = get_post_meta( $object->ID, 'hpm_pod_cat', true );
@@ -447,7 +452,8 @@ class HPM_Podcasts {
 					'stitcher'   => '',
 					'analytics'  => '',
 					'categories' => [ 'first' => '', 'second' => '', 'third' => '' ],
-					'type'       => 'episodic'
+					'type'       => 'episodic',
+					'rss-override' => ''
 				];
 			endif;
 		else :
@@ -459,8 +465,17 @@ class HPM_Podcasts {
 				'stitcher'   => '',
 				'analytics'  => '',
 				'categories' => [ 'first' => '', 'second' => '', 'third' => '' ],
-				'type'       => 'episodic'
+				'type'       => 'episodic',
+				'rss-override' => ''
 			];
+		endif;
+		if ( $exists_prod ) :
+			$hpm_podcast_prod = get_post_meta( $object->ID, 'hpm_pod_prod', true );
+			if ( empty( $hpm_podcast_prod ) ) :
+				$hpm_podcast_prod = 'internal';
+			endif;
+		else :
+			$hpm_podcast_prod = 'internal';
 		endif;
 		include __DIR__ . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR . 'post-type.php';
 	}
@@ -484,6 +499,7 @@ class HPM_Podcasts {
 				return $post_id;
 
 			$hpm_podcast_cat = $_POST['hpm-podcast-cat'];
+			$hpm_podcast_prod = $_POST['hpm-podcast-prod'];
 			$hpm_podcast_link = [
 				'page' => ( isset( $_POST['hpm-podcast-link'] ) ? sanitize_text_field( $_POST['hpm-podcast-link'] ) : '' ),
 				'itunes' => ( isset( $_POST['hpm-podcast-link-itunes'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-itunes'] ) : '' ),
@@ -497,11 +513,13 @@ class HPM_Podcasts {
 					'second' => $_POST['hpm-podcast-icat-second'],
 					'third' => $_POST['hpm-podcast-icat-third']
 				],
-				'type' => $_POST['hpm-podcast-type']
+				'type' => $_POST['hpm-podcast-type'],
+				'rss-override' => ( isset( $_POST['hpm-podcast-rss-override'] ) ? sanitize_text_field( $_POST['hpm-podcast-rss-override'] ) : '' )
 			];
 
 			update_post_meta( $post_id, 'hpm_pod_cat', $hpm_podcast_cat );
 			update_post_meta( $post_id, 'hpm_pod_link', $hpm_podcast_link );
+			update_post_meta( $post_id, 'hpm_pod_prod', $hpm_podcast_prod );
 		endif;
 	}
 
@@ -627,7 +645,12 @@ class HPM_Podcasts {
 		$podcasts = new WP_Query([	
 			'post_type' => 'podcasts',
 			'post_status' => 'publish',
-			'posts_per_page' => -1
+			'posts_per_page' => -1,
+			'meta_query' => [[
+				'key' => 'hpm_pod_prod',
+				'compare' => '=',
+				'value' => 'internal'
+			]]
 		]);
 		if ( !empty( $pods['recurrence'] ) ) :
 			if ( $pods['recurrence'] == 'hpm_5min' ) :
@@ -1129,6 +1152,46 @@ class HPM_Podcasts {
 		endif;
 
 		return rest_ensure_response( [ 'code' => 'rest_api_success', 'message' => esc_html__( 'Newscast uploaded successfully.', 'hpm-podcasts' ), 'data' => [ 'status' => 200 ] ] );
+	}
+	/**
+	 * Generate podcast feed promo at the bottom of article content
+	 *
+	 * @return string
+	 */
+	public function article_footer( $content ) {
+		if ( is_single() && in_the_loop() && is_main_query() ) :
+			$meta = get_post_meta( get_the_ID(), 'hpm_podcast_ep_meta', true );
+			if ( !empty( $meta['feed'] ) ) :
+				$poids = new WP_Query([
+					'name' => $meta['feed'],
+					'post_status' => 'publish',
+					'post_type' => 'podcasts',
+					'posts_per_page' => 1
+				]);
+				if ( $poids->have_posts() ) :
+					$badges = HPM_PODCAST_PLUGIN_URL.'badges/';
+					$pod_link = get_post_meta( $poids->post->ID, 'hpm_pod_link', true );
+					$content .= '<div class="podcast-episode-info"><h2>This article is part of the <em><a href="'.$pod_link['page'].'">'.$poids->post->post_title.'</a></em> podcast</h2><ul>';
+					if ( !empty( $pod_link['itunes'] ) ) :
+						$content .= '<li><a href="'.$pod_link['itunes'].' target="_blank" title="Subscribe on Apple Podcasts"><img src="'.$badges.'apple_pod.png" alt="Subscribe on Apple Podcasts"></a></li>';
+					endif;
+					if ( !empty( $pod_link['gplay'] ) ) :
+						$content .= '<li><a href="'.$pod_link['gplay'].'" target="_blank" title="Subscribe on Google Podcasts"><img src="'.$badges.'google_pod.png" alt="Subscribe on Google Podcasts"></a></li>';
+					endif;
+					if ( !empty( $pod_link['stitcher'] ) ) :
+						$content .= '<li><a href="'.$pod_link['stitcher'].'" target="_blank" title="Subscribe on Stitcher"><img src="'.$badges.'stitcher_pod.png" alt="Subscribe on Stitcher"></a></li>';
+					endif;
+					if ( !empty( $pod_link['radiopublic'] ) ) :
+						$content .= '<li><a href="'.$pod_link['radiopublic'].'" target="_blank" title="Subscribe on RadioPublic"><img src="'.$badges.'radiopublic_pod.png" alt="Subscribe on RadioPublic"></a></li>';
+					endif;
+					if ( !empty( $pod_link['pcast'] ) ) :
+						$content .= '<li><a href="'.$pod_link['pcast'].'" target="_blank" title="Subscribe on Pocket Casts"><img src="'.$badges.'pocketcasts_pod.png" alt="Subscribe on Pocket Casts"></a></li>';
+					endif;
+					$content .= '<li><a href="'.get_the_permalink( $poids->post->ID ).'" title="RSS Feed" target="_blank"><span class="fa fa-rss" aria-hidden="true"></span></a></li></ul></div>';
+				endif;
+			endif;
+		endif;
+		return $content;
 	}
 }
 

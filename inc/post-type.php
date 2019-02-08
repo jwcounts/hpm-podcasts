@@ -1,3 +1,14 @@
+<h3><?PHP _e( "Featured Podcast", 'hpm-podcasts' ); ?></h3>
+<p><strong><?PHP _e( "Is this podcast being produced internally, or featured from an external source?", 'hpm-podcasts' ); ?></strong><br />
+	<label for="hpm-podcast-prod"><?php _e( "Production:", 'hpm-podcasts' ); ?></label> <select name="hpm-podcast-prod" id="hpm-podcast-prod">
+		<option value="internal"<?PHP selected( $hpm_podcast_prod, 'internal', TRUE ); ?>><?PHP _e( "Internal", 'hpm-podcasts' ); ?></option>
+		<option value="external"<?PHP selected( $hpm_podcast_prod, 'external', TRUE ); ?>><?PHP _e( "External", 'hpm-podcasts' ); ?></option>
+	</select>
+</p>
+<p><strong><?PHP _e( "If externally produced/hosted, enter the RSS feed link below", 'hpm-podcasts' );
+?></strong><br />
+<label for="hpm-podcast-rss-override"><?php _e( "URL:", 'hpm-podcasts' ); ?></label> <input type="text" id="hpm-podcast-rss-override" name="hpm-podcast-rss-override" value="<?PHP echo $hpm_podcast_link['rss-override']; ?>" placeholder="http://example.com/law-blog-with-bob-loblaw/" style="width: 60%;" /></p>
+<p>&nbsp;</p>
 <?php
 	$itunes_cats = [
 		'Arts' => [
