@@ -78,6 +78,8 @@ class HPM_Podcasts {
 
 		// Add filter for the_content to display podcast tune-in/promo
 		add_filter( 'the_content', [ $this, 'article_footer' ] );
+		add_filter( 'get_the_excerpt', [ $this, 'remove_foot_filter' ], 9 );
+		add_filter( 'get_the_excerpt', [ $this, 'add_foot_filter' ], 11 );
 
 		// Register WP-REST API endpoints
 		add_action( 'rest_api_init', function() {
@@ -445,27 +447,31 @@ class HPM_Podcasts {
 			$hpm_podcast_link = get_post_meta( $object->ID, 'hpm_pod_link', true );
 			if ( empty( $hpm_podcast_link ) ) :
 				$hpm_podcast_link = [
-					'page'       => '',
-					'limit'      => 0,
-					'itunes'     => '',
-					'gplay'      => '',
-					'stitcher'   => '',
-					'analytics'  => '',
-					'categories' => [ 'first' => '', 'second' => '', 'third' => '' ],
-					'type'       => 'episodic',
+					'page'         => '',
+					'limit'        => 0,
+					'itunes'       => '',
+					'gplay'        => '',
+					'stitcher'     => '',
+					'spotify'      => '',
+					'radiopublic'  => '',
+					'pcast'        => '',
+					'categories'   => [ 'first' => '', 'second' => '', 'third' => '' ],
+					'type'         => 'episodic',
 					'rss-override' => ''
 				];
 			endif;
 		else :
 			$hpm_podcast_link = [
-				'page'       => '',
-				'limit'      => 0,
-				'itunes'     => '',
-				'gplay'      => '',
-				'stitcher'   => '',
-				'analytics'  => '',
-				'categories' => [ 'first' => '', 'second' => '', 'third' => '' ],
-				'type'       => 'episodic',
+				'page'         => '',
+				'limit'        => 0,
+				'itunes'       => '',
+				'gplay'        => '',
+				'stitcher'     => '',
+				'spotify'      => '',
+				'radiopublic'  => '',
+				'pcast'        => '',
+				'categories'   => [ 'first' => '', 'second' => '', 'third' => '' ],
+				'type'         => 'episodic',
 				'rss-override' => ''
 			];
 		endif;
@@ -504,6 +510,7 @@ class HPM_Podcasts {
 				'page' => ( isset( $_POST['hpm-podcast-link'] ) ? sanitize_text_field( $_POST['hpm-podcast-link'] ) : '' ),
 				'itunes' => ( isset( $_POST['hpm-podcast-link-itunes'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-itunes'] ) : '' ),
 				'gplay' => ( isset( $_POST['hpm-podcast-link-gplay'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-gplay'] ) : '' ),
+				'spotify' => ( isset( $_POST['hpm-podcast-link-spotify'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-spotify'] ) : '' ),
 				'stitcher' => ( isset( $_POST['hpm-podcast-link-stitcher'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-stitcher'] ) : '' ),
 				'radiopublic' => ( isset( $_POST['hpm-podcast-link-radiopublic'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-radiopublic'] ) : '' ),
 				'pcast' => ( isset( $_POST['hpm-podcast-link-pcast'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-pcast'] ) : '' ),
@@ -1178,6 +1185,9 @@ class HPM_Podcasts {
 					if ( !empty( $pod_link['gplay'] ) ) :
 						$content .= '<li><a href="'.$pod_link['gplay'].'" target="_blank" title="Subscribe on Google Podcasts"><img src="'.$badges.'google_pod.png" alt="Subscribe on Google Podcasts"></a></li>';
 					endif;
+					if ( !empty( $pod_link['spotify'] ) ) :
+						$content .= '<li><a href="'.$pod_link['spotify'].'" target="_blank" title="Subscribe on Spotify"><img src="'.$badges.'spotify_pod.png" alt="Subscribe on Spotify"></a></li>';
+					endif;
 					if ( !empty( $pod_link['stitcher'] ) ) :
 						$content .= '<li><a href="'.$pod_link['stitcher'].'" target="_blank" title="Subscribe on Stitcher"><img src="'.$badges.'stitcher_pod.png" alt="Subscribe on Stitcher"></a></li>';
 					endif;
@@ -1187,12 +1197,27 @@ class HPM_Podcasts {
 					if ( !empty( $pod_link['pcast'] ) ) :
 						$content .= '<li><a href="'.$pod_link['pcast'].'" target="_blank" title="Subscribe on Pocket Casts"><img src="'.$badges.'pocketcasts_pod.png" alt="Subscribe on Pocket Casts"></a></li>';
 					endif;
-					$content .= '<li><a href="'.get_the_permalink( $poids->post->ID ).'" title="RSS Feed" target="_blank"><span class="fa fa-rss" aria-hidden="true"></span></a></li></ul></div>';
+					$content .= '</ul></div>';
 				endif;
 			endif;
 		endif;
 		return $content;
 	}
+
+	public function remove_foot_filter( $content )
+	{
+		if ( has_filter( 'the_content', [ $this, 'article_footer' ] ) ) :
+			remove_filter( 'the_content', [ $this, 'article_footer' ] );
+		endif;
+		return $content;
+	}
+
+	public function add_foot_filter( $content )
+	{
+		add_filter( 'the_content', [ $this, 'article_footer' ] );
+		return $content;
+	}
+	
 }
 
 new HPM_Podcasts();

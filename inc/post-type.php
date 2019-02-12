@@ -93,15 +93,15 @@
 <h3><?PHP _e( "Category and Page", 'hpm-podcasts' ); ?></h3>
 <p><?PHP _e( "Select the post category for this podcast:", 'hpm-podcasts' );
 	wp_dropdown_categories([
-		'show_option_all' => __("Select One"),
-		'taxonomy'		=> 'category',
-		'name'			=> 'hpm-podcast-cat',
-		'orderby'		 => 'name',
-		'selected'		=> $hpm_podcast_cat,
-		'hierarchical'	=> true,
-		'depth'		   => 3,
-		'show_count'	  => false,
-		'hide_empty'	  => false,
+		'show_option_all'	=> __("Select One"),
+		'taxonomy'			=> 'category',
+		'name'				=> 'hpm-podcast-cat',
+		'orderby'			=> 'name',
+		'selected'			=> $hpm_podcast_cat,
+		'hierarchical'		=> true,
+		'depth'				=> 3,
+		'show_count'		=> false,
+		'hide_empty'		=> false
 	]); ?></p>
 <p><strong><?PHP _e( "Enter the page URL for this podcast (show page or otherwise)", 'hpm-podcasts' );
 ?></strong><br />
@@ -150,6 +150,7 @@
 <h3><?PHP _e( "External Services", 'hpm-podcasts' ); ?></h3>
 <p><label for="hpm-podcast-link-itunes"><?php _e( "iTunes:", 'hpm-podcasts' ); ?></label> <input type="text" id="hpm-podcast-link-itunes" name="hpm-podcast-link-itunes" value="<?PHP echo $hpm_podcast_link['itunes']; ?>" placeholder="https://itunes.apple.com/us/podcast/law-blog-with-bob-loblaw/id123456789?mt=2" style="width: 60%;" /></p>
 <p><label for="hpm-podcast-link-gplay"><?php _e( "Google Play:", 'hpm-podcasts' ); ?></label> <input type="text" id="hpm-podcast-link-gplay" name="hpm-podcast-link-gplay" value="<?PHP echo $hpm_podcast_link['gplay']; ?>" placeholder="http://play.google.com/blahblahblah" style="width: 60%;" /></p>
+	<p><label for="hpm-podcast-link-spotify"><?php _e( "Spotify:", 'hpm-podcasts' ); ?></label> <input type="text" id="hpm-podcast-link-spotify" name="hpm-podcast-link-spotify" value="<?PHP echo $hpm_podcast_link['spotify']; ?>" placeholder="http://spotify.com/blah" style="width: 60%;" /></p>
 <p><label for="hpm-podcast-link-stitcher"><?php _e( "Stitcher:", 'hpm-podcasts' ); ?></label> <input type="text" id="hpm-podcast-link-stitcher" name="hpm-podcast-link-stitcher" value="<?PHP echo $hpm_podcast_link['stitcher']; ?>" placeholder="http://stitcher.com/blah" style="width: 60%;" /></p>
 <p><label for="hpm-podcast-link-radiopublic"><?php _e( "RadioPublic:", 'hpm-podcasts' ); ?></label> <input type="text" id="hpm-podcast-link-radiopublic" name="hpm-podcast-link-radiopublic" value="<?PHP echo $hpm_podcast_link['radiopublic']; ?>" placeholder="http://radiopublic.com/blah" style="width: 60%;" /></p>
 <p><label for="hpm-podcast-link-pcast"><?php _e( "Pocket Casts:", 'hpm-podcasts' ); ?></label> <input type="text" id="hpm-podcast-link-pcast" name="hpm-podcast-link-pcast" value="<?PHP echo $hpm_podcast_link['pcast']; ?>" placeholder="https://pca.st/blah" style="width: 60%;" /></p>

@@ -85,6 +85,10 @@ get_header(); ?>
 								<li><a href="<?php echo $pod_link['gplay']; ?>" target="_blank" title="Subscribe on Google Podcasts"><img src="<?php echo $badges; ?>google_pod.png" alt="Subscribe on Google Podcasts"></a></li>							
 						<?php
 							endif;
+							if ( !empty( $pod_link['spotify'] ) ) : ?>
+								<li><a href="<?php echo $pod_link['spotify']; ?>" target="_blank" title="Subscribe on Spotify"><img src="<?php echo $badges; ?>spotify_pod.png" alt="Subscribe on Spotify"></a></li>							
+						<?php
+							endif;
 							if ( !empty( $pod_link['stitcher'] ) ) : ?>
 								<li><a href="<?php echo $pod_link['stitcher']; ?>" target="_blank" title="Subscribe on Stitcher"><img src="<?php echo $badges; ?>stitcher_pod.png" alt="Subscribe on Stitcher"></a></li>
 						<?php
