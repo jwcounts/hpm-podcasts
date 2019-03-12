@@ -700,7 +700,7 @@ class HPM_Podcasts {
 				]);
 				if ( $podeps->have_posts() && $request === null ) :
 					$first_id = $podeps->post->ID;
-					$modified = get_the_modified_date('u', $first_id );
+					$modified = get_the_modified_date('U', $first_id );
 					if ( !empty( $last_id['id'] ) && $last_id['id'] == $first_id && $last_id['modified'] == $modified ) :
 						continue;
 					endif;
@@ -790,7 +790,7 @@ class HPM_Podcasts {
 				$podeps->the_post();
 				$epid = get_the_ID();
 				if ( $podeps->current_post == 0 ) :
-					$last = [ 'id' => $epid, 'modified' => get_the_modified_time( 'u' ) ];
+					$last = [ 'id' => $epid, 'modified' => get_the_modified_time( 'U' ) ];
 					update_post_meta( $pod_id, 'hpm_pod_last_id', $last );
 				endif;
 				$a_meta = get_post_meta( $epid, 'hpm_podcast_enclosure', true );
