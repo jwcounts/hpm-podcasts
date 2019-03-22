@@ -81,6 +81,15 @@ class HPM_Podcasts {
 		add_filter( 'get_the_excerpt', [ $this, 'remove_foot_filter' ], 9 );
 		add_filter( 'get_the_excerpt', [ $this, 'add_foot_filter' ], 11 );
 
+		if ( ! array_key_exists( 'hpm_filter_text' , $GLOBALS['wp_filter'] ) ) :
+			add_filter( 'hpm_filter_text', 'wptexturize' );
+			add_filter( 'hpm_filter_text', 'convert_smilies' );
+			add_filter( 'hpm_filter_text', 'convert_chars' );
+			add_filter( 'hpm_filter_text', 'wpautop' );
+			add_filter( 'hpm_filter_text', 'shortcode_unautop' );
+			add_filter( 'hpm_filter_text', 'do_shortcode' );
+		endif;
+
 		// Register WP-REST API endpoints
 		add_action( 'rest_api_init', function() {
 			register_rest_route( 'hpm-podcast/v1', '/refresh', [
@@ -816,7 +825,7 @@ class HPM_Podcasts {
 						'id' => $epid,
 						'title' => $item_title,
 						'permalink' => get_permalink(),
-						'content_html' => apply_filters( 'hpm_filter_text', get_the_content() ),
+						'content_html' => $content,
 						'content_text' => strip_shortcodes( wp_strip_all_tags( get_the_content() ) ),
 						'excerpt' => get_the_excerpt(),
 						'date_published' => get_the_date( 'c', '', '', false),
