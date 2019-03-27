@@ -838,9 +838,9 @@ class HPM_Podcasts {
 							'filesize' => $a_meta['filesize'],
 							'duration_in_seconds' => $a_meta['length']
 						],
-						'season' => $pod_desc['season'],
-						'episode' => $pod_desc['episode'],
-						'episodeType' => $pod_desc['episodeType']
+						'season' => ( !empty( $pod_desc['season'] ) ? $pod_desc['season'] : '' ),
+						'episode' => ( !empty( $pod_desc['episode'] ) ? $pod_desc['episode'] : '' ),
+						'episodeType' => ( !empty( $pod_desc['episodeType'] ) ? $pod_desc['episodeType'] : '' )
 					];
 				endif; ?>
 		<item>
