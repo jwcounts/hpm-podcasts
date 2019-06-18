@@ -1,14 +1,14 @@
 <?php
 /**
  * @link 			https://github.com/jwcounts/hpm-podcasts
- * @since  			1.6
+ * @since  			2.0
  * @package  		HPM-Podcasts
  *
  * @wordpress-plugin
  * Plugin Name: 	HPM Podcasts
  * Plugin URI: 		https://github.com/jwcounts/hpm-podcasts
  * Description: 	A plugin that allows you to create a podcast feed from any category, as well as
- * Version: 		1.6.1
+ * Version: 		2.0
  * Author: 			Jared Counts
  * Author URI: 		https://www.houstonpublicmedia.org/staff/jared-counts/
  * License: 		GPL-2.0+
@@ -52,10 +52,6 @@ class HPM_Podcasts {
 		add_filter( 'cron_schedules', [ $this, 'cron' ], 10, 2 );
 		add_action( 'hpm_podcast_update_refresh', [ $this, 'generate' ] );
 		add_filter( 'pre_update_option_hpm_podcast_settings', [ $this, 'options_clean' ], 10, 2 );
-
-		// Setup meta box in article editor
-		add_action( 'load-post.php', [ $this, 'description_setup' ] );
-		add_action( 'load-post-new.php', [ $this, 'description_setup' ] );
 
 		// Add edit capabilities to selected roles
 		add_action( 'admin_init', [ $this, 'add_role_caps' ], 999 );
@@ -211,10 +207,10 @@ class HPM_Podcasts {
 		if ( ! wp_next_scheduled( 'hpm_podcast_update_refresh' ) ) :
 			wp_schedule_event( time(), 'hourly', 'hpm_podcast_update_refresh' );
 		endif;
-		if ( wp_mkdir_p( get_stylesheet_directory() . '/hpm-podcasts/' ) ) :
-			copy( HPM_PODCAST_PLUGIN_DIR . 'templates/single.php', get_stylesheet_directory() . '/hpm-podcasts/single.php' );
-			copy( HPM_PODCAST_PLUGIN_DIR . 'templates/archive.php', get_stylesheet_directory() . '/hpm-podcasts/archive.php' );
-		endif;
+		// if ( wp_mkdir_p( get_stylesheet_directory() . '/hpm-podcasts/' ) ) :
+		// 	copy( HPM_PODCAST_PLUGIN_DIR . 'templates/single.php', get_stylesheet_directory() . '/hpm-podcasts/single.php' );
+		// 	copy( HPM_PODCAST_PLUGIN_DIR . 'templates/archive.php', get_stylesheet_directory() . '/hpm-podcasts/archive.php' );
+		// endif;
 	}
 
 	public function deactivation() {
@@ -227,10 +223,21 @@ class HPM_Podcasts {
 	public function single_template( $single ) {
 		global $post;
 		if ( $post->post_type == "podcasts" ) :
-			if ( file_exists( get_stylesheet_directory() . '/hpm-podcasts/single.php' ) ) :
-				return get_stylesheet_directory() . '/hpm-podcasts/single.php';
+			if ( file_exists( get_stylesheet_directory() . DIRECTORY_SEPARATOR . 'single-podcasts.php' ) ) :
+				return get_stylesheet_directory() . DIRECTORY_SEPARATOR . 'single-podcasts.php';
 			else :
-				return HPM_PODCAST_PLUGIN_DIR . 'templates/single.php';
+				return HPM_PODCAST_PLUGIN_DIR . 'templates' . DIRECTORY_SEPARATOR . 'single-podcasts.php';
+			endif;
+		elseif ( $post->post_type == "shows" ) :
+			$page_temp = get_post_meta( $post->ID, '_wp_page_template', true );
+			if ( !empty( $page_temp ) && file_exists( get_stylesheet_directory() . DIRECTORY_SEPARATOR . $page_temp ) ) :
+				return get_stylesheet_directory() . DIRECTORY_SEPARATOR . $page_temp;
+			elseif ( file_exists( get_stylesheet_directory() . DIRECTORY_SEPARATOR . 'single-shows-' . $post->post_name . '.php' ) ) :
+				return get_stylesheet_directory() . DIRECTORY_SEPARATOR . 'single-shows-' . $post->post_name . '.php';
+			elseif ( file_exists( get_stylesheet_directory() . DIRECTORY_SEPARATOR . 'single-shows.php' ) ) :
+				return get_stylesheet_directory() . DIRECTORY_SEPARATOR . 'single-shows.php';
+			else :
+				return HPM_PODCAST_PLUGIN_DIR . 'templates' . DIRECTORY_SEPARATOR . 'single-shows.php';
 			endif;
 		endif;
 		return $single;
@@ -239,10 +246,16 @@ class HPM_Podcasts {
 	public function archive_template( $archive_template ) {
 		global $post;
 		if ( is_post_type_archive ( 'podcasts' ) ) :
-			if ( file_exists( get_stylesheet_directory() . '/hpm-podcasts/archive.php' ) ) :
-				return get_stylesheet_directory() . '/hpm-podcasts/archive.php';
+			if ( file_exists( get_stylesheet_directory() . DIRECTORY_SEPARATOR . 'archive-podcasts.php' ) ) :
+				return get_stylesheet_directory() . DIRECTORY_SEPARATOR . 'archive-podcasts.php';
 			else :
-				return HPM_PODCAST_PLUGIN_DIR . 'templates/archive.php';
+				return HPM_PODCAST_PLUGIN_DIR . 'templates' . DIRECTORY_SEPARATOR . 'archive-podcasts.php';
+			endif;
+		elseif ( is_post_type_archive ( 'shows' ) ) :
+			if ( file_exists( get_stylesheet_directory() . DIRECTORY_SEPARATOR . 'archive-shows.php' ) ) :
+				return get_stylesheet_directory() . DIRECTORY_SEPARATOR . 'archive-shows.php';
+			else :
+				return HPM_PODCAST_PLUGIN_DIR . 'templates' . DIRECTORY_SEPARATOR . 'archive-shows.php';
 			endif;
 		endif;
 		return $archive_template;
@@ -250,36 +263,79 @@ class HPM_Podcasts {
 
 	public function feed_template() {
 		if ( 'podcasts' === get_query_var( 'post_type' ) ) :
-			if ( file_exists( get_stylesheet_directory() . '/hpm-podcasts/single.php' ) ) :
-				load_template( get_stylesheet_directory() . '/hpm-podcasts/single.php' );
+			if ( ffile_exists( get_stylesheet_directory() . DIRECTORY_SEPARATOR . 'single-podcasts.php' ) ) :
+				load_template( get_stylesheet_directory() . DIRECTORY_SEPARATOR . 'single-podcasts.php' );
 			else :
-				load_template( HPM_PODCAST_PLUGIN_DIR . 'templates/single.php' );
+				load_template( HPM_PODCAST_PLUGIN_DIR . 'templates' . DIRECTORY_SEPARATOR . 'single-podcasts.php' );
 			endif;
-		elseif ( file_exists( get_stylesheet_directory() . '/feed-rss2.php' ) ) :
-			load_template( get_stylesheet_directory() . '/feed-rss2.php' );
+		elseif ( file_exists( get_stylesheet_directory() . DIRECTORY_SEPARATOR . 'feed-rss2.php' ) ) :
+			load_template( get_stylesheet_directory() . DIRECTORY_SEPARATOR . 'feed-rss2.php' );
 		else :
 			get_template_part( 'feed', 'rss2' );
 		endif;
 	}
 
-	/**
-	 * Creating and setting up the metadata boxes in the post editor
-	 */
-
-	public function description_setup() {
-		add_action( 'add_meta_boxes', [ $this, 'add_description' ] );
-		add_action( 'save_post', [ $this, 'save_description' ], 10, 2 );
+	public function meta_setup() {
+		add_action( 'add_meta_boxes', [ $this, 'add_meta' ] );
+		add_action( 'save_post', [ $this, 'save_meta' ], 10, 2 );
 	}
-
-	public function add_description() {
+	
+	public function add_meta() {
+		add_meta_box(
+			'hpm-podcast-meta-class',
+			esc_html__( 'Podcast Metadata', 'hpm-podcasts' ),
+			[ $this, 'podcast_feed_meta' ],
+			'podcasts',
+			'normal',
+			'core'
+		);
 		add_meta_box(
 			'hpm-podcast-meta-class',
 			esc_html__( 'Podcast Feed Information', 'hpm-podcasts' ),
-			[ $this, 'description_box' ],
+			[ $this, 'podcast_episode_meta' ],
 			'post',
 			'advanced',
 			'default'
 		);
+		add_meta_box(
+			'hpm-show-meta-class',
+			esc_html__( 'Social and Show Info', 'hpmv2' ),
+			[ $this, 'show_meta_box' ],
+			'shows',
+			'normal',
+			'core'
+		);
+	}
+
+	function show_meta_box( $object, $box ) {
+		wp_nonce_field( basename( __FILE__ ), 'hpm_show_class_nonce' );
+	
+		$hpm_show_social = get_post_meta( $object->ID, 'hpm_show_social', true );
+		if ( empty( $hpm_show_social ) ) :
+			$hpm_show_social = [ 'fb' => '', 'twitter' => '', 'yt' => '', 'sc' => '', 'insta' => '', 'tumblr' => '', 'snapchat' => '' ];
+		endif;
+	
+		$hpm_show_meta = get_post_meta( $object->ID, 'hpm_show_meta', true );
+		if ( empty( $hpm_show_meta ) ) :
+			$hpm_show_meta = [
+				'times' => '',
+				'hosts' => '',
+				'ytp' => '',
+				'podcast' => '',
+				'banners' => [
+					'mobile' => '',
+					'tablet' => '',
+					'desktop' => '',
+				]
+			];
+		endif;
+	
+		$hpm_shows_cat = get_post_meta( $object->ID, 'hpm_shows_cat', true );
+		global $post;
+		$post_old = $post;
+		include __DIR__ . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR . 'show-meta.php';
+		wp_reset_query();
+		$post = $post_old;
 	}
 
 	/**
@@ -288,7 +344,7 @@ class HPM_Podcasts {
 	 * Also, if you are storing your media files on another server, an option to assign your media file to a certain
 	 * feed, so that the files can be organized on the remote server, will appear, as well as an area for manual URL entry.
 	 */
-	public function description_box( $object, $box ) {
+	public function podcast_episode_meta( $object, $box ) {
 		$pods = $this->options;
 		global $post;
 		$post_old = $post;
@@ -298,56 +354,192 @@ class HPM_Podcasts {
 			$hpm_pod_desc = [ 'title' => '', 'feed' => '', 'description' => '', 'episode' => '', 'season' => '', 'episodeType'
 			=> 'full' ];
 		endif;
-		include __DIR__ . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR .'post-editor.php';
+		include __DIR__ . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR .'podcast-post-meta.php';
 		wp_reset_query();
 		$post = $post_old;
 	}
 
 	/**
-	 * Saving the media file feed and episode-specific description in postmeta.
+	 * Set up metadata for this feed: iTunes categories, episode archive link, iTunes link, Google Play link, number of
+	 * episodes in the feed, feed-specific analytics, etc.
 	 *
-	 * If your media files are being uploaded to another service, this function will also kick off a cron job to handle
-	 * the upload.
+	 * @param $object
+	 * @param $box
+	 *
+	 * @return mixed
+	 */
+	public function podcast_feed_meta( $object, $box ) {
+		wp_nonce_field( basename( __FILE__ ), 'hpm_podcast_class_nonce' );
+		$exists_cat  = metadata_exists( 'post', $object->ID, 'hpm_pod_cat' );
+		$exists_link = metadata_exists( 'post', $object->ID, 'hpm_pod_link' );
+		$exists_prod = metadata_exists( 'post', $object->ID, 'hpm_pod_prod' );
+
+		if ( $exists_cat ) :
+			$hpm_podcast_cat = get_post_meta( $object->ID, 'hpm_pod_cat', true );
+			if ( empty( $hpm_podcast_cat ) ) :
+				$hpm_podcast_cat = '';
+			endif;
+		else :
+			$hpm_podcast_cat = '';
+		endif;
+		if ( $exists_link ) :
+			$hpm_podcast_link = get_post_meta( $object->ID, 'hpm_pod_link', true );
+			if ( empty( $hpm_podcast_link ) ) :
+				$hpm_podcast_link = [
+					'page'         => '',
+					'limit'        => 0,
+					'itunes'       => '',
+					'gplay'        => '',
+					'spotify'      => '',
+					'stitcher'     => '',
+					'radiopublic'  => '',
+					'pcast'        => '',
+					'overcast'     => '',
+					'tunein'       => '',
+					'pandora'      => '',
+					'iheart'       => '',
+					'categories'   => [ 'first' => '', 'second' => '', 'third' => '' ],
+					'type'         => 'episodic',
+					'rss-override' => ''
+				];
+			endif;
+		else :
+			$hpm_podcast_link = [
+				'page'         => '',
+				'limit'        => 0,
+				'itunes'       => '',
+				'gplay'        => '',
+				'spotify'      => '',
+				'stitcher'     => '',
+				'radiopublic'  => '',
+				'pcast'        => '',
+				'overcast'     => '',
+				'tunein'       => '',
+				'pandora'      => '',
+				'iheart'       => '',
+				'categories'   => [ 'first' => '', 'second' => '', 'third' => '' ],
+				'type'         => 'episodic',
+				'rss-override' => ''
+			];
+		endif;
+		if ( $exists_prod ) :
+			$hpm_podcast_prod = get_post_meta( $object->ID, 'hpm_pod_prod', true );
+			if ( empty( $hpm_podcast_prod ) ) :
+				$hpm_podcast_prod = 'internal';
+			endif;
+		else :
+			$hpm_podcast_prod = 'internal';
+		endif;
+		include __DIR__ . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR . 'podcast-feed-meta.php';
+	}
+
+	/**
+	 * Save the above metadata in postmeta
 	 *
 	 * @param $post_id
 	 * @param $post
 	 *
 	 * @return mixed
 	 */
-	public function save_description( $post_id, $post ) {
-		if ( empty( $_POST['hpm_podcast_class_nonce'] ) || !wp_verify_nonce( $_POST['hpm_podcast_class_nonce'], basename( __FILE__ ) ) ) :
-			return $post_id;
-		endif;
-		global $wpdb;
-		$pods = $this->options;
-
+	public function save_meta( $post_id, $post ) {
 		$post_type = get_post_type_object( $post->post_type );
-
 		if ( !current_user_can( $post_type->cap->edit_post, $post_id ) ) :
 			return $post_id;
 		endif;
 
-		$hpm_podcast = [
-			'feed' => ( !empty( $_POST['hpm-podcast-ep-feed'] ) ? $_POST['hpm-podcast-ep-feed'] : '' ),
-			'title' => ( !empty( $_POST['hpm-podcast-title'] ) ? sanitize_text_field( $_POST['hpm-podcast-title'] ) : '' ),
-			'description' => balanceTags( $_POST['hpm-podcast-description'], true ),
-			'episode' => ( isset( $_POST['hpm-podcast-episode'] ) ? sanitize_text_field( $_POST['hpm-podcast-episode'] ) :	'' ),
-			'episodeType' => $_POST['hpm-podcast-episodetype'],
-			'season' => ( isset( $_POST['hpm-podcast-season'] ) ? sanitize_text_field( $_POST['hpm-podcast-season'] ) : '' ),
-		];
+		if ( $post_type == 'podcasts' || $post_type == 'post' ) :
+			if ( empty( $_POST['hpm_podcast_class_nonce'] ) || !wp_verify_nonce( $_POST['hpm_podcast_class_nonce'], basename( __FILE__ ) ) ) :
+				return $post_id;
+			endif;
+		elseif ( $post_type == 'shows' ) :
+			if ( empty( $_POST['hpm_show_class_nonce'] ) || !wp_verify_nonce( $_POST['hpm_show_class_nonce'], basename( __FILE__ ) ) ) :
+				return $post_id;
+			endif;
+		endif;
 
-		update_post_meta( $post_id, 'hpm_podcast_ep_meta', $hpm_podcast );
+		if ( $post->post_type == 'podcasts' ) :
+			$hpm_podcast_cat = $_POST['hpm-podcast-cat'];
+			$hpm_podcast_prod = $_POST['hpm-podcast-prod'];
+			$hpm_podcast_link = [
+				'page' => ( isset( $_POST['hpm-podcast-link'] ) ? sanitize_text_field( $_POST['hpm-podcast-link'] ) : '' ),
+				'itunes' => ( isset( $_POST['hpm-podcast-link-itunes'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-itunes'] ) : '' ),
+				'gplay' => ( isset( $_POST['hpm-podcast-link-gplay'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-gplay'] ) : '' ),
+				'spotify' => ( isset( $_POST['hpm-podcast-link-spotify'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-spotify'] ) : '' ),
+				'stitcher' => ( isset( $_POST['hpm-podcast-link-stitcher'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-stitcher'] ) : '' ),
+				'radiopublic' => ( isset( $_POST['hpm-podcast-link-radiopublic'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-radiopublic'] ) : '' ),
+				'pcast' => ( isset( $_POST['hpm-podcast-link-pcast'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-pcast'] ) : '' ),
+				'overcast' => ( isset( $_POST['hpm-podcast-link-overcast'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-overcast'] ) : '' ),
+				'tunein' => ( isset( $_POST['hpm-podcast-link-overcast'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-tunein'] ) : '' ),
+				'pandora' => ( isset( $_POST['hpm-podcast-link-overcast'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-pandora'] ) : '' ),
+				'iheart' => ( isset( $_POST['hpm-podcast-link-iheart'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-iheart'] ) : '' ),
+				'limit' => ( isset( $_POST['hpm-podcast-limit'] ) ? sanitize_text_field( $_POST['hpm-podcast-limit'] ) : 0 ),
+				'categories' => [
+					'first' => $_POST['hpm-podcast-icat-first'],
+					'second' => $_POST['hpm-podcast-icat-second'],
+					'third' => $_POST['hpm-podcast-icat-third']
+				],
+				'type' => $_POST['hpm-podcast-type'],
+				'rss-override' => ( isset( $_POST['hpm-podcast-rss-override'] ) ? sanitize_text_field( $_POST['hpm-podcast-rss-override'] ) : '' )
+			];
 
-		$sg_url = ( isset( $_POST['hpm-podcast-sg-file'] ) ? sanitize_text_field( $_POST['hpm-podcast-sg-file'] ) : '' );
+			update_post_meta( $post_id, 'hpm_pod_cat', $hpm_podcast_cat );
+			update_post_meta( $post_id, 'hpm_pod_link', $hpm_podcast_link );
+			update_post_meta( $post_id, 'hpm_pod_prod', $hpm_podcast_prod );
+		elseif ( $post->post_type == 'shows' ) :
+			/* Get the posted data and sanitize it for use as an HTML class. */
+			$hpm_social = [
+				'fb'		=> ( isset( $_POST['hpm-social-fb'] ) ? sanitize_text_field( $_POST['hpm-social-fb'] ) : '' ),
+				'twitter'	=> ( isset( $_POST['hpm-social-twitter'] ) ? sanitize_text_field( $_POST['hpm-social-twitter'] ) : '' ),
+				'yt'	 	=> ( isset( $_POST['hpm-social-yt'] ) ? sanitize_text_field( $_POST['hpm-social-yt'] ) : '' ),
+				'sc'		=> ( isset( $_POST['hpm-social-sc'] ) ? sanitize_text_field( $_POST['hpm-social-sc'] ) : '' ),
+				'insta'		=> ( isset( $_POST['hpm-social-insta'] ) ? sanitize_text_field( $_POST['hpm-social-insta'] ) : ''),
+				'tumblr'	=> ( isset( $_POST['hpm-social-tumblr'] ) ? sanitize_text_field( $_POST['hpm-social-tumblr'] ) : ''),
+				'snapchat'	=> ( isset( $_POST['hpm-social-snapchat'] ) ? sanitize_text_field( $_POST['hpm-social-snapchat'] ) : '')
+			];
 
-		$hpm_enclose = get_post_meta( $post_id, 'hpm_podcast_enclosure', true );
+			$hpm_show = [
+				'times'	=> ( isset( $_POST['hpm-show-times'] ) ? $_POST['hpm-show-times'] : '' ),
+				'hosts'	=> ( isset( $_POST['hpm-show-hosts'] ) ? sanitize_text_field( $_POST['hpm-show-hosts'] ) : '' ),
+				'ytp'	=> ( isset( $_POST['hpm-show-ytp'] ) ? sanitize_text_field( $_POST['hpm-show-ytp'] ) : '' ),
+				'podcast'	=> ( isset( $_POST['hpm-show-pod'] ) ? $_POST['hpm-show-pod'] : '' ),
+				'banners' => [
+					'mobile' => ( isset( $_POST['hpm-show-banner-mobile-id'] ) ? sanitize_text_field( $_POST['hpm-show-banner-mobile-id'] ) : '' ),
+					'tablet' => ( isset( $_POST['hpm-show-banner-tablet-id'] ) ? sanitize_text_field( $_POST['hpm-show-banner-tablet-id'] ) : '' ),
+					'desktop' => ( isset( $_POST['hpm-show-banner-desktop-id'] ) ? sanitize_text_field( $_POST['hpm-show-banner-desktop-id'] ) : '' ),
+				]
 
-		if ( !empty( $pods['upload-media'] ) ) :
-			if ( !empty( $sg_url ) ) :
-				if ( !empty( $hpm_enclose ) ) :
-					if ( $hpm_enclose['url'] !== $sg_url ) :
-						$hpm_enclose['url'] = $sg_url;
-						update_post_meta( $post_id, 'hpm_podcast_enclosure', $hpm_enclose );
+			];
+
+			$hpm_shows_cat = ( isset( $_POST['hpm-shows-cat'] ) ? sanitize_text_field( $_POST['hpm-shows-cat'] ) : '' );
+			$hpm_shows_top = ( isset( $_POST['hpm-shows-top'] ) ? sanitize_text_field( $_POST['hpm-shows-top'] ) : '' );
+
+			update_post_meta( $post_id, 'hpm_show_social', $hpm_social );
+			update_post_meta( $post_id, 'hpm_show_meta', $hpm_show );
+			update_post_meta( $post_id, 'hpm_shows_cat', $hpm_shows_cat );
+			update_post_meta( $post_id, 'hpm_shows_top', $hpm_shows_top );
+		else :
+			$hpm_podcast = [
+				'feed' => ( !empty( $_POST['hpm-podcast-ep-feed'] ) ? $_POST['hpm-podcast-ep-feed'] : '' ),
+				'title' => ( !empty( $_POST['hpm-podcast-title'] ) ? $_POST['hpm-podcast-title'] : '' ),
+				'description' => balanceTags( strip_shortcodes( $_POST['hpm-podcast-description'] ), true ),
+				'episode' => ( isset( $_POST['hpm-podcast-episode'] ) ? sanitize_text_field( $_POST['hpm-podcast-episode'] ) :	'' ),
+				'episodeType' => $_POST['hpm-podcast-episodetype'],
+				'season' => ( isset( $_POST['hpm-podcast-season'] ) ? sanitize_text_field( $_POST['hpm-podcast-season'] ) : '' ),
+			];
+	
+			update_post_meta( $post_id, 'hpm_podcast_ep_meta', $hpm_podcast );
+	
+			$sg_url = ( isset( $_POST['hpm-podcast-sg-file'] ) ? sanitize_text_field( $_POST['hpm-podcast-sg-file'] ) : '' );
+	
+			$hpm_enclose = get_post_meta( $post_id, 'hpm_podcast_enclosure', true );
+	
+			if ( !empty( $this->options['upload-media'] ) ) :
+				if ( !empty( $sg_url ) ) :
+					if ( !empty( $hpm_enclose ) ) :
+						if ( $hpm_enclose['url'] !== $sg_url ) :
+							$hpm_enclose['url'] = $sg_url;
+							update_post_meta( $post_id, 'hpm_podcast_enclosure', $hpm_enclose );
+						endif;
 					endif;
 				endif;
 			endif;
@@ -387,6 +579,36 @@ class HPM_Podcasts {
 			'capability_type' => [ 'hpm_podcast', 'hpm_podcasts' ],
 			'map_meta_cap' => true
 		]);
+
+		register_post_type( 'shows', [
+			'labels' => [
+				'name' => __( 'Shows' ),
+				'singular_name' => __( 'Show' ),
+				'menu_name' => __( 'Shows' ),
+				'add_new_item' => __( 'Add New Show' ),
+				'edit_item' => __( 'Edit Show' ),
+				'new_item' => __( 'New Show' ),
+				'view_item' => __( 'View Show' ),
+				'search_items' => __( 'Search Shows' ),
+				'not_found' => __( 'Show Not Found' ),
+				'not_found_in_trash' => __( 'Show not found in trash' )
+			],
+			'description' => 'Information pertaining to locally-produced shows',
+			'public' => true,
+			'menu_position' => 20,
+			'menu_icon' => 'dashicons-video-alt3',
+			'has_archive' => true,
+			'rewrite' => [
+				'slug' => __( 'shows' ),
+				'with_front' => false,
+				'feeds' => false,
+				'pages' => true
+			],
+			'supports' => [ 'title', 'editor', 'thumbnail' ],
+			'taxonomies' => [ 'post_tag' ],
+			'capability_type' => [ 'hpm_show','hpm_shows' ],
+			'map_meta_cap' => true
+		]);
 	}
 
 	/**
@@ -395,7 +617,7 @@ class HPM_Podcasts {
 	public function add_role_caps() {
 		$pods = $this->options;
 		foreach( $pods['roles'] as $the_role ) :
-			$role = get_role($the_role);
+			$role = get_role( $the_role );
 			$role->add_cap( 'read' );
 			$role->add_cap( 'read_hpm_podcast');
 			$role->add_cap( 'read_private_hpm_podcasts' );
@@ -407,136 +629,17 @@ class HPM_Podcasts {
 			$role->add_cap( 'delete_others_hpm_podcasts' );
 			$role->add_cap( 'delete_private_hpm_podcasts' );
 			$role->add_cap( 'delete_published_hpm_podcasts' );
+			$role->add_cap( 'read_hpm_show');
+			$role->add_cap( 'read_private_hpm_shows' );
+			$role->add_cap( 'edit_hpm_show' );
+			$role->add_cap( 'edit_hpm_shows' );
+			$role->add_cap( 'edit_others_hpm_shows' );
+			$role->add_cap( 'edit_published_hpm_shows' );
+			$role->add_cap( 'publish_hpm_shows' );
+			$role->add_cap( 'delete_others_hpm_shows' );
+			$role->add_cap( 'delete_private_hpm_shows' );
+			$role->add_cap( 'delete_published_hpm_shows' );
 		endforeach;
-	}
-
-	/**
-	 * Add meta boxes to the post editor for the podcast feeds
-	 */
-	public function meta_setup() {
-		add_action( 'add_meta_boxes', [ $this, 'add_meta' ] );
-		add_action( 'save_post', [ $this, 'save_meta' ], 10, 2 );
-	}
-
-	public function add_meta() {
-		add_meta_box(
-			'hpm-podcast-meta-class',
-			esc_html__( 'Podcast Metadata', 'hpm-podcasts' ),
-			[ $this, 'meta_box' ],
-			'podcasts',
-			'normal',
-			'core'
-		);
-	}
-
-	/**
-	 * Set up metadata for this feed: iTunes categories, episode archive link, iTunes link, Google Play link, number of
-	 * episodes in the feed, feed-specific analytics, etc.
-	 *
-	 * @param $object
-	 * @param $box
-	 *
-	 * @return mixed
-	 */
-	public function meta_box( $object, $box ) {
-		wp_nonce_field( basename( __FILE__ ), 'hpm_podcast_class_nonce' );
-		$exists_cat  = metadata_exists( 'post', $object->ID, 'hpm_pod_cat' );
-		$exists_link = metadata_exists( 'post', $object->ID, 'hpm_pod_link' );
-		$exists_prod = metadata_exists( 'post', $object->ID, 'hpm_pod_prod' );
-
-		if ( $exists_cat ) :
-			$hpm_podcast_cat = get_post_meta( $object->ID, 'hpm_pod_cat', true );
-			if ( empty( $hpm_podcast_cat ) ) :
-				$hpm_podcast_cat = '';
-			endif;
-		else :
-			$hpm_podcast_cat = '';
-		endif;
-		if ( $exists_link ) :
-			$hpm_podcast_link = get_post_meta( $object->ID, 'hpm_pod_link', true );
-			if ( empty( $hpm_podcast_link ) ) :
-				$hpm_podcast_link = [
-					'page'         => '',
-					'limit'        => 0,
-					'itunes'       => '',
-					'gplay'        => '',
-					'stitcher'     => '',
-					'spotify'      => '',
-					'radiopublic'  => '',
-					'pcast'        => '',
-					'categories'   => [ 'first' => '', 'second' => '', 'third' => '' ],
-					'type'         => 'episodic',
-					'rss-override' => ''
-				];
-			endif;
-		else :
-			$hpm_podcast_link = [
-				'page'         => '',
-				'limit'        => 0,
-				'itunes'       => '',
-				'gplay'        => '',
-				'stitcher'     => '',
-				'spotify'      => '',
-				'radiopublic'  => '',
-				'pcast'        => '',
-				'categories'   => [ 'first' => '', 'second' => '', 'third' => '' ],
-				'type'         => 'episodic',
-				'rss-override' => ''
-			];
-		endif;
-		if ( $exists_prod ) :
-			$hpm_podcast_prod = get_post_meta( $object->ID, 'hpm_pod_prod', true );
-			if ( empty( $hpm_podcast_prod ) ) :
-				$hpm_podcast_prod = 'internal';
-			endif;
-		else :
-			$hpm_podcast_prod = 'internal';
-		endif;
-		include __DIR__ . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR . 'post-type.php';
-	}
-
-	/**
-	 * Save the above metadata in postmeta
-	 *
-	 * @param $post_id
-	 * @param $post
-	 *
-	 * @return mixed
-	 */
-	public function save_meta( $post_id, $post ) {
-		if ( $post->post_type == 'podcasts' ) :
-			if ( !isset( $_POST['hpm_podcast_class_nonce'] ) || !wp_verify_nonce( $_POST['hpm_podcast_class_nonce'], basename( __FILE__ ) ) )
-				return $post_id;
-
-			$post_type = get_post_type_object( $post->post_type );
-
-			if ( !current_user_can( $post_type->cap->edit_post, $post_id ) )
-				return $post_id;
-
-			$hpm_podcast_cat = $_POST['hpm-podcast-cat'];
-			$hpm_podcast_prod = $_POST['hpm-podcast-prod'];
-			$hpm_podcast_link = [
-				'page' => ( isset( $_POST['hpm-podcast-link'] ) ? sanitize_text_field( $_POST['hpm-podcast-link'] ) : '' ),
-				'itunes' => ( isset( $_POST['hpm-podcast-link-itunes'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-itunes'] ) : '' ),
-				'gplay' => ( isset( $_POST['hpm-podcast-link-gplay'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-gplay'] ) : '' ),
-				'spotify' => ( isset( $_POST['hpm-podcast-link-spotify'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-spotify'] ) : '' ),
-				'stitcher' => ( isset( $_POST['hpm-podcast-link-stitcher'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-stitcher'] ) : '' ),
-				'radiopublic' => ( isset( $_POST['hpm-podcast-link-radiopublic'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-radiopublic'] ) : '' ),
-				'pcast' => ( isset( $_POST['hpm-podcast-link-pcast'] ) ? sanitize_text_field( $_POST['hpm-podcast-link-pcast'] ) : '' ),
-				'limit' => ( isset( $_POST['hpm-podcast-limit'] ) ? sanitize_text_field( $_POST['hpm-podcast-limit'] ) : 0 ),
-				'categories' => [
-					'first' => $_POST['hpm-podcast-icat-first'],
-					'second' => $_POST['hpm-podcast-icat-second'],
-					'third' => $_POST['hpm-podcast-icat-third']
-				],
-				'type' => $_POST['hpm-podcast-type'],
-				'rss-override' => ( isset( $_POST['hpm-podcast-rss-override'] ) ? sanitize_text_field( $_POST['hpm-podcast-rss-override'] ) : '' )
-			];
-
-			update_post_meta( $post_id, 'hpm_pod_cat', $hpm_podcast_cat );
-			update_post_meta( $post_id, 'hpm_pod_link', $hpm_podcast_link );
-			update_post_meta( $post_id, 'hpm_pod_prod', $hpm_podcast_prod );
-		endif;
 	}
 
 	/**
@@ -566,7 +669,7 @@ class HPM_Podcasts {
 		else :
 			$last_refresh = 'Never';
 		endif;
-		include __DIR__ . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR . 'admin.php';
+		include __DIR__ . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR . 'podcast-admin.php';
 	}
 
 	/**
@@ -635,7 +738,6 @@ class HPM_Podcasts {
 		endif;
 		$error = '';
 		$dir = wp_upload_dir();
-		$save = $dir['basedir'];
 		if ( class_exists( 'feed_json' ) ) :
 			$feed_json = true;
 			$json = [
@@ -668,6 +770,17 @@ class HPM_Podcasts {
 				'value' => 'internal'
 			]]
 		]);
+		if ( file_exists( get_stylesheet_directory() . DIRECTORY_SEPARATOR . 'podcast.xsl' ) ) :
+			$xsl = get_stylesheet_directory() . DIRECTORY_SEPARATOR . 'podcast.xsl';
+		else :
+			$xsl = HPM_PODCAST_PLUGIN_URL . $ds . 'templates' . $ds . 'podcast.xsl';
+		endif;
+		$assets = get_option( 'as3cf_assets_pull' );
+		if ( !empty( $assets ) ) :
+			$domain_p = parse_url( get_site_url() );
+			$xsl = str_replace( $domain_p['host'], $assets['domain'], $xsl );
+		endif;
+
 		if ( !empty( $pods['recurrence'] ) ) :
 			if ( $pods['recurrence'] == 'hpm_5min' ) :
 				$frequency = '5';
@@ -743,9 +856,9 @@ class HPM_Podcasts {
 					endforeach;
 					$json['items'] = [];
 				endif;
-
+				
 				ob_start();
-				echo "<?xml version=\"1.0\" encoding=\"".get_option('blog_charset')."\"?>\n";
+				echo "<?xml version=\"1.0\" encoding=\"".get_option('blog_charset')."\"?>\n<?xml-stylesheet type=\"application/xml\" media=\"screen\" href=\"".$xsl."\"?>\n";
 				do_action( 'rss_tag_pre', 'rss2' ); ?>
 <rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:atom="http://www.w3.org/2005/Atom" <?php do_action( 'rss2_ns' ); ?>>
 	<channel>
@@ -931,13 +1044,13 @@ class HPM_Podcasts {
 	 * Display podcasts and shows alphabetically instead of by creation date
 	 */
 	public function meta_query( $query ) {
-		if ( $query->is_archive() && $query->is_main_query() ) :
+		/* if ( $query->is_archive() && $query->is_main_query() ) :
 			$pod_check = $query->get( 'post_type' );
-			if ( $pod_check == 'podcasts' ) :
+			if ( $pod_check == 'podcasts' || $pod_check == 'shows' ) :
 				$query->set( 'orderby', 'post_title' );
 				$query->set( 'order', 'ASC' );
 			endif;
-		endif;
+		endif; */
 	}
 
 	/**
@@ -1126,17 +1239,6 @@ class HPM_Podcasts {
 		$sg_url = $short['url'].'/'.$feed.'/'.$filename;
 		unlink( $local );
 
-		$podeps = new WP_Query([
-			'post_type' => 'post',
-			'post_status' => 'publish',
-			'cat' => $catslug,
-			'posts_per_page' => 1,
-			'meta_query' => [[
-				'key' => 'hpm_podcast_enclosure',
-				'compare' => 'EXISTS'
-			]]
-		]);
-
 		$args = [
 			'post_title' => 'HPM Local Newscast for '.date( 'g a, l, F j, Y', $now[0] ),
 			'post_content' => 'Local news updates from the Houston Public Media Newsroom. Last updated at ' . date( 'g a, l, F j, Y', $now[0] ),
@@ -1148,9 +1250,9 @@ class HPM_Podcasts {
 			'tags_input' => [ 'houston', 'houston public media', 'local news', 'newscasts',  'texas' ],
 			'post_author' => 89
 		];
-		if ( $podeps->have_posts() ) :
-			wp_delete_post( $podeps->post->ID, true );
-		endif;
+		// if ( $podeps->have_posts() ) :
+		// 	wp_delete_post( $podeps->post->ID, true );
+		// endif;
 		$post_id = wp_insert_post( $args );
 		
 		if ( is_wp_error( $post_id ) ) :
@@ -1185,32 +1287,81 @@ class HPM_Podcasts {
 					'posts_per_page' => 1
 				]);
 				if ( $poids->have_posts() ) :
-					$badges = HPM_PODCAST_PLUGIN_URL.'badges/';
-					$pod_link = get_post_meta( $poids->post->ID, 'hpm_pod_link', true );
-					$content .= '<p>&nbsp;</p><div class="podcast-episode-info"><h3>This article is part of the <em><a href="'.$pod_link['page'].'">'.$poids->post->post_title.'</a></em> podcast</h3><ul>';
-					if ( !empty( $pod_link['itunes'] ) ) :
-						$content .= '<li><a href="'.$pod_link['itunes'].' target="_blank" title="Subscribe on Apple Podcasts"><img src="'.$badges.'apple_pod.png" alt="Subscribe on Apple Podcasts"></a></li>';
-					endif;
-					if ( !empty( $pod_link['gplay'] ) ) :
-						$content .= '<li><a href="'.$pod_link['gplay'].'" target="_blank" title="Subscribe on Google Podcasts"><img src="'.$badges.'google_pod.png" alt="Subscribe on Google Podcasts"></a></li>';
-					endif;
-					if ( !empty( $pod_link['spotify'] ) ) :
-						$content .= '<li><a href="'.$pod_link['spotify'].'" target="_blank" title="Subscribe on Spotify"><img src="'.$badges.'spotify_pod.png" alt="Subscribe on Spotify"></a></li>';
-					endif;
-					if ( !empty( $pod_link['stitcher'] ) ) :
-						$content .= '<li><a href="'.$pod_link['stitcher'].'" target="_blank" title="Subscribe on Stitcher"><img src="'.$badges.'stitcher_pod.png" alt="Subscribe on Stitcher"></a></li>';
-					endif;
-					if ( !empty( $pod_link['radiopublic'] ) ) :
-						$content .= '<li><a href="'.$pod_link['radiopublic'].'" target="_blank" title="Subscribe on RadioPublic"><img src="'.$badges.'radiopublic_pod.png" alt="Subscribe on RadioPublic"></a></li>';
-					endif;
-					if ( !empty( $pod_link['pcast'] ) ) :
-						$content .= '<li><a href="'.$pod_link['pcast'].'" target="_blank" title="Subscribe on Pocket Casts"><img src="'.$badges.'pocketcasts_pod.png" alt="Subscribe on Pocket Casts"></a></li>';
-					endif;
-					$content .= '</ul></div>';
+					$content .= HPM_Podcasts::show_social( $poids->post->ID, true, '' );
 				endif;
 			endif;
 		endif;
 		return $content;
+	}
+
+	public static function show_social( $pod_id = '', $lede, $show_id = '' ) {
+		$temp = $output = '';
+		$badges = HPM_PODCAST_PLUGIN_URL.'badges/';
+
+		if ( !empty( $pod_id ) ) :
+			$pod_link = get_post_meta( $pod_id, 'hpm_pod_link', true );
+			if ( !empty( $pod_link['itunes'] ) ) :
+				$temp .= '<li><a href="'.$pod_link['itunes'].' target="_blank" title="Subscribe on Apple Podcasts"><img src="'.$badges.'apple.png" alt="Subscribe on Apple Podcasts" title="Subscribe on Apple Podcasts"></a></li>';
+			endif;
+			if ( !empty( $pod_link['gplay'] ) ) :
+				$temp .= '<li><a href="'.$pod_link['gplay'].'" target="_blank" title="Subscribe on Google Podcasts"><img src="'.$badges.'google_podcasts.png" alt="Subscribe on Google Podcasts" title="Subscribe on Google Podcasts"></a></li>';
+			endif;
+			if ( !empty( $pod_link['spotify'] ) ) :
+				$temp .= '<li><a href="'.$pod_link['spotify'].'" target="_blank" title="Subscribe on Spotify"><img src="'.$badges.'spotify.png" alt="Subscribe on Spotify" title="Subscribe on Spotify"></a></li>';
+			endif;
+			if ( !empty( $pod_link['stitcher'] ) ) :
+				$temp .= '<li><a href="'.$pod_link['stitcher'].'" target="_blank" title="Subscribe on Stitcher"><img src="'.$badges.'stitcher.png" alt="Subscribe on Stitcher" title="Subscribe on Stitcher"></a></li>';
+			endif;
+			if ( !empty( $pod_link['tunein'] ) ) :
+				$temp .= '<li><a href="'.$pod_link['tunein'].'" target="_blank" title="Subscribe on TuneIn"><img src="'.$badges.'tunein.png" alt="Subscribe on TuneIn" title="Subscribe on TuneIn"></a></li>';
+			endif;
+			if ( !empty( $pod_link['iheart'] ) ) :
+				$temp .= '<li><a href="'.$pod_link['iheart'].'" target="_blank" title="Subscribe on iHeart"><img src="'.$badges.'iheart_radio.png" alt="Subscribe on iHeart" title="Subscribe on iHeart"></a></li>';
+			endif;
+			if ( !empty( $pod_link['pandora'] ) ) :
+				$temp .= '<li><a href="'.$pod_link['pandora'].'" target="_blank" title="Subscribe on Pandora"><img src="'.$badges.'pandora.png" alt="Subscribe on Pandora" title="Subscribe on Pandora"></a></li>';
+			endif;
+			if ( !empty( $pod_link['radiopublic'] ) ) :
+				$temp .= '<li><a href="'.$pod_link['radiopublic'].'" target="_blank" title="Subscribe on RadioPublic"><img src="'.$badges.'radio_public.png" alt="Subscribe on RadioPublic" title="Subscribe on RadioPublic"></a></li>';
+			endif;
+			if ( !empty( $pod_link['pcast'] ) ) :
+				$temp .= '<li><a href="'.$pod_link['pcast'].'" target="_blank" title="Subscribe on Pocket Casts"><img src="'.$badges.'pocketcasts.png" alt="Subscribe on Pocket Casts" title="Subscribe on Pocket Casts"></a></li>';
+			endif;
+			if ( !empty( $pod_link['overcast'] ) ) :
+				$temp .= '<li><a href="'.$pod_link['overcast'].'" target="_blank" title="Subscribe on Overcast"><img src="'.$badges.'overcast.png" alt="Subscribe on Overcast" title="Subscribe on Overcast"></a></li>';
+			endif;
+			$temp .= '<li><a href="'.get_permalink( $pod_id ).'" target="_blank" title="Subscribe via RSS"><img src="'.$badges.'rss.png" alt="Subscribe via RSS" title="Subscribe via RSS"></a></li>';
+		endif;
+		if ( !empty( $show_id ) ) :
+			$social = get_post_meta( $show_id, 'hpm_show_social', true );
+			if ( !empty( $social['snapchat'] ) ) :
+				$temp .= '<li class="station-social-icon"><a href="http://www.snapchat.com/add/'.$social['snapchat'].'" target="_blank" title="Snapchat"><span class="fa fa-snapchat-ghost" aria-hidden="true"></span></a></li>';
+			endif;
+			if ( !empty( $social['tumblr'] ) ) :
+				$temp .= '<li class="station-social-icon"><a href="'.$social['tumblr'].'" target="_blank" title="Tumblr"><span class="fa fa-tumblr" aria-hidden="true"></span></a></li>';
+			endif;
+			if ( !empty( $social['insta'] ) ) :
+				$temp .= '<li class="station-social-icon"><a href="https://instagram.com/' . $social['insta'].'" target="_blank" title="Instagram"><span class="fa fa-instagram" aria-hidden="true"></span></a></li>';
+			endif;
+			if ( !empty( $social['sc'] ) ) :
+				$temp .= '<li class="station-social-icon"><a href="https://soundcloud.com/'.$social['sc'].'" target="_blank" title="SoundCloud"><span class="fa fa-soundcloud" aria-hidden="true"></span></a></li>';
+			endif;
+			if ( !empty( $social['yt'] ) ) :
+				$temp .= '<li class="station-social-icon"><a href="'.$social['yt'].'" target="_blank" title="YouTube"><span class="fa fa-youtube-play" aria-hidden="true"></span></a></li>';
+			endif;
+			if ( !empty( $social['twitter'] ) ) :
+				$temp .= '<li class="station-social-icon"><a href="https://twitter.com/'.$social['twitter'].'" target="_blank" title="Twitter"><span class="fa fa-twitter" aria-hidden="true"></span></a></li>';
+			endif;
+			if ( !empty( $social['fb'] ) ) :
+				$temp .= '<li class="station-social-icon"><a href="https://www.facebook.com/'.$social['fb'].'" target="_blank" title="Facebook"><span class="fa fa-facebook" aria-hidden="true"></span></a></li>';
+			endif;
+		endif;
+		if ( !empty( $pod_link ) && $lede ) :
+			$output = '<p>&nbsp;</p><div class="podcast-episode-info"><h3>This article is part of the <em><a href="'.$pod_link['page'].'">'.get_the_title( $pod_id ).'</a></em> podcast</h3>' . $temp . '</ul></div>';
+		else :
+			$output = '<ul class="podcast-badges">' . $temp . '</ul>';
+		endif;
+		return $output;
 	}
 
 	public function remove_foot_filter( $content )
