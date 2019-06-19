@@ -1,14 +1,14 @@
 <?php
 /**
  * @link 			https://github.com/jwcounts/hpm-podcasts
- * @since  			2.0.1
+ * @since  			2.0.2
  * @package  		HPM-Podcasts
  *
  * @wordpress-plugin
  * Plugin Name: 	HPM Podcasts
  * Plugin URI: 		https://github.com/jwcounts/hpm-podcasts
  * Description: 	A plugin that allows you to create a podcast feed from any category, as well as
- * Version: 		2.0.1
+ * Version: 		2.0.2
  * Author: 			Jared Counts
  * Author URI: 		https://www.houstonpublicmedia.org/staff/jared-counts/
  * License: 		GPL-2.0+
@@ -774,11 +774,6 @@ class HPM_Podcasts {
 			$xsl = get_stylesheet_directory() . DIRECTORY_SEPARATOR . 'podcast.xsl';
 		else :
 			$xsl = HPM_PODCAST_PLUGIN_URL . $ds . 'templates' . $ds . 'podcast.xsl';
-		endif;
-		$assets = get_option( 'as3cf_assets_pull' );
-		if ( !empty( $assets ) ) :
-			$domain_p = parse_url( get_site_url() );
-			$xsl = str_replace( $domain_p['host'], $assets['domain'], $xsl );
 		endif;
 
 		if ( !empty( $pods['recurrence'] ) ) :
