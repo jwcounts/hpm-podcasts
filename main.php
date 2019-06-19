@@ -1,14 +1,14 @@
 <?php
 /**
  * @link 			https://github.com/jwcounts/hpm-podcasts
- * @since  			2.0
+ * @since  			2.0.1
  * @package  		HPM-Podcasts
  *
  * @wordpress-plugin
  * Plugin Name: 	HPM Podcasts
  * Plugin URI: 		https://github.com/jwcounts/hpm-podcasts
  * Description: 	A plugin that allows you to create a podcast feed from any category, as well as
- * Version: 		2.0
+ * Version: 		2.0.1
  * Author: 			Jared Counts
  * Author URI: 		https://www.houstonpublicmedia.org/staff/jared-counts/
  * License: 		GPL-2.0+
@@ -1357,7 +1357,7 @@ class HPM_Podcasts {
 			endif;
 		endif;
 		if ( !empty( $pod_link ) && $lede ) :
-			$output = '<p>&nbsp;</p><div class="podcast-episode-info"><h3>This article is part of the <em><a href="'.$pod_link['page'].'">'.get_the_title( $pod_id ).'</a></em> podcast</h3>' . $temp . '</ul></div>';
+			$output = '<p>&nbsp;</p><div class="podcast-episode-info"><h3>This article is part of the <em><a href="'.$pod_link['page'].'">'.get_the_title( $pod_id ).'</a></em> podcast</h3><ul class="podcast-badges">' . $temp . '</ul></div>';
 		else :
 			$output = '<ul class="podcast-badges">' . $temp . '</ul>';
 		endif;
