@@ -59,7 +59,7 @@
 				</xsl:element>
 				<xsl:element name="script">
 					<xsl:attribute name="type">text/javascript</xsl:attribute>
-					<xsl:attribute name="src">/rss/hpm.js</xsl:attribute>
+					<xsl:attribute name="src">https://cdn.hpm.io/assets/js/rss.js</xsl:attribute>
 				</xsl:element>
 				<xsl:element name="script">
 					<xsl:attribute name="type">text/javascript</xsl:attribute>
