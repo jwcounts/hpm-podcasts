@@ -770,10 +770,10 @@ class HPM_Podcasts {
 				'value' => 'internal'
 			]]
 		]);
-		if ( file_exists( get_stylesheet_directory() . DIRECTORY_SEPARATOR . 'podcast.xsl' ) ) :
-			$xsl = get_stylesheet_directory() . DIRECTORY_SEPARATOR . 'podcast.xsl';
+		if ( file_exists( get_stylesheet_directory() . $ds . 'podcast.xsl' ) ) :
+			$xsl = get_stylesheet_directory() . $ds . 'podcast.xsl';
 		else :
-			$xsl = HPM_PODCAST_PLUGIN_URL . $ds . 'templates' . $ds . 'podcast.xsl';
+			$xsl = HPM_PODCAST_PLUGIN_URL . 'templates' . $ds . 'podcast.xsl';
 		endif;
 
 		if ( !empty( $pods['recurrence'] ) ) :
