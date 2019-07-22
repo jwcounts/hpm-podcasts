@@ -520,7 +520,7 @@ class HPM_Podcasts {
 		else :
 			$hpm_podcast = [
 				'feed' => ( !empty( $_POST['hpm-podcast-ep-feed'] ) ? $_POST['hpm-podcast-ep-feed'] : '' ),
-				'title' => ( !empty( $_POST['hpm-podcast-title'] ) ? $_POST['hpm-podcast-title'] : '' ),
+				'title' => ( !empty( $_POST['hpm-podcast-title'] ) ? preg_replace( '/(&)([^amp])/', '&amp;$2', $_POST['hpm-podcast-title'] ) : '' ),
 				'description' => balanceTags( strip_shortcodes( $_POST['hpm-podcast-description'] ), true ),
 				'episode' => ( isset( $_POST['hpm-podcast-episode'] ) ? sanitize_text_field( $_POST['hpm-podcast-episode'] ) :	'' ),
 				'episodeType' => $_POST['hpm-podcast-episodetype'],
