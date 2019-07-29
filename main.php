@@ -1,14 +1,14 @@
 <?php
 /**
  * @link 			https://github.com/jwcounts/hpm-podcasts
- * @since  			2019.07.16
+ * @since  			2019.07.29
  * @package  		HPM-Podcasts
  *
  * @wordpress-plugin
  * Plugin Name: 	HPM Podcasts
  * Plugin URI: 		https://github.com/jwcounts/hpm-podcasts
  * Description: 	A plugin that allows you to create a podcast feed from any category, as well as
- * Version: 		2019.07.16
+ * Version: 		2019.07.29
  * Author: 			Jared Counts
  * Author URI: 		https://www.houstonpublicmedia.org/staff/jared-counts/
  * License: 		GPL-2.0+
