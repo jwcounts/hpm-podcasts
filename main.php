@@ -1,14 +1,14 @@
 <?php
 /**
  * @link 			https://github.com/jwcounts/hpm-podcasts
- * @since  			2019.07.29
+ * @since  			2019.08.01
  * @package  		HPM-Podcasts
  *
  * @wordpress-plugin
  * Plugin Name: 	HPM Podcasts
  * Plugin URI: 		https://github.com/jwcounts/hpm-podcasts
  * Description: 	A plugin that allows you to create a podcast feed from any category, as well as
- * Version: 		2019.07.29
+ * Version: 		2019.08.01
  * Author: 			Jared Counts
  * Author URI: 		https://www.houstonpublicmedia.org/staff/jared-counts/
  * License: 		GPL-2.0+
@@ -1236,7 +1236,7 @@ class HPM_Podcasts {
 
 		$args = [
 			'post_title' => 'HPM Local Newscast for '.date( 'g a, l, F j, Y', $now[0] ),
-			'post_content' => 'Local news updates from the Houston Public Media Newsroom. Last updated at ' . date( 'g a, l, F j, Y', $now[0] ),
+			'post_content' => '[audio mp3="' . $sg_url . '"][/audio]<p>Local news updates from the Houston Public Media Newsroom. Last updated at ' . date( 'g a, l, F j, Y', $now[0] ) . '</p>',
 			'post_category' => [ $catslug ],
 			'post_date' => date( 'Y-m-d H:i:s', $now[0] ),
 			'post_type' => 'post',
